@@ -1,0 +1,51 @@
+import {StyleSheet} from 'react-native'
+
+export default newUserStyles=StyleSheet.create({
+    container:{
+        width:'100%',
+        height:'100%',
+        display:'flex',
+        flexDirection:'column',
+        justifyContent:'space-between',
+        backgroundColor:'#091d24'
+    },
+    viewInformation:{
+        width:'100%',
+        height:200,        
+        backgroundColor:'#fea200',
+        display:'flex',
+        justifyContent:'space-around',
+        alignItems:'flex-start',
+    },
+    viewFormContainer:{        
+        width:'100%',
+        height:900,
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center',
+        paddingBottom:20        
+    },
+    inputContainer:{
+        width:'80%',
+        height:'9%',        
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center'
+    },
+    inputForm:{
+        width:'100%',
+        height:40,
+        backgroundColor:'#fea200',
+        borderRadius:5,
+        paddingLeft:5
+    },
+    btnSendInfo:{
+        width:'80%',
+        height:40,
+        backgroundColor:'#fea200',
+        borderRadius:5,
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center'
+    }
+})
