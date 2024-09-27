@@ -15,9 +15,35 @@ export default contactStyles=StyleSheet.create({
         height:60,
         fontSize:22,        
         textAlign:'center',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center'
+    },
+    textTitle:{
         color:'#ffffff',
-        borderColor:'#ff0000',
-        borderWidth:2,
-        
+        fontSize:22,
+    },
+    mediasContactContainer:{
+        width:'100%',
+        height:'70%',
+        backgroundColor:'#fea200',
+        display:'flex',
+        justifyContent:'space-around',
+        alignItems:'center',
+        flexDirection:'column'
+    },
+    footerContainer:{        
+        width:'100%',
+        height:'15%',
+        backgroundColor:'#fea200',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center'
+    },
+    btnWhatsApp:{
+        width:'80%',
+        height:40,
+        backgroundColor:'#25d366',
+        borderRadius:7
     }
 })
