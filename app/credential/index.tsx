@@ -2,7 +2,6 @@ import { ImageBackground, StatusBar, Text, View, Dimensions, Image } from "react
 import styles from '../../styles/cedential/credential-styles'
 export default function GetCredentialCard(){
     const statusBarHeight = StatusBar.currentHeight;
-    const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
@@ -18,8 +17,8 @@ const windowHeight = Dimensions.get('window').height;
                 <Text style={{color:'#ffffff',fontSize:25,fontWeight:500,transform:'rotateZ(90deg)',width:300}}>Credencial de Afiliado</Text>
             </View>                                          
             <View style={styles.logosHeaderContainer}>
-                <Image source={require('../../assets/logos/logo-01.png')} style={{width:50,height:50,transform:'rotateZ(90deg)'}}/> 
-                <Image source={require('../../assets/logos/logo-01.png')} style={{width:50,height:50,transform:'rotateZ(90deg)'}}/> 
+                <Image source={require('../../assets/logos/logo-01.png')} style={{width:80,height:80,transform:'rotateZ(90deg)'}} resizeMode="contain"/> 
+                <Image source={require('../../assets/logos/cea.jpg')} style={{width:80,height:80,transform:'rotateZ(90deg)'}} resizeMode="contain"/> 
             </View>      
             </ImageBackground>
         </View>

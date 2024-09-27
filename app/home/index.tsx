@@ -20,7 +20,7 @@ export default function HomePage(){
                         <Link href="/credential">Credencial de Afiliado</Link>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Text>Contacto</Text>
+                        <Link href="/contact/contact-information">Contacto</Link>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Cuotas Adherentes</Text>

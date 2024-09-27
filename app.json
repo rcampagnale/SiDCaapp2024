@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "sidcapp",
-    "slug": "sidcapp",
+    "slug": "one",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.jakiro12.one"
     },
     "web": {
       "bundler": "metro",
@@ -31,6 +32,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ede1655c-2dbc-4af8-8001-0c7d7380e0a8"
+      }
+    },
+    "owner": "jakiro12"
   }
 }

@@ -53,14 +53,14 @@ export default function SignInApp(){
                     resizeMode="cover"
                     style={styles.viewShowMedias}>
                     <TouchableOpacity style={styles.mediasBtns}
-                        onPress={()=>openSocialMedia('https://www.google.com')}
+                        onPress={()=>openSocialMedia('https://youtube.com/@sidcacatamarca2424?si=dQTZ6oWZQLSizYLN')}
                     >
                         <Image 
                             style={{width:'100%',height:'100%'}}
                             source={{uri: 'https://reactnative.dev/img/tiny_logo.png'}}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.mediasBtns}
-                        onPress={()=>openSocialMedia('https://www.facebook.com')}
+                        onPress={()=>openSocialMedia('https://www.facebook.com/profile.php?id=100058046356234')}
                     >
                          <Image 
                             style={{width:'100%',height:'100%'}}
@@ -74,7 +74,7 @@ export default function SignInApp(){
                             source={{uri: 'https://reactnative.dev/img/tiny_logo.png'}}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.mediasBtns}
-                        onPress={()=>openSocialMedia('https://www.google.com')}
+                        onPress={()=>openSocialMedia('https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl')}
                         >
                          <Image 
                             style={{width:'100%',height:'100%'}}
