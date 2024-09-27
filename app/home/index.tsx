@@ -31,7 +31,7 @@ export default function HomePage(){
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Informacion</Text>
                 <View style={styles.btnsContainer}>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Text>Capacitacions</Text>
+                        <Text>Capacitaciones</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Enlaces de utilidad</Text>

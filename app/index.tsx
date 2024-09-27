@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Link } from "expo-router";
 
 export default function SignInApp(){
-    const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+    const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
     const statusBarHeight = StatusBar.currentHeight;
      
     const openSocialMedia=(urlMedia:string)=>{
@@ -35,7 +35,7 @@ export default function SignInApp(){
                         <Text style={{fontSize:20,color:'#ffffff'}}>Ingresar con tu DNI de afiliado</Text>
                         <TextInput 
                             style={styles.inputForm}
-                            placeholder="  D.N.I."
+                            placeholder="D.N.I."
                         ></TextInput>
                         <TouchableOpacity style={styles.btnGetIn} activeOpacity={1}>
                             <Link href="/home" style={{fontSize:20,fontWeight:500}}>INGRESAR</Link>
@@ -57,28 +57,28 @@ export default function SignInApp(){
                     >
                         <Image 
                             style={{width:'100%',height:'100%'}}
-                            source={{uri: 'https://reactnative.dev/img/tiny_logo.png'}}/>
+                            source={require('../assets/logos/youtube.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.mediasBtns}
                         onPress={()=>openSocialMedia('https://www.facebook.com/profile.php?id=100058046356234')}
                     >
                          <Image 
                             style={{width:'100%',height:'100%'}}
-                            source={{uri: 'https://reactnative.dev/img/tiny_logo.png'}}/>
+                            source={require('../assets/logos/facebook.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.mediasBtns}
-                        onPress={()=>openSocialMedia('https://www.google.com')}
+                        onPress={()=>openSocialMedia('https://www.x.com')}
                         >
                          <Image 
                             style={{width:'100%',height:'100%'}}
-                            source={{uri: 'https://reactnative.dev/img/tiny_logo.png'}}/>
+                            source={require('../assets/logos/twitter.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.mediasBtns}
                         onPress={()=>openSocialMedia('https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl')}
                         >
                          <Image 
                             style={{width:'100%',height:'100%'}}
-                            source={{uri: 'https://reactnative.dev/img/tiny_logo.png'}}/>
+                            source={require('../assets/logos/instagram.png')}/>
                     </TouchableOpacity>
                 </ImageBackground>
                 :null}

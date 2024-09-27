@@ -46,6 +46,7 @@ export default signInStyles=StyleSheet.create({
         height:45,
         backgroundColor:'#fea200',
         borderRadius:5,
+        paddingLeft:10
     },
     btnGetIn:{
         width:'100%',

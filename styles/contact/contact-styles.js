@@ -44,6 +44,10 @@ export default contactStyles=StyleSheet.create({
         width:'80%',
         height:40,
         backgroundColor:'#25d366',
-        borderRadius:7
+        borderRadius:7,
+        display:'flex',
+        justifyContent:'space-around',
+        alignItems:'center',
+        flexDirection:'row',
     }
 })

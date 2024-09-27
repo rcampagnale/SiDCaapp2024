@@ -1,4 +1,4 @@
-import { Text, View,StatusBar, TouchableOpacity } from "react-native";
+import { Text, View,StatusBar, TouchableOpacity, Image } from "react-native";
 import styles from '../../styles/contact/contact-styles'
 export default function ContactInformation(){
     const statusBarHeight = StatusBar.currentHeight;
@@ -15,22 +15,40 @@ export default function ContactInformation(){
                        Numeros de WhatsApp
                     </Text>
                     <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
-                        <Text>Asesoramiento General</Text>
+                        <Text style={{fontSize:18}}>Asesoramiento General</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
-                        <Text>Departamento Juridico</Text>
+                        <Text style={{fontSize:18}}>Departamento Juridico</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
-                        <Text>SiDCa Gestion</Text>
+                        <Text style={{fontSize:18}}>SiDCa Gestion</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
-                        <Text>SiDCa Turismo</Text>
+                        <Text style={{fontSize:18}}>SiDCa Turismo</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
-                        <Text>Casa del Docente</Text>
+                        <Text style={{fontSize:18}}>Casa del Docente</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
-                        <Text>SiDCA Radio</Text>
+                        <Text style={{fontSize:18}}>SiDCA Radio</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
                 </View>
                 <View style={styles.footerContainer}>
