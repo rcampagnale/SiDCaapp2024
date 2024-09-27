@@ -13,16 +13,16 @@ export default function HomePage(){
             <ImageBackground style={styles.viewAbout} source={require('../../assets/home/nosotros.png')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Nosotros</Text>
                 <View style={styles.btnsContainer}>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Link href="/aboutus/about-sidca">Quienes somos</Link>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Link href="/credential">Credencial de Afiliado</Link>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Contacto</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Cuotas Adherentes</Text>
                     </TouchableOpacity>
                 </View>
@@ -30,10 +30,10 @@ export default function HomePage(){
             <ImageBackground style={styles.viewInformation} source={require('../../assets/home/capacitaciones.png')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Informacion</Text>
                 <View style={styles.btnsContainer}>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Capacitacions</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Enlaces de utilidad</Text>
                     </TouchableOpacity>
                 </View>
@@ -41,10 +41,10 @@ export default function HomePage(){
             <ImageBackground style={styles.viewSupport} source={require('../../assets/home/asesoramiento.jpg')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Asesoramiento</Text>
                 <View style={styles.btnsContainer}>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>General</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Legal</Text>
                     </TouchableOpacity>
                 </View>
@@ -52,13 +52,13 @@ export default function HomePage(){
             <ImageBackground style={styles.viewBenefits} source={require('../../assets/home/casadocente.png')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Beneficios</Text>
                 <View style={styles.btnsContainer}>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Turismo</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Casa del docente</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Predio recreativo</Text>
                     </TouchableOpacity>
                 </View>

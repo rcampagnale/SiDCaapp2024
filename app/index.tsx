@@ -35,14 +35,14 @@ export default function SignInApp(){
                         <Text style={{fontSize:20,color:'#ffffff'}}>Ingresar con tu DNI de afiliado</Text>
                         <TextInput 
                             style={styles.inputForm}
-                            placeholder="holaa"
+                            placeholder="  D.N.I."
                         ></TextInput>
-                        <TouchableOpacity style={styles.btnGetIn}>
+                        <TouchableOpacity style={styles.btnGetIn} activeOpacity={1}>
                             <Link href="/home" style={{fontSize:20,fontWeight:500}}>INGRESAR</Link>
                         </TouchableOpacity>
                    </View>
                    <ImageBackground style={styles.viewAfiliate} source={require('../assets/signinFotos/afiliate.png')} resizeMode="cover">
-                    <TouchableOpacity style={styles.btnAfiliate}>
+                    <TouchableOpacity style={styles.btnAfiliate} activeOpacity={1}>
                             <Link href="/form-register/create-new-user" style={{fontSize:20,fontWeight:500}}>AFILIARSE</Link>
                         </TouchableOpacity>
                    </ImageBackground>

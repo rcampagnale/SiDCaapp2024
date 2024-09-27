@@ -8,30 +8,32 @@ export default function AboutUs(){
             <Text style={{fontSize:20,color:'#ffffff',fontWeight:500, height:45,display:'flex',justifyContent:'center',alignItems:'center'}}>
                 Quienes somos
             </Text>
-            <ScrollView style={{width:'100%',borderColor:'#ff0000',borderWidth:1,height:200}} horizontal={true} contentContainerStyle={{columnGap:20,alignItems:'center'}} >
-                <Image source={{uri: 'https://reactnative.dev/img/tiny_logo.png',}}
+            <ScrollView style={{width:'100%',height:200}} horizontal={true} contentContainerStyle={{columnGap:20,alignItems:'center'}} >
+                <Image source={require('../../assets/home/nosotros.png')}
                     style={{width:200,height:100}}
                 />
-                <Image source={{uri: 'https://reactnative.dev/img/tiny_logo.png',}}
+                <Image source={require('../../assets/home/nosotros.png')}
                     style={{width:200,height:100}}
                 />
-                <Image source={{uri: 'https://reactnative.dev/img/tiny_logo.png',}}
+                <Image source={require('../../assets/home/nosotros.png')}
                     style={{width:200,height:100}}
                 />
             </ScrollView>
             <View style={{width:'100%',height:'40%',backgroundColor:'#fea200'}}>
-                <Text>
-                    ejemploosss
+                <Text style={{fontSize:16,textAlign:'justify'}}>
+                    SIDCA, el sindicato de docentes de Catamarca, inscripcion gremial 2902, adherido a la Confederacion Argentina de Educadores, CEA, Personeria gremial 1716. Trabaja en la firme defensa de los derechos docente, rearfirmando el reclamo permanente por mejores condiciones en el desempeño profesional, promoviendo la capacitacion y el perfecionamiento, exigiendo el respeto a normativas justas
+                    para los trabajadores y trabajadoras de la educacion. Creemos que la educacion es motor indiscutible de desarrollo de los pueblos y por eso defendemos las mejores condiciones
+                    laborales para quienes la imparten, en consonancia con las intituciones gremiales consolidadas a nivel pais y la internacional de la educacion, que cuidan y protegen a educadores del pais y el mundo
                 </Text>
             </View>
-            <ScrollView style={{width:'100%',borderColor:'#ff0000',borderWidth:1,height:200}} horizontal={true} contentContainerStyle={{columnGap:20,alignItems:'center'}}>
-            <Image source={{uri: 'https://reactnative.dev/img/tiny_logo.png',}}
+            <ScrollView style={{width:'100%',height:200}} horizontal={true} contentContainerStyle={{columnGap:20,alignItems:'center'}}>
+            <Image source={require('../../assets/home/nosotros.png')}
                     style={{width:200,height:100}}
                 />
-                <Image source={{uri: 'https://reactnative.dev/img/tiny_logo.png',}}
+                <Image source={require('../../assets/home/nosotros.png')}
                     style={{width:200,height:100}}
                 />
-                <Image source={{uri: 'https://reactnative.dev/img/tiny_logo.png',}}
+                <Image source={require('../../assets/home/nosotros.png')}
                     style={{width:200,height:100}}
                 />
             </ScrollView>

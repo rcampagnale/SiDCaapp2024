@@ -12,7 +12,11 @@ export default homeStyles=StyleSheet.create({
     topBar:{
         width:'100%',
         height:40,
-        backgroundColor:'#fea200'
+        backgroundColor:'#fea200',
+        display:'flex',
+        flexDirection:'row',
+        justifyContent:'flex-end',
+        alignItems:'center'
     },
     viewAbout:{
         width:'100%',

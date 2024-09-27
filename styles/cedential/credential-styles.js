@@ -1,0 +1,45 @@
+import {StyleSheet} from 'react-native'
+
+export default credentialStyles=StyleSheet.create({
+    container:{
+        width:'100%',
+        height:'100%',
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center',
+        flexDirection:'row'
+    },
+    viewInfoContainer:{
+        height:'100%',
+        width:'30%',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center'
+    },
+    mainInformationContainer:{
+        transform:'rotateZ(90deg)',
+        height:140,
+        display:'flex',
+        flexDirection:'column',
+        justifyContent:'space-around',
+        alignItems:'flex-start',
+        paddingBottom:20
+    },
+    cardNameContainer:{
+        width:'20%',
+        height:'100%',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',        
+    },
+    logosHeaderContainer:{
+        width:'20%',
+        height:'100%',        
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center',
+        flexDirection:'column',
+        paddingBottom:20,
+        paddingTop:20
+    },
+})
