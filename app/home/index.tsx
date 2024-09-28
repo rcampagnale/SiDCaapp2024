@@ -23,7 +23,7 @@ export default function HomePage(){
                         <Link href="/contact/contact-information">Contacto</Link>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Text>Cuotas Adherentes</Text>
+                        <Link href="/quota/quota-users">Cuotas Adherentes</Link>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
@@ -31,7 +31,7 @@ export default function HomePage(){
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Informacion</Text>
                 <View style={styles.btnsContainer}>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Text>Capacitaciones</Text>
+                        <Link href="/courses/get-my-courses">Capacitaciones</Link>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Enlaces de utilidad</Text>
