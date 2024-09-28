@@ -9,6 +9,17 @@ export default coursesStyles=StyleSheet.create({
         justifyContent:'space-between',
         alignItems:'center',
         backgroundColor:'#091d24',
-        paddingTop:10
     },
+    scrollContainer:{
+        width:'100%',
+        height:200,        
+    },
+    textAboutCourse:{
+        width:'100%',
+        height:200,
+        backgroundColor:'#fea200',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center'
+    }
 })
