@@ -21,5 +21,21 @@ export default coursesStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'center',
         alignItems:'center'
+    },
+    cardCourses:{
+        width:'100%',
+        height:150,       
+        display:'flex',
+        justifyContent:'space-around',
+        alignItems:'center'
+    },
+    btnSeeInfo:{
+        width:'80%',
+        height:40,
+        borderRadius:5,
+        backgroundColor:'#005CFE',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center'
     }
 })
