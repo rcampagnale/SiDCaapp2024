@@ -1,12 +1,23 @@
-import { View, Text, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import styles from '../../styles/courses/courses-styles'
+import AntDesign from '@expo/vector-icons/AntDesign';
 
-export default function CourseAviablesForMe(){
-    const statusBarHeight = StatusBar.currentHeight;
+interface HandleOptionsCourse{
+    setActionType:(value:null | string)=>void
+}
+export default function CourseAviablesForMe({setActionType}:HandleOptionsCourse){
     return(
-        <View  style={{height:'100%',width:'100%',backgroundColor:'#ffffff'}}>    
-
+        <View  style={{height:'100%',width:'100%',backgroundColor:'#091d24'}}>    
+        <View style={styles.btnBackToOptions}>
+            <TouchableOpacity style={styles.btnBack}
+                onPress={()=>setActionType(null)}
+            >
+            <AntDesign name="back" size={24} color="black" />
+                <Text style={{fontSize:18,marginLeft:5}}>Volver</Text>
+            </TouchableOpacity>
+        </View>
             <View>
-                <Text>
+                <Text style={{color:'#ffffff'}}>
                     Cursos disponibles
                 </Text>
             </View>

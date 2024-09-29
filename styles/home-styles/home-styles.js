@@ -66,6 +66,14 @@ export default homeStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'center',
         alignItems:'center'
+    },
+    btnTextAction:{
+        width:'100%',
+        height:'100%',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        flexDirection:'row'
     }
     
 })

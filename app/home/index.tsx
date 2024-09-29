@@ -1,6 +1,6 @@
 import { StatusBar, Text, View, ScrollView, TouchableOpacity, ImageBackground } from "react-native";
 import styles from '../../styles/home-styles/home-styles'
-import { Link } from "expo-router";
+import { router } from "expo-router";
 export default function HomePage(){
     const statusBarHeight = StatusBar.currentHeight;
 
@@ -13,25 +13,35 @@ export default function HomePage(){
             <ImageBackground style={styles.viewAbout} source={require('../../assets/home/nosotros.png')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Nosotros</Text>
                 <View style={styles.btnsContainer}>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Link href="/aboutus/about-sidca">Quienes somos</Link>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/aboutus/about-sidca")}
+                    >
+                        <Text>Quienes somos</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Link href="/credential">Credencial de Afiliado</Link>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/credential")}                
+                    >
+                        <Text>Credencial de Afiliado</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Link href="/contact/contact-information">Contacto</Link>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/contact/contact-information")}                
+                        >
+                        <Text>Contacto</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Link href="/quota/quota-users">Cuotas Adherentes</Link>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/quota/quota-users")}                
+                    >
+                        <Text>Cuotas Adherentes</Text>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
             <ImageBackground style={styles.viewInformation} source={require('../../assets/home/capacitaciones.png')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Informacion</Text>
                 <View style={styles.btnsContainer}>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
-                        <Link href="/courses/get-my-courses">Capacitaciones</Link>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/courses/get-my-courses")}                
+                    >
+                        <Text>Capacitaciones</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
                         <Text>Enlaces de utilidad</Text>

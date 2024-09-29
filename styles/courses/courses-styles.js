@@ -37,5 +37,23 @@ export default coursesStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'center',
         alignItems:'center'
+    },
+    btnBackToOptions:{
+        width:'100%',
+        height:40,
+        backgroundColor:'#fea200',
+        display:'flex',
+        justifyContent:'flex-start',
+        alignItems:'center',
+        flexDirection:'row'
+    },
+    btnBack:{
+        width:'auto',
+        height:'100%',
+        marginLeft:15,
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        flexDirection:'row'
     }
 })

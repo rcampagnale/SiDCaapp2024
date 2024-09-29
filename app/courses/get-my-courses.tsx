@@ -13,10 +13,10 @@ export default function GetCoursesOptions(){
     let content;
     switch (action) {
         case 'see':
-            content=<CourseAviablesForMe/>
+            content=<CourseAviablesForMe setActionType={handleSetActionType}/>
             break;    
         case 'verify':
-            content=<CoursesTakenByMe/>
+            content=<CoursesTakenByMe setActionType={handleSetActionType}/>
         break;
         default:
             content=<HandleCourses setActionType={handleSetActionType}/>
@@ -25,21 +25,7 @@ export default function GetCoursesOptions(){
     
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>    
-            <View style={styles.container}>
-                <View style={styles.scrollContainer}>
-                    <ScrollView style={{width:'100%',height:'100%'}} horizontal={true} contentContainerStyle={{display:'flex',justifyContent:'space-around',alignItems:'center',columnGap:10}} showsHorizontalScrollIndicator={false}>
-                        <Image style={{width:180,height:120}} source={require('../../assets/home/nosotros.png')} />
-                        <Image style={{width:180,height:120}} source={require('../../assets/home/nosotros.png')} />
-                        <Image style={{width:180,height:120}} source={require('../../assets/home/nosotros.png')} />
-                        <Image style={{width:180,height:120}} source={require('../../assets/home/nosotros.png')} />
-                    </ScrollView>
-                </View>
-                <View style={styles.textAboutCourse}>
-                    <Text style={{fontSize:18,width:'90%'}}>
-                        El programacion de capacitacion de SIDCA brinda durante todo el año ofertas de capacitacion y perfecionamiento docente gratuita a sus afiliados, mediante cursos, talleres, congresos y seminarios que propician
-                        el acceso a material innovador y actualizado, contribuyendo en la profesionalizacion de nuestros docentes.                        
-                    </Text>                    
-                </View>
+            <View style={styles.container}>                
                 {content}
             </View>
         </View>
