@@ -2,7 +2,7 @@ import { StatusBar, Text, View, ScrollView, TouchableOpacity, ImageBackground } 
 import styles from '../../styles/home-styles/home-styles'
 import { router } from "expo-router";
 export default function HomePage(){
-    const statusBarHeight = StatusBar.currentHeight;
+    const statusBarHeight:number | undefined = StatusBar.currentHeight;
 
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>

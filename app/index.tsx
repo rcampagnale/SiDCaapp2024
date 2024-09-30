@@ -1,11 +1,11 @@
 import { Text, TouchableOpacity, View, Linking,ImageBackground, TextInput, Keyboard, Image, StatusBar } from "react-native";
 import styles from '../styles/signin-styles/sign-in-styles'
 import { useEffect, useState } from "react";
-import { Link,router } from "expo-router";
+import { router } from "expo-router";
 
 export default function SignInApp(){
     const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
-    const statusBarHeight = StatusBar.currentHeight;
+    const statusBarHeight : number | undefined = StatusBar.currentHeight; 
      
     const openSocialMedia=(urlMedia:string)=>{
         Linking.openURL(urlMedia)
@@ -26,7 +26,7 @@ export default function SignInApp(){
         };
       }, []);
     return(
-        <View  style={{height:'100%',paddingTop:statusBarHeight}}>
+        <View  style={{height:'100%',paddingTop:statusBarHeight}}> 
             <View style={styles.container}>
                 <View style={[styles.viewGetData,{height: isKeyboardVisible ? '100%' : '60%' }]}>
                    <ImageBackground source={require('../assets/logos/logo-01.png')} resizeMode="contain" style={styles.logoSignin}>                        

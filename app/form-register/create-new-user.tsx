@@ -11,7 +11,7 @@ interface NewUserTypes{
         establishment:string
 }
 export default function CreateNewUser() {
-    const statusBarHeight = StatusBar.currentHeight || 0;
+    const statusBarHeight:number | undefined  = StatusBar.currentHeight;
     const [newUser,setNewUser]=useState<NewUserTypes>({
         realName:'',
         lastName:'',

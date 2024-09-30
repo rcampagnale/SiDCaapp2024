@@ -1,7 +1,7 @@
 import { ImageBackground, StatusBar, Text, View, Dimensions, Image } from "react-native";
 import styles from '../../styles/cedential/credential-styles'
 export default function GetCredentialCard(){
-    const statusBarHeight = StatusBar.currentHeight;
+    const statusBarHeight:number | undefined  = StatusBar.currentHeight;
 const windowHeight = Dimensions.get('window').height;
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
