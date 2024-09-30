@@ -51,7 +51,9 @@ export default function HomePage(){
             <ImageBackground style={styles.viewSupport} source={require('../../assets/home/asesoramiento.jpg')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Asesoramiento</Text>
                 <View style={styles.btnsContainer}>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/advice-general/advicer")}                                    
+                    >
                         <Text>General</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}>

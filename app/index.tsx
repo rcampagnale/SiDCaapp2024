@@ -1,7 +1,7 @@
 import { Text, TouchableOpacity, View, Linking,ImageBackground, TextInput, Keyboard, Image, StatusBar } from "react-native";
 import styles from '../styles/signin-styles/sign-in-styles'
 import { useEffect, useState } from "react";
-import { Link } from "expo-router";
+import { Link,router } from "expo-router";
 
 export default function SignInApp(){
     const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
@@ -37,13 +37,17 @@ export default function SignInApp(){
                             style={styles.inputForm}
                             placeholder="D.N.I."
                         ></TextInput>
-                        <TouchableOpacity style={styles.btnGetIn} activeOpacity={1}>
-                            <Link href="/home" style={{fontSize:20,fontWeight:500}}>INGRESAR</Link>
+                        <TouchableOpacity style={styles.btnGetIn} activeOpacity={1}
+                            onPress={()=>router.navigate("/home")}                        
+                        >
+                            <Text style={{fontSize:20,fontWeight:500}}>INGRESAR</Text>
                         </TouchableOpacity>
                    </View>
                    <ImageBackground style={styles.viewAfiliate} source={require('../assets/signinFotos/afiliate.png')} resizeMode="cover">
-                    <TouchableOpacity style={styles.btnAfiliate} activeOpacity={1}>
-                            <Link href="/form-register/create-new-user" style={{fontSize:20,fontWeight:500}}>AFILIARSE</Link>
+                    <TouchableOpacity style={styles.btnAfiliate} activeOpacity={1}
+                            onPress={()=>router.navigate("/form-register/create-new-user")}                        
+                    >
+                            <Text style={{fontSize:20,fontWeight:500}}>AFILIARSE</Text>
                         </TouchableOpacity>
                    </ImageBackground>
                 </View>
