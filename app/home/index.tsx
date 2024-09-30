@@ -56,7 +56,9 @@ export default function HomePage(){
                     >
                         <Text>General</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/legal-advice/legal")}                                                
+                    >
                         <Text>Legal</Text>
                     </TouchableOpacity>
                 </View>
@@ -64,13 +66,19 @@ export default function HomePage(){
             <ImageBackground style={styles.viewBenefits} source={require('../../assets/home/casadocente.png')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Beneficios</Text>
                 <View style={styles.btnsContainer}>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/tourist/tourist")}                                                                
+                    >
                         <Text>Turismo</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/house/house")}                                                                                        
+                    >
                         <Text>Casa del docente</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}
+                        onPress={()=>router.navigate("/campus/campus")}                                                
+                    >
                         <Text>Predio recreativo</Text>
                     </TouchableOpacity>
                 </View>

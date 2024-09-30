@@ -16,7 +16,7 @@ export default function HandleCourses ({setActionType}:HandleOptionsCourse){
                 </View>
                 <View style={styles.textAboutCourse}>
                     <Text style={{fontSize:18,width:'90%'}}>
-                        El programacion de capacitacion de SIDCA brinda durante todo el año ofertas de capacitacion y perfecionamiento docente gratuita a sus afiliados, mediante cursos, talleres, congresos y seminarios que propician
+                        El programa de capacitacion de SIDCA brinda durante todo el año ofertas de capacitacion y perfecionamiento docente gratuita a sus afiliados, mediante cursos, talleres, congresos y seminarios que propician
                         el acceso a material innovador y actualizado, contribuyendo en la profesionalizacion de nuestros docentes.                        
                     </Text>                    
                 </View>

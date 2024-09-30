@@ -1,20 +1,21 @@
 import {StyleSheet} from 'react-native'
 
-export default advicerStyles=StyleSheet.create({
+export default touristStyles=StyleSheet.create({
     container:{
         width:'100%',
         height:'100%',
         display:'flex',
+        flexDirection:'column',
         justifyContent:'space-between',
         alignItems:'center',
-        backgroundColor:'#091d24'
+        backgroundColor:'#091d24',
     },
-    titleView:{
+    viewTitle:{
         width:'100%',
-        height:40,
+        height:'8%',        
         display:'flex',
         justifyContent:'center',
-        alignItems:'center',
+        alignItems:'center'
     },
     viewInformation:{
         width:'100%',
@@ -23,17 +24,25 @@ export default advicerStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'center',
         alignItems:'center',
-        paddingTop:10,
-        paddingBottom:10
-    },
-    btnsContainer:{
+        paddingBottom:10,
+        paddingTop:10
+    }, 
+    carruselContainer:{
         width:'100%',
-        height:250,
+        height:150,
+    },
+    carrusel:{
+        width:'100%',
+        height:'100%',        
+    },
+    viewGetInformation:{
+        width:'100%',
+        height:'15%',        
+        backgroundColor:'#fea200',
         display:'flex',
         justifyContent:'space-around',
         alignItems:'center',
         flexDirection:'column',
-        backgroundColor:'#fea200',
     },
     btnWhatsApp:{
         width:'80%',
@@ -44,15 +53,16 @@ export default advicerStyles=StyleSheet.create({
         justifyContent:'space-around',
         alignItems:'center',
         flexDirection:'row',
-        marginBottom:20
     },
-    btnGetData:{
-        width:'80%',
+    btnNews:{
+        width:'75%',
         height:40,
+        backgroundColor:'#fea200',
         borderRadius:5,
-        backgroundColor:'#005CFE',
         display:'flex',
         justifyContent:'center',
-        alignItems:'center'
+        alignItems:'center',
+        marginBottom:100
     }
+
 })
