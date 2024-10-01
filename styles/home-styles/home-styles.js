@@ -64,14 +64,24 @@ export default homeStyles=StyleSheet.create({
         backgroundColor:'#fea200',
         borderRadius:5,
         display:'flex',
-        justifyContent:'center',
-        alignItems:'center'
+        justifyContent:'flex-start',
+        alignItems:'center',
+        flexDirection:'row'
     },
     btnTextAction:{
         width:'100%',
         height:'100%',
         display:'flex',
         justifyContent:'center',
+        alignItems:'center',
+        flexDirection:'row'
+    },
+    logoContainer:{
+        width:'30%',
+        height:'100%',
+        marginRight:10,
+        display:'flex',
+        justifyContent:'flex-end',
         alignItems:'center',
         flexDirection:'row'
     }
