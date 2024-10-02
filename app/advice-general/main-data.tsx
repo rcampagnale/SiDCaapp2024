@@ -21,10 +21,14 @@ export default function MainComponent({setActionType}:HandleAdviceStatus){
                     >
                         <Text style={{color:'#ffffff',fontSize:18}}>Info paritarias</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnGetData}>
+                    <TouchableOpacity style={styles.btnGetData}
+                        onPress={()=>setActionType('salary')}                    
+                    >
                         <Text style={{color:'#ffffff',fontSize:18}}>Escala salarial</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnGetData}>
+                    <TouchableOpacity style={styles.btnGetData}
+                        onPress={()=>setActionType('news')}
+                    >
                         <Text style={{color:'#ffffff',fontSize:18}}>Novedades</Text>
                     </TouchableOpacity>
                 </View>
