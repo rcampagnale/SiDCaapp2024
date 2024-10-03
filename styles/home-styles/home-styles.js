@@ -15,7 +15,7 @@ export default homeStyles=StyleSheet.create({
         backgroundColor:'#fea200',
         display:'flex',
         flexDirection:'row',
-        justifyContent:'flex-end',
+        justifyContent:'space-between',
         alignItems:'center'
     },
     viewAbout:{

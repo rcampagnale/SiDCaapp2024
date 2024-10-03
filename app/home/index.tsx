@@ -1,4 +1,4 @@
-import { StatusBar, Text, View, ScrollView, TouchableOpacity, ImageBackground } from "react-native";
+import { StatusBar, Text, View, ScrollView, TouchableOpacity, ImageBackground, Image } from "react-native";
 import styles from '../../styles/home-styles/home-styles'
 import { router } from "expo-router";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -13,7 +13,17 @@ export default function HomePage(){
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
             <View style={styles.topBar}>
-                <Text>Salir</Text>
+                <View>
+                <Image source={require('../../assets/logos/cea.jpg')} style={{width:80,height:80}} resizeMode="contain"/> 
+                </View>
+                <View>
+                    <Image source={require('../../assets/logos/logo-01.png')} style={{width:80,height:80}} resizeMode="contain"/>                     
+                </View>
+                <TouchableOpacity style={{width:'auto',height:'auto', marginRight:20}} activeOpacity={1}>
+                    <Text style={{fontSize:18}}>
+                        Salir
+                    </Text>    
+                </TouchableOpacity>
             </View>
         <ScrollView  contentContainerStyle={{justifyContent:'space-between',rowGap:20,backgroundColor:'#091d24'}}>
             <ImageBackground style={styles.viewAbout} source={require('../../assets/home/nosotros.png')} resizeMode="cover">
@@ -25,7 +35,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                        
                         <Ionicons name="heart" size={24} color="black" />
                         </View>
-                        <Text>Quienes somos</Text>
+                        <Text style={{fontSize:18}}>Quienes somos</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
                         onPress={()=>router.navigate("/credential")}                
@@ -33,7 +43,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                        
                         <MaterialCommunityIcons name="card-text" size={24} color="black" />
                         </View>
-                        <Text>Credencial de Afiliado</Text>
+                        <Text style={{fontSize:18}}>Credencial de Afiliado</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
                         onPress={()=>router.navigate("/contact/contact-information")}                
@@ -41,7 +51,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                                                
                         <FontAwesome5 name="phone-alt" size={24} color="black" />
                         </View>
-                        <Text>Contacto</Text>
+                        <Text style={{fontSize:18}}>Contacto</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
                         onPress={()=>router.navigate("/quota/quota-users")}                
@@ -49,7 +59,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                        
                         <MaterialCommunityIcons name="card-multiple" size={24} color="black" />
                         </View>
-                        <Text>Cuotas Adherentes</Text>
+                        <Text style={{fontSize:18}}>Cuotas Adherentes</Text>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
@@ -62,13 +72,15 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                        
                         <FontAwesome5 name="user-graduate" size={24} color="black" />
                         </View>
-                        <Text>Capacitaciones</Text>
+                        <Text style={{fontSize:18}}>Capacitaciones</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnActions} activeOpacity={1}                    
+                    onPress={()=>router.navigate("/links/short-links")}                
+                    >
                         <View style={styles.logoContainer}>                        
                         <Feather name="external-link" size={24} color="black" />
                         </View>
-                        <Text>Enlaces de utilidad</Text>
+                        <Text style={{fontSize:18}}>Enlaces de utilidad</Text>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
@@ -81,7 +93,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                        
                         <Entypo name="shield" size={24} color="black" />
                         </View>
-                        <Text>General</Text>
+                        <Text style={{fontSize:18}}>General</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
                         onPress={()=>router.navigate("/legal-advice/legal")}                                                
@@ -89,7 +101,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                        
                         <FontAwesome name="legal" size={24} color="black" />
                         </View>
-                        <Text>Legal</Text>
+                        <Text style={{fontSize:18}}>Legal</Text>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
@@ -102,7 +114,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                        
                         <FontAwesome name="bus" size={24} color="black" />
                         </View>
-                        <Text>Turismo</Text>
+                        <Text style={{fontSize:18}}>Turismo</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
                         onPress={()=>router.navigate("/house/house")}                                                                                        
@@ -110,7 +122,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>
                         <FontAwesome5 name="house-user" size={24} color="black" />
                         </View>
-                        <Text>Casa del docente</Text>
+                        <Text style={{fontSize:18}}>Casa del docente</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
                         onPress={()=>router.navigate("/campus/campus")}                                                
@@ -118,7 +130,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>
                             <FontAwesome name="birthday-cake" size={24} color="black" />
                         </View>
-                        <Text>Predio recreativo</Text>
+                        <Text style={{fontSize:18}}>Predio recreativo</Text>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
