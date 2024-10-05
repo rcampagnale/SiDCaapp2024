@@ -1,7 +1,10 @@
-import { Text, View,StatusBar, TouchableOpacity, Image } from "react-native";
+import { Text, View,StatusBar, TouchableOpacity, Image, Linking } from "react-native";
 import styles from '../../styles/contact/contact-styles'
 export default function ContactInformation(){
     const statusBarHeight = StatusBar.currentHeight;
+    const openWspNumber=(urlMedia:string)=>{
+        Linking.openURL(urlMedia)
+    }
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
             <View style={styles.container}>
@@ -14,7 +17,9 @@ export default function ContactInformation(){
                     <Text style={{fontSize:20,fontWeight:500}}>
                        Numeros de WhatsApp
                     </Text>
-                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>('https://wa.me/5493424420130?text=Im%20interested%20in%20your%20car%20for%20sale')}
+                    >
                         <Text style={{fontSize:18}}>Asesoramiento General</Text>
                         <Image
                         style={{width:30,height:30}}

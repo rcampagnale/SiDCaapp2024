@@ -1,4 +1,4 @@
-import { Image, ScrollView, StatusBar, Text, View,ImageBackground, TouchableOpacity } from "react-native";
+import {  StatusBar, View } from "react-native";
 import styles from '../../styles/courses/courses-styles'
 import { useState } from "react";
 import CourseAviablesForMe from "./courses-aviables";
