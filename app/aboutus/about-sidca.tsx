@@ -9,13 +9,25 @@ export default function AboutUs(){
                 Quienes somos
             </Text>
             <ScrollView style={{width:'100%',height:200}} horizontal={true} contentContainerStyle={{columnGap:20,alignItems:'center'}} >
-                <Image source={require('../../assets/home/nosotros.png')}
+                <Image source={require('../../assets/somos/somos1.jpg')}
                     style={{width:200,height:100}}
                 />
-                <Image source={require('../../assets/home/nosotros.png')}
+                <Image source={require('../../assets/somos/somos2.jpg')}
                     style={{width:200,height:100}}
                 />
-                <Image source={require('../../assets/home/nosotros.png')}
+                <Image source={require('../../assets/somos/somos3.jpg')}
+                    style={{width:200,height:100}}
+                />
+                <Image source={require('../../assets/somos/somos4.jpg')}
+                    style={{width:200,height:100}}
+                />
+                <Image source={require('../../assets/somos/somos5.jpg')}
+                    style={{width:200,height:100}}
+                />
+                <Image source={require('../../assets/somos/somos6.jpg')}
+                    style={{width:200,height:100}}
+                />
+                <Image source={require('../../assets/somos/somos7.jpg')}
                     style={{width:200,height:100}}
                 />
             </ScrollView>
@@ -27,13 +39,22 @@ export default function AboutUs(){
                 </Text>
             </View>
             <ScrollView style={{width:'100%',height:200}} horizontal={true} contentContainerStyle={{columnGap:20,alignItems:'center'}}>
-            <Image source={require('../../assets/home/nosotros.png')}
+                <Image source={require('../../assets/somos/somos8.jpg')}
+                        style={{width:200,height:100}}
+                    />
+                <Image source={require('../../assets/somos/somos9.jpg')}
                     style={{width:200,height:100}}
                 />
-                <Image source={require('../../assets/home/nosotros.png')}
+                <Image source={require('../../assets/somos/somos10.jpg')}
                     style={{width:200,height:100}}
                 />
-                <Image source={require('../../assets/home/nosotros.png')}
+                <Image source={require('../../assets/somos/somos11.png')}
+                    style={{width:200,height:100}}
+                />
+                <Image source={require('../../assets/somos/somos12.png')}
+                    style={{width:200,height:100}}
+                />
+                <Image source={require('../../assets/somos/somos13.png')}
                     style={{width:200,height:100}}
                 />
             </ScrollView>

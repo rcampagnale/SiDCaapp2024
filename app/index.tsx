@@ -1,15 +1,40 @@
-import { Text, TouchableOpacity, View, Linking,ImageBackground, TextInput, Keyboard, Image, StatusBar } from "react-native";
+import { Text, TouchableOpacity, View, Linking,ImageBackground, TextInput, Keyboard, Image, StatusBar, ActivityIndicator } from "react-native";
 import styles from '../styles/signin-styles/sign-in-styles'
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
-
-export default function SignInApp(){
+import {getFirestore, collection, getDocs} from 'firebase/firestore'
+import { firebaseconn } from "@/constants/FirebaseConn";
+export default function SignInApp(){    
     const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false); 
+    const [dniNumber,setDniNumber]=useState<string>('')
     const statusBarHeight : number | undefined = StatusBar.currentHeight; 
      
     const openSocialMedia=(urlMedia:string)=>{
         Linking.openURL(urlMedia)
-    }
+    } 
+    const analytics = getFirestore(firebaseconn) 
+    const data=collection(analytics,'usuarios')
+    
+    const findUser = async () => {
+        setLoading(true); 
+        try {
+            const response = (await getDocs(data)).docs;                    
+            if( response.some(user => user.data().dni = dniNumber) === false) {
+                alert('DNI no encontrado')
+            }else{
+                router.navigate('/home');
+            }                
+        } catch (error) {
+            alert(`error: ${error}`);
+        } finally {
+            setLoading(false); 
+        }
+    };
+    
+    const handleDniChange = (text: string) => {
+        setDniNumber(text); 
+    };
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
           setKeyboardVisible(true);
@@ -36,11 +61,13 @@ export default function SignInApp(){
                         <TextInput 
                             style={styles.inputForm}
                             placeholder="D.N.I."
+                            value={dniNumber} 
+                            onChangeText={handleDniChange} 
                         ></TextInput>
                         <TouchableOpacity style={styles.btnGetIn} activeOpacity={1}
-                            onPress={()=>router.navigate("/home")}                        
-                        >
-                            <Text style={{fontSize:20,fontWeight:500}}>INGRESAR</Text>
+                            onPress={findUser}                        
+                        >                            
+                            {loading === true ? <ActivityIndicator size="large" color="#ffffff" /> : <Text style={{fontSize:20,fontWeight:500}}>INGRESAR</Text>}
                         </TouchableOpacity>
                    </View>
                    <ImageBackground style={styles.viewAfiliate} source={require('../assets/signinFotos/afiliate.png')} resizeMode="cover">
