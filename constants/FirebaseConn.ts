@@ -1,6 +1,5 @@
 import { initializeApp } from "firebase/app"
 
-const keyFire=process.env.EXPO_PUBLIC_FIREBASE
 const firebaseConfig  = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE,
     authDomain: "sidca-a33f0.firebaseapp.com",

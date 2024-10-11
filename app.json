@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "sidcapp",
-    "slug": "two",
+    "slug": "three",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -35,7 +35,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "0f22373c-a1b4-4950-8d89-ad13c4eaaeec"
+        "projectId": "8cd99623-ca4a-4d95-98c0-a5f71cd2db39"
       }
     },
     "owner": "jakiro12"
