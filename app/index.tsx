@@ -1,20 +1,21 @@
 import { Text, TouchableOpacity, View, Linking,ImageBackground, TextInput, Keyboard, Image, StatusBar, ActivityIndicator } from "react-native";
 import styles from '../styles/signin-styles/sign-in-styles'
-import { useEffect, useState } from "react";
+import { useEffect, useState,useContext } from "react";
 import { router } from "expo-router";
 import {getFirestore, collection, getDocs} from 'firebase/firestore'
 import { firebaseconn } from "@/constants/FirebaseConn";
+import { SidcaContext } from "./_layout";
 export default function SignInApp(){    
     const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false); 
     const [dniNumber,setDniNumber]=useState<string>('')
     const statusBarHeight : number | undefined = StatusBar.currentHeight; 
-     
+    const{setUserData}=useContext(SidcaContext)
     const openSocialMedia=(urlMedia:string)=>{
         Linking.openURL(urlMedia)
     } 
     const analytics = getFirestore(firebaseconn) 
-    const data=collection(analytics,'usuarios')
+    const data=collection(analytics,'nuevoAfiliado')
     
     const findUser = async () => {
         setLoading(true); 
@@ -23,6 +24,8 @@ export default function SignInApp(){
             if( response.some(user => user.data().dni = dniNumber) === false) {
                 alert('DNI no encontrado')
             }else{
+                const resultado = response.find(item => item.data().dni === dniNumber);
+                setUserData(resultado?.data())
                 router.navigate('/home');
             }                
         } catch (error) {
@@ -72,7 +75,8 @@ export default function SignInApp(){
                    </View>
                    <ImageBackground style={styles.viewAfiliate} source={require('../assets/signinFotos/afiliate.png')} resizeMode="cover">
                     <TouchableOpacity style={styles.btnAfiliate} activeOpacity={1}
-                            onPress={()=>router.navigate("/form-register/create-new-user")}                        
+                            onPress={()=>router.navigate("/form-register/create-new-user")}  
+                            disabled={loading}                      
                     >
                             <Text style={{fontSize:20,fontWeight:500}}>AFILIARSE</Text>
                         </TouchableOpacity>

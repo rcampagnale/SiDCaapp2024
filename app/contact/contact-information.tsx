@@ -18,38 +18,48 @@ export default function ContactInformation(){
                        Numeros de WhatsApp
                     </Text>
                     <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
-                        onPress={()=>('https://wa.me/5493424420130?text=Im%20interested%20in%20your%20car%20for%20sale')}
+                        onPress={()=>openWspNumber('https://wa.me/5493834051983')}
                     >
                         <Text style={{fontSize:18}}>Asesoramiento General</Text>
                         <Image
                         style={{width:30,height:30}}
                         source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493834397239')}
+                    >
                         <Text style={{fontSize:18}}>Departamento Juridico</Text>
                         <Image
                         style={{width:30,height:30}}
                         source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493832437803')}
+                    >
                         <Text style={{fontSize:18}}>SiDCa Gestion</Text>
                         <Image
                         style={{width:30,height:30}}
                         source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493834283151')}
+                    >
                         <Text style={{fontSize:18}}>SiDCa Turismo</Text>
                         <Image
                         style={{width:30,height:30}}
                         source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493834250139')}                    
+                    >
                         <Text style={{fontSize:18}}>Casa del Docente</Text>
                         <Image
                         style={{width:30,height:30}}
                         source={require('../../assets/logos/whatsapp.png')}/>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}>
+                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493834220295')}                    
+                    >
                         <Text style={{fontSize:18}}>SiDCA Radio</Text>
                         <Image
                         style={{width:30,height:30}}

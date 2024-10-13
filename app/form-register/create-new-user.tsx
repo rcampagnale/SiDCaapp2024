@@ -42,7 +42,8 @@ export default function CreateNewUser() {
                     <Text>PLANES DE TURISMO FAMILIAR</Text>
                 </View>
                 <View style={styles.viewFormContainer}>
-                    <Text style={{color:'#ffffff',fontSize:24,fontWeight:600}}>Afiliarse Ahora</Text>
+                    <Text style={{color:'#ffffff',fontWeight:'bold',width:'90%'}}>Al afiliarse, acepta que se descontarán cuotas y servicios sociales de su salario.</Text>
+
                     <View style={styles.inputContainer}>
                         <Text style={{color:'#ffffff',alignSelf:'flex-start',fontSize:18}}>Nombre</Text>
                         <TextInput style={styles.inputForm}

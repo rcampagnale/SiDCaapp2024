@@ -1,6 +1,9 @@
 import { ImageBackground, StatusBar, Text, View, Dimensions, Image } from "react-native";
 import styles from '../../styles/cedential/credential-styles'
+import { SidcaContext } from "../_layout";
+import { useContext } from "react";
 export default function GetCredentialCard(){
+    const{userData}=useContext(SidcaContext)
     const statusBarHeight:number | undefined  = StatusBar.currentHeight;
 const windowHeight = Dimensions.get('window').height;
     return(
@@ -8,9 +11,9 @@ const windowHeight = Dimensions.get('window').height;
             <ImageBackground style={styles.container} source={require('../../assets/home/card.png')} resizeMode="cover">
             <View style={styles.viewInfoContainer}>
                 <View style={[{width:windowHeight - 20},styles.mainInformationContainer]}>
-                    <Text style={{color:'#ffffff',fontSize:18}}>Nombre del afiliado</Text>
-                    <Text style={{color:'#ffffff',fontSize:18}}>Numero de identificacion</Text>
-                    <Text style={{color:'#ffffff',fontSize:18}}>Ubicacion</Text>
+                    <Text style={{color:'#ffffff',fontSize:18}}>{userData?.apellido}, {userData?.nombre}</Text>
+                    <Text style={{color:'#ffffff',fontSize:18}}>{userData?.cod}</Text>
+                    <Text style={{color:'#ffffff',fontSize:18}}>{userData?.departamento}</Text>
                 </View>            
             </View>            
             <View style={styles.cardNameContainer}>

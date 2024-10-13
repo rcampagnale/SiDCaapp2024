@@ -22,16 +22,35 @@ export default function HandleTourist(){
                     <ScrollView style={styles.carrusel} contentContainerStyle={{justifyContent:'space-between',alignItems:'center',columnGap:15}} horizontal={true} showsHorizontalScrollIndicator={false}>
                         <Image
                             style={{width:200,height:130}}
-                            source={require('../../assets/home/casadocente.png')} 
+                            source={require('../../assets/turismo/turismo.jpg')} 
+                            resizeMode="cover"/>
+                        
+                        <Image
+                            style={{width:200,height:130}}
+                            source={require('../../assets/turismo/turismo1.jpg')} 
+                            resizeMode="cover"/>
+                            
+                            <Image
+                            style={{width:200,height:130}}
+                            source={require('../../assets/turismo/turismo2.jpg')} 
+                            resizeMode="cover"/>
+                        <Image
+                            style={{width:200,height:130}}
+                            source={require('../../assets/turismo/turismo3.jpg')} 
+                            resizeMode="cover"/>
+                        <Image
+                            style={{width:200,height:130}}
+                            source={require('../../assets/turismo/turismo4.jpg')} 
                             resizeMode="cover"/>
                             <Image
                             style={{width:200,height:130}}
-                            source={require('../../assets/home/casadocente.png')} 
+                            source={require('../../assets/turismo/turismo5.jpg')} 
                             resizeMode="cover"/>
                             <Image
                             style={{width:200,height:130}}
-                            source={require('../../assets/home/casadocente.png')} 
+                            source={require('../../assets/turismo/turismo6.jpg')} 
                             resizeMode="cover"/>
+                            
                     </ScrollView>
                 </View>
                 <View style={styles.viewGetInformation}>

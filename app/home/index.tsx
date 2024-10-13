@@ -105,7 +105,7 @@ export default function HomePage(){
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
-            <ImageBackground style={styles.viewBenefits} source={require('../../assets/home/casadocente.png')} resizeMode="cover">
+            <ImageBackground style={styles.viewBenefits} source={require('../../assets/casa/casa.jpg')} resizeMode="cover">
                 <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Beneficios</Text>
                 <View style={styles.btnsContainer}>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
