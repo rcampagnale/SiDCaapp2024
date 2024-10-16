@@ -1,9 +1,23 @@
 import { Image, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import styles from '../../styles/advices/advices-styles'
+import { useState } from "react";
 
 export default function LegalAdvices(){
-    const statusBarHeight = StatusBar.currentHeight;
-
+    const statusBarHeight: number | undefined = StatusBar.currentHeight;
+    const [advice,setAdvice]=useState<string | null>(null)
+    const handleAdviceStatus=(value:string | null)=>{
+        setAdvice(value)
+    }
+    let content;
+    switch (advice) {
+        case 'test':
+            content='holaa'
+            break;
+    
+        default:
+            content='nada'
+            break;
+    }
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
             <View style={styles.container}>

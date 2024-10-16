@@ -12,8 +12,8 @@ const windowHeight = Dimensions.get('window').height;
             <View style={styles.viewInfoContainer}>
                 <View style={[{width:windowHeight - 20},styles.mainInformationContainer]}>
                     <Text style={{color:'#ffffff',fontSize:18}}>{userData?.apellido}, {userData?.nombre}</Text>
-                    <Text style={{color:'#ffffff',fontSize:18}}>{userData?.cod}</Text>
-                    <Text style={{color:'#ffffff',fontSize:18}}>{userData?.departamento}</Text>
+                    <Text style={{color:'#ffffff',fontSize:18}}>SiDCa</Text>
+                    <Text style={{color:'#ffffff',fontSize:18}}>Departamento: {userData?.departamento}</Text>
                 </View>            
             </View>            
             <View style={styles.cardNameContainer}>

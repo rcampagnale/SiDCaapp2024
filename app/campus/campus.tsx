@@ -55,7 +55,7 @@ export default function HandleCampusTeachers(){
                     <Text style={{fontSize:24,fontWeight:600}}>Hace tu reserva</Text>
                     <TouchableOpacity style={styles.btnWhatsApp} 
                         activeOpacity={1}
-                        onPress={()=>openWspNumber('https://wa.me/5493834051938')}
+                        onPress={()=>openWspNumber('https://wa.me/5493834051983')}
                     >
                     <Text style={{fontSize:18}}>Contacto</Text>
                     <Image
@@ -63,7 +63,9 @@ export default function HandleCampusTeachers(){
                         source={require('../../assets/logos/whatsapp.png')}/>
                 </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.btnNews}>
+                <TouchableOpacity style={styles.btnNews}
+                    activeOpacity={1}
+                >
                     <Text>Novedades</Text>
                 </TouchableOpacity>
             </View>

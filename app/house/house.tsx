@@ -56,7 +56,9 @@ export default function HandleTeacherHouse(){
                         source={require('../../assets/logos/whatsapp.png')}/>
                 </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.btnNews}>
+                <TouchableOpacity style={styles.btnNews}
+                    activeOpacity={1}
+                >
                     <Text>Novedades</Text>
                 </TouchableOpacity>
             </View>

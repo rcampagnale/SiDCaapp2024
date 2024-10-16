@@ -1,8 +1,10 @@
-import { View, Text, StatusBar, ScrollView, Image, TouchableOpacity } from "react-native";
+import { View, Text, StatusBar, ScrollView, Image, TouchableOpacity, Linking } from "react-native";
 import styles from '../../styles/tourist/tourist-styles'
 export default function HandleTourist(){
     const statusBarHeight = StatusBar.currentHeight;
-
+    const openWspNumber=(urlMedia:string)=>{
+        Linking.openURL(urlMedia)
+    }
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
             <View style={styles.container}>
@@ -55,14 +57,19 @@ export default function HandleTourist(){
                 </View>
                 <View style={styles.viewGetInformation}>
                     <Text style={{fontSize:24,fontWeight:600}}>Hace tu reserva</Text>
-                    <TouchableOpacity style={styles.btnWhatsApp}>
-                    <Text style={{fontSize:18}}>Contacto</Text>
+                    <TouchableOpacity style={styles.btnWhatsApp}
+                        activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493834283151')}
+                        >
+                        <Text style={{fontSize:18}}>Contacto</Text>
                     <Image
                         style={{width:30,height:30}}
                         source={require('../../assets/logos/whatsapp.png')}/>
                 </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.btnNews}>
+                <TouchableOpacity style={styles.btnNews}
+                    activeOpacity={1}
+                >
                     <Text>Novedades</Text>
                 </TouchableOpacity>
             </View>
