@@ -47,5 +47,38 @@ export default newUserStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'center',
         alignItems:'center'
+    },
+    modalContainer:{
+        width:'100%',
+        height:'100%',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+    },
+    modalContent:{
+        width:'85%',
+        height:'50%',
+        backgroundColor:'#fea200',
+        borderRadius:10
+    },
+    modalItem:{
+        width:'100%',
+        height:50,
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        borderWidth:2,
+        borderColor:'#000000'
+    },
+    closeButton:{
+        width:'100%',
+        height:50,
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        borderColor:'#000000',
+        borderWidth:1,
+        backgroundColor:'#005CFE',
+
     }
 })
