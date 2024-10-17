@@ -62,13 +62,9 @@ export default newUserStyles=StyleSheet.create({
         borderRadius:10
     },
     modalItem:{
-        width:'100%',
-        height:50,
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center',
-        borderWidth:2,
-        borderColor:'#000000'
+        width:'auto',
+        height:'auto',        
+        fontWeight:'bold'
     },
     closeButton:{
         width:'100%',

@@ -8,10 +8,11 @@ export default function HandleCourses ({setActionType}:HandleOptionsCourse){
         <>
         <View style={styles.scrollContainer}>
                     <ScrollView style={{width:'100%',height:'100%'}} horizontal={true} contentContainerStyle={{display:'flex',justifyContent:'space-around',alignItems:'center',columnGap:10}} showsHorizontalScrollIndicator={false}>
-                        <Image style={{width:180,height:120}} source={require('../../assets/home/nosotros.png')} />
-                        <Image style={{width:180,height:120}} source={require('../../assets/home/nosotros.png')} />
-                        <Image style={{width:180,height:120}} source={require('../../assets/home/nosotros.png')} />
-                        <Image style={{width:180,height:120}} source={require('../../assets/home/nosotros.png')} />
+                        <Image style={{width:180,height:120}} source={require('../../assets/cursos/curso.jpg')} />
+                        <Image style={{width:180,height:120}} source={require('../../assets/cursos/curso1.jpg')} />
+                        <Image style={{width:180,height:120}} source={require('../../assets/cursos/curso2.jpg')} />
+                        <Image style={{width:180,height:120}} source={require('../../assets/cursos/curso3.jpg')} />
+                        <Image style={{width:180,height:120}} source={require('../../assets/cursos/curso4.jpg')} />                       
                     </ScrollView>
                 </View>
                 <View style={styles.textAboutCourse}>

@@ -7,7 +7,7 @@ export default credentialStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'space-between',
         alignItems:'center',
-        flexDirection:'row'
+        flexDirection:'row',
     },
     viewInfoContainer:{
         height:'100%',
@@ -22,15 +22,15 @@ export default credentialStyles=StyleSheet.create({
         display:'flex',
         flexDirection:'column',
         justifyContent:'space-around',
-        alignItems:'flex-start',
-        paddingBottom:20
+        alignItems:'center',
+        paddingBottom:20,        
     },
     cardNameContainer:{
         width:'20%',
         height:'100%',
         display:'flex',
         justifyContent:'center',
-        alignItems:'center',        
+        alignItems:'center',             
     },
     logosHeaderContainer:{
         width:'20%',

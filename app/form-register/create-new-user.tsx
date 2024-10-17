@@ -128,7 +128,7 @@ export default function CreateNewUser() {
                     <View style={styles.inputContainer}>
                         <Text style={{ color: '#ffffff', alignSelf: 'flex-start', fontSize: 18 }}>Departamento</Text>
                         <TouchableOpacity onPress={() => setModalVisible(true)} style={{ width: '100%', borderRadius: 5 }}>
-                            <TextInput style={{ width: '100%', height: 40, backgroundColor: '#fea200', borderRadius: 5 }}
+                            <TextInput style={{ width: '100%', height: 40, backgroundColor: '#fea200', borderRadius: 5,color:'#000000',paddingLeft:10 }}
                                 editable={false} // Deshabilita la edición directa
                                 value={newUser.departamento}
                             />
@@ -148,7 +148,6 @@ export default function CreateNewUser() {
                         <Text style={{ fontSize: 20, fontWeight: '500' }}>Afiliarse</Text>
                     </TouchableOpacity>
                 </View>                
-                {/* Modal para seleccionar departamento */}
                 <Modal
                     animationType="slide"
                     transparent={true}
@@ -161,7 +160,9 @@ export default function CreateNewUser() {
                                 data={departamentos}
                                 keyExtractor={(item) => item}
                                 renderItem={({ item }) => (
-                                    <TouchableOpacity onPress={() => selectDepartment(item)}>
+                                    <TouchableOpacity onPress={() => selectDepartment(item)}
+                                            style={{width:'100%',height:50,display:'flex',justifyContent:'center',alignItems:'center',borderWidth:2,borderBottomColor:'#000000'}}
+                                    >
                                         <Text style={styles.modalItem}>{item}</Text>
                                     </TouchableOpacity>
                                 )}

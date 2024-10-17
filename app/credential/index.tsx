@@ -8,20 +8,18 @@ export default function GetCredentialCard(){
 const windowHeight = Dimensions.get('window').height;
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
-            <ImageBackground style={styles.container} source={require('../../assets/home/card.png')} resizeMode="cover">
+            <ImageBackground style={styles.container} source={require('../../assets/home/credencial.jpg')} resizeMode="cover">
             <View style={styles.viewInfoContainer}>
                 <View style={[{width:windowHeight - 20},styles.mainInformationContainer]}>
-                    <Text style={{color:'#ffffff',fontSize:18}}>{userData?.apellido}, {userData?.nombre}</Text>
-                    <Text style={{color:'#ffffff',fontSize:18}}>SiDCa</Text>
-                    <Text style={{color:'#ffffff',fontSize:18}}>Departamento: {userData?.departamento}</Text>
+                    <Text style={{fontSize:18}}>{userData?.apellido}, {userData?.nombre}</Text>
+                    <Text style={{fontSize:18}}>SiDCa</Text>
+                    <Text style={{fontSize:18}}>Departamento: {userData?.departamento}</Text>
                 </View>            
             </View>            
             <View style={styles.cardNameContainer}>
-                <Text style={{color:'#ffffff',fontSize:25,fontWeight:500,transform:'rotateZ(90deg)',width:300}}>Credencial de Afiliado</Text>
+                <Text style={{fontSize:25,fontWeight:500,transform:'rotateZ(90deg)',width:300}}>Credencial de Afiliado</Text>
             </View>                                          
-            <View style={styles.logosHeaderContainer}>
-                <Image source={require('../../assets/logos/logo-01.png')} style={{width:80,height:80,transform:'rotateZ(90deg)'}} resizeMode="contain"/> 
-                <Image source={require('../../assets/logos/cea.jpg')} style={{width:80,height:80,transform:'rotateZ(90deg)'}} resizeMode="contain"/> 
+            <View style={styles.logosHeaderContainer}>               
             </View>      
             </ImageBackground>
         </View>

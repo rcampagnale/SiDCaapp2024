@@ -91,6 +91,14 @@ export default advicerStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'center',
         alignItems:'center'
+    },
+    viewDisplayInfo:{
+        width:'100%',
+        height:'100%',
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center',
+        backgroundColor:'#091d24'               
     }
     
 })

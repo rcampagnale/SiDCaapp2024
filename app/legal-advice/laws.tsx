@@ -2,14 +2,14 @@ import { ActivityIndicator, Linking, ScrollView, Text, TouchableOpacity, View } 
 import styles from '../../styles/advices/advices-styles'
 import { AntDesign } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { firebaseconn } from "@/constants/FirebaseConn";
 import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { firebaseconn } from "@/constants/FirebaseConn";
 
 interface HandleAdviceStatus{
     setActionType:(value:null | string)=>void
 }
-export default function OtherData({setActionType}:HandleAdviceStatus){
-    const[others,setOthers]=useState<any>([])
+export default function Laws({setActionType}:HandleAdviceStatus){
+    const[laws,setLaws]=useState<any>([])
     const [loading, setLoading] = useState<boolean>(true); 
     const analytics = getFirestore(firebaseconn) 
     const data=collection(analytics,'asesoramiento')
@@ -19,8 +19,8 @@ export default function OtherData({setActionType}:HandleAdviceStatus){
     useEffect(()=>{
         const getData=async()=>{
             try {
-                const res=(await getDocs(data)).docs.filter(item=>item.data().categoria === "otros")
-                setOthers(res)
+                const res=(await getDocs(data)).docs.filter(item=>item.data().categoria === "leyes")
+                setLaws(res)
             } catch (error) {
                 console.log(error)
             }finally {
@@ -45,7 +45,7 @@ export default function OtherData({setActionType}:HandleAdviceStatus){
             {loading ? ( 
                     <ActivityIndicator size="large" color="#ffffff" />
                 ) : (
-                    others.map((e: any, i: number) => (
+                    laws.map((e: any, i: number) => (
                         <View style={styles.linksBox} key={i}>
                             <Text style={{ fontWeight: 'bold' }}>{e.data().titulo}</Text>
                             <TouchableOpacity style={styles.btnGetLink}
