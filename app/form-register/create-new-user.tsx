@@ -3,7 +3,7 @@ import styles from '../../styles/new-user-styles/create-user-styles';
 import React, { useState } from "react";
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { firebaseconn } from "@/constants/FirebaseConn";
-
+import {regexRegister} from './regex-form'
 interface NewUserTypes {
     nombre: string,
     apellido: string,
@@ -64,8 +64,22 @@ export default function CreateNewUser() {
     };
 
     const onSubmitForm = async () => {
+        if(Object.values(newUser).includes('')) return alert('Debe completar todos los campos')
+        if(regexRegister.names.test(newUser.nombre) === false ||regexRegister.names.test(newUser.apellido) ===false ) return alert('nombre u apellido no valido')
+        if(regexRegister.dni.test(newUser.documento)===false) return alert('DNI no valido')
         const newAfiliate = await addDoc(dataAdd, newUser);
         console.log(newAfiliate.id);
+        setNewUser({
+            nombre: '',
+            apellido: '',
+            documento: '',
+            email: '',
+            celular: '',
+            departamento: '',
+            establecimiento: '',
+            descuento: "si",
+            fecha: formattedDate
+        })
     };
 
     const selectDepartment = (department: string) => {
@@ -88,7 +102,7 @@ export default function CreateNewUser() {
                     <Text>PLANES DE TURISMO FAMILIAR</Text>
                 </View>
                 <View style={styles.viewFormContainer}>
-                    <Text style={{ color: '#ffffff', fontWeight: 'bold', width: '90%' }}>Al afiliarse, acepta que se descontarán cuotas y servicios sociales de su salario.</Text>
+                    <Text style={{ color: '#ffffff', fontWeight: 'bold', width: '95%' }}>Al afiliarse, acepta que se descontarán cuotas y servicios sociales de su salario.</Text>
 
                     <View style={styles.inputContainer}>
                         <Text style={{ color: '#ffffff', alignSelf: 'flex-start', fontSize: 18 }}>Nombre</Text>

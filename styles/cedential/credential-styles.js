@@ -29,7 +29,7 @@ export default credentialStyles=StyleSheet.create({
         width:'20%',
         height:'100%',
         display:'flex',
-        justifyContent:'center',
+        justifyContent:'flex-start',
         alignItems:'center',             
     },
     logosHeaderContainer:{
