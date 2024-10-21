@@ -1,9 +1,12 @@
-import { ImageBackground, Text, TouchableOpacity,View,ScrollView,Image } from "react-native";
+import { ImageBackground, Text, TouchableOpacity,View,ScrollView,Image, Linking } from "react-native";
 import styles from '../../styles/courses/courses-styles'
 interface HandleOptionsCourse{
     setActionType:(value:null | string)=>void
 }
 export default function HandleCourses ({setActionType}:HandleOptionsCourse){
+    const openClassroom=(urlMedia:string)=>{
+        Linking.openURL(urlMedia)
+    }
     return(
         <>
         <View style={styles.scrollContainer}>
@@ -20,6 +23,14 @@ export default function HandleCourses ({setActionType}:HandleOptionsCourse){
                         El programa de capacitacion de SIDCA brinda durante todo el año ofertas de capacitacion y perfecionamiento docente gratuita a sus afiliados, mediante cursos, talleres, congresos y seminarios que propician
                         el acceso a material innovador y actualizado, contribuyendo en la profesionalizacion de nuestros docentes.                        
                     </Text>                    
+                </View>
+                <View style={{width:'90%',height:40,display:'flex',justifyContent:'center',alignItems:'center'}}>
+                    <TouchableOpacity style={{width:'90%',height:'100%',display:'flex',justifyContent:'center',alignItems:'center',backgroundColor:'#005CFE'}}
+                        onPress={()=>openClassroom('https://aula.sidcagremio.com')}
+                        activeOpacity={1}
+                    >
+                        <Text style={{color:'#ffffff',fontSize:20,fontWeight:600}}>Abrir Aula Virtual</Text>
+                    </TouchableOpacity>
                 </View>
         <ImageBackground style={styles.cardCourses} source={require('../../assets/home/capacitaciones.png')} resizeMode="cover">
                     <Text style={{color:'#ffffff',fontSize:20,fontWeight:600}}>

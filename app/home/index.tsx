@@ -7,6 +7,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Feather from '@expo/vector-icons/Feather';
 import Entypo from '@expo/vector-icons/Entypo';
+import CloseApp from "./log-out";
 export default function HomePage(){
     const statusBarHeight:number | undefined = StatusBar.currentHeight;
 
@@ -19,11 +20,13 @@ export default function HomePage(){
                 <View>
                     <Image source={require('../../assets/logos/logo-01.png')} style={{width:80,height:80}} resizeMode="contain"/>                     
                 </View>
-                <TouchableOpacity style={{width:'auto',height:'auto', marginRight:20}} activeOpacity={1}>
-                    <Text style={{fontSize:18}}>
-                        Salir
-                    </Text>    
-                </TouchableOpacity>
+                <View>
+                    <Image source={require('../../assets/logos/cgt.png')} style={{width:40,height:40}} resizeMode="contain"/>                     
+                </View>
+                <View>
+                    <Image source={require('../../assets/logos/ie.png')} style={{width:40,height:40}} resizeMode="contain"/>                     
+                </View>
+               <CloseApp/>
             </View>
         <ScrollView  contentContainerStyle={{justifyContent:'space-between',rowGap:20,backgroundColor:'#091d24'}}>
             <ImageBackground style={styles.viewAbout} source={require('../../assets/home/nosotros.png')} resizeMode="cover">

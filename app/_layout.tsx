@@ -7,7 +7,7 @@ import React from 'react';
 SplashScreen.preventAutoHideAsync();
 export const SidcaContext=React.createContext()
 export default function RootLayout() {
-  const [userData,setUserData]=React.useState([])
+  const [userData,setUserData]=React.useState<any>([])
 
   return (
     <SidcaContext.Provider value={{userData,setUserData}}>

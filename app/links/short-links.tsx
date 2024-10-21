@@ -8,41 +8,12 @@ export default function ReferenceLinks(){
         <View style={styles.container}>
             <ScrollView contentContainerStyle={{display:'flex',justifyContent:'center',alignItems:'center',paddingTop:10,rowGap:20}}>
                 <View style={styles.linksBox}>
-                    <Text>Accidente de Trabajo</Text>
+                    <Text style={{fontSize:20,fontWeight:'bold'}}>Accidente de Trabajo</Text>
                     <TouchableOpacity style={styles.btnGetLink}>
-                        <Text>Link</Text>
+                        <Text style={{fontSize:18,color:'#ffffff'}}>Link</Text>
                     </TouchableOpacity>
                 </View>
-                <View style={styles.linksBox}>
-                    <Text>Accidente de Trabajo</Text>
-                    <TouchableOpacity style={styles.btnGetLink}>
-                        <Text>Link</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.linksBox}>
-                    <Text>Accidente de Trabajo</Text>
-                    <TouchableOpacity style={styles.btnGetLink}>
-                        <Text>Link</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.linksBox}>
-                    <Text>Accidente de Trabajo</Text>
-                    <TouchableOpacity style={styles.btnGetLink}>
-                        <Text>Link</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.linksBox}>
-                    <Text>Accidente de Trabajo</Text>
-                    <TouchableOpacity style={styles.btnGetLink}>
-                        <Text>Link</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.linksBox}>
-                    <Text>Accidente de Trabajo</Text>
-                    <TouchableOpacity style={styles.btnGetLink}>
-                        <Text>Link</Text>
-                    </TouchableOpacity>
-                </View>
+              
                 
             </ScrollView>
         </View>

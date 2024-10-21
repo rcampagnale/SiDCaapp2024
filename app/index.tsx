@@ -18,6 +18,7 @@ export default function SignInApp(){
     const data=collection(analytics,'nuevoAfiliado')
     
     const findUser = async () => {
+        if(dniNumber === '')return alert('Ingrese un Numero Valido!!')
         setLoading(true); 
         try {
             const response = (await getDocs(data)).docs;                    
@@ -27,6 +28,7 @@ export default function SignInApp(){
                 const resultado = response.find(item => item.data().dni === dniNumber);
                 setUserData(resultado?.data())
                 router.navigate('/home');
+                setDniNumber('')
             }                
         } catch (error) {
             alert(`error: ${error}`);
