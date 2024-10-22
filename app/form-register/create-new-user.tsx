@@ -68,7 +68,6 @@ export default function CreateNewUser() {
         if(regexRegister.names.test(newUser.nombre) === false ||regexRegister.names.test(newUser.apellido) ===false ) return alert('nombre u apellido no valido')
         if(regexRegister.dni.test(newUser.documento)===false) return alert('DNI no valido')
         const newAfiliate = await addDoc(dataAdd, newUser);
-        console.log(newAfiliate.id);
         setNewUser({
             nombre: '',
             apellido: '',

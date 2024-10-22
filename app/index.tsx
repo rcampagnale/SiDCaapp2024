@@ -24,11 +24,13 @@ export default function SignInApp(){
             const response = (await getDocs(data)).docs;                    
             if( response.some(user => user.data().dni = dniNumber) === false) {
                 alert('DNI no encontrado')
-            }else{
+            }else if(response.find(item => item.data().dni === dniNumber) !== undefined){
                 const resultado = response.find(item => item.data().dni === dniNumber);
                 setUserData(resultado?.data())
                 router.navigate('/home');
                 setDniNumber('')
+            }else{
+                alert('DNI no registrado')
             }                
         } catch (error) {
             alert(`error: ${error}`);
@@ -104,11 +106,11 @@ export default function SignInApp(){
                             source={require('../assets/logos/facebook.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.mediasBtns}
-                        onPress={()=>openSocialMedia('https://www.x.com')}
+                        onPress={()=>openSocialMedia('https://www.google.com')}
                         >
                          <Image 
                             style={{width:'100%',height:'100%'}}
-                            source={require('../assets/logos/twitter.png')}/>
+                            source={require('../assets/logos/cromo.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.mediasBtns}
                         onPress={()=>openSocialMedia('https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl')}
