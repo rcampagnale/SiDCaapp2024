@@ -1,10 +1,10 @@
-import { ImageBackground, StatusBar, Text, View, Dimensions, Image } from "react-native";
+import { ImageBackground, StatusBar, Text, View, Dimensions } from "react-native";
 import styles from '../../styles/cedential/credential-styles'
 import { SidcaContext } from "../_layout";
 import { useContext } from "react";
 export default function GetCredentialCard(){
     const{userData}=useContext(SidcaContext)
-    const statusBarHeight:number | undefined  = StatusBar.currentHeight;
+    const statusBarHeight:number | undefined  = StatusBar.currentHeight;   
 const windowHeight = Dimensions.get('window').height;
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
