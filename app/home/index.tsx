@@ -67,7 +67,7 @@ export default function HomePage(){
                 </View>
             </ImageBackground>
             <ImageBackground style={styles.viewInformation} source={require('../../assets/home/capacitaciones.png')} resizeMode="cover">
-                <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Informacion</Text>
+                <Text style={{fontSize:22,fontWeight:600,color:'#ffffff'}}>Información</Text>
                 <View style={styles.btnsContainer}>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
                         onPress={()=>router.navigate("/courses/get-my-courses")}                
@@ -96,7 +96,7 @@ export default function HomePage(){
                         <View style={styles.logoContainer}>                        
                         <Entypo name="shield" size={24} color="black" />
                         </View>
-                        <Text style={{fontSize:18}}>General</Text>
+                        <Text style={{fontSize:18}}>Gremial</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnActions} activeOpacity={1}
                         onPress={()=>router.navigate("/legal-advice/legal")}                                                
