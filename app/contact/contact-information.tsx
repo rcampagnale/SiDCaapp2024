@@ -36,7 +36,7 @@ export default function ContactInformation(){
                     <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
                         onPress={()=>openWspNumber('https://wa.me/5493834230813')}
                     >
-                        <Text style={{fontSize:18}}>SiDCa Gestion</Text>
+                        <Text style={{fontSize:18}}>SiDCa Gestion Expediente</Text>
                         <Image
                         style={{width:30,height:30}}
                         source={require('../../assets/logos/whatsapp.png')}/>
@@ -77,6 +77,22 @@ export default function ContactInformation(){
                         onPress={()=>openWspNumber('https://wa.me/5493834012228')}                    
                     >
                         <Text style={{fontSize:18}}>Capacitaciones</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../../assets/logos/whatsapp.png')}/>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493832437803')}                    
+                    >
+                        <Text style={{fontSize:18}}>Soporte Tecnico</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../../assets/logos/whatsapp.png')}/>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493834539754')}                    
+                    >
+                        <Text style={{fontSize:18}}>Afiliado  Adherente</Text>
                         <Image
                         style={{width:30,height:30}}
                         source={require('../../assets/logos/whatsapp.png')}/>

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Linking, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, Linking, ActivityIndicator, ScrollView, Image } from "react-native";
 import styles from '../../styles/courses/courses-styles'
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useEffect, useState } from "react";
@@ -48,6 +48,10 @@ export default function CourseAviablesForMe({setActionType}:HandleOptionsCourse)
                     currentCourses.map((e: any, i: number) => (
                         <View style={styles.linksBox} key={i}>
                             <Text style={{ fontWeight: 'bold' }}>{e.data().titulo}</Text>
+                            <Image src={e.data().imagen} style={{width:200,height:250}} resizeMode="cover"/>
+                            <Text>
+                                {e.data().descripcion}
+                            </Text>
                             <TouchableOpacity style={styles.btnGetLink}
                                 onPress={() => openLinks(e.data().link)}
                                 activeOpacity={1}

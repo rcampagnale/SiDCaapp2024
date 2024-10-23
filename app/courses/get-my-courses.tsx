@@ -12,10 +12,10 @@ export default function GetCoursesOptions(){
       }
     let content;
     switch (action) {
-        case 'see':
+        case 'verify':
             content=<CourseAviablesForMe setActionType={handleSetActionType}/>
             break;    
-        case 'verify':
+        case 'see':
             content=<CoursesTakenByMe setActionType={handleSetActionType}/>
         break;
         default:

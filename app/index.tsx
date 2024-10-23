@@ -106,7 +106,7 @@ export default function SignInApp(){
                             source={require('../assets/logos/facebook.png')}/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.mediasBtns}
-                        onPress={()=>openSocialMedia('https://www.google.com')}
+                        onPress={()=>openSocialMedia('https://www.sidcagremio.com.ar')}
                         >
                          <Image 
                             style={{width:'100%',height:'100%'}}

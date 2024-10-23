@@ -2,9 +2,7 @@ import { View, Text, StatusBar, ScrollView, Image, TouchableOpacity, Linking } f
 import styles from '../../styles/tourist/tourist-styles'
 export default function HandleCampusTeachers(){
     const statusBarHeight = StatusBar.currentHeight;
-    const openWspNumber=(urlMedia:string)=>{
-        Linking.openURL(urlMedia)
-    }
+    
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
             <View style={styles.container}>
@@ -55,7 +53,7 @@ export default function HandleCampusTeachers(){
                     <Text style={{fontSize:24,fontWeight:600}}>Hace tu reserva</Text>
                     <TouchableOpacity style={styles.btnWhatsApp} 
                         activeOpacity={1}
-                        onPress={()=>openWspNumber('https://wa.me/5493834051983')}
+                       
                     >
                     <Text style={{fontSize:18}}>Contacto</Text>
                     <Image
