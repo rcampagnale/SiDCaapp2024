@@ -22,7 +22,7 @@ export default function CourseAviablesForMe({setActionType}:HandleOptionsCourse)
                 const res=(await getDocs(data)).docs.filter(item=>item.data().estado !== "terminado")
                 setCurrentCourses(res)
             } catch (error) {
-                console.log(error)
+                alert(`Error:${error}`)
             }finally {
                 setLoading(false); // Cambiar el estado de carga al final
             }
@@ -40,7 +40,7 @@ export default function CourseAviablesForMe({setActionType}:HandleOptionsCourse)
             </TouchableOpacity>
         </View>
         <ScrollView  style={{width:'95%',height:'80%',margin:'auto',paddingTop:20}}
-            contentContainerStyle={{justifyContent:'space-between',alignItems:'center',display:'flex',rowGap:15}}
+            contentContainerStyle={{justifyContent:'space-between',alignItems:'center',display:'flex',rowGap:15,paddingBottom:40}}
         >
             {loading ? ( 
                     <ActivityIndicator size="large" color="#ffffff" />

@@ -12,7 +12,7 @@ export default coursesStyles=StyleSheet.create({
     },
     scrollContainer:{
         width:'100%',
-        height:200,        
+        height:160,        
     },
     textAboutCourse:{
         width:'100%',
@@ -24,7 +24,7 @@ export default coursesStyles=StyleSheet.create({
     },
     cardCourses:{
         width:'100%',
-        height:130,       
+        height:120,       
         display:'flex',
         justifyContent:'space-around',
         alignItems:'center'
@@ -74,4 +74,13 @@ export default coursesStyles=StyleSheet.create({
         justifyContent:'center',
         alignItems:'center'
     },
+    coursesDoneBox:{
+        width:'100%',
+        height:150,
+        backgroundColor:'#fea200',
+        borderRadius:10,
+        display:'flex',
+        justifyContent:'space-around',
+        alignItems:'center'      
+    }
 })
