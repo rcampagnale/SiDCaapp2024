@@ -58,12 +58,12 @@ export default coursesStyles=StyleSheet.create({
     },
     linksBox:{
         width:'100%',
-        height:450,
+        height:460,
         backgroundColor:'#fea200',
         borderRadius:10,
         display:'flex',
         justifyContent:'space-around',
-        alignItems:'center'
+        alignItems:'center',        
     },
     btnGetLink:{
         width:'80%',

@@ -47,9 +47,9 @@ export default function CourseAviablesForMe({setActionType}:HandleOptionsCourse)
                 ) : (
                     currentCourses.map((e: any, i: number) => (
                         <View style={styles.linksBox} key={i}>
-                            <Text style={{ fontWeight: 'bold' }}>{e.data().titulo}</Text>
+                            <Text style={{ fontWeight: 'bold',width:'90%' }}>{e.data().titulo}</Text>
                             <Image src={e.data().imagen} style={{width:200,height:250}} resizeMode="cover"/>
-                            <Text>
+                            <Text style={{width:'90%',height:'auto',textAlign:'center'}}>
                                 {e.data().descripcion}
                             </Text>
                             <TouchableOpacity style={styles.btnGetLink}

@@ -11,6 +11,7 @@ interface HandleOptionsCourse{
 export default function CoursesTakenByMe({setActionType}:HandleOptionsCourse){
     const[courseAproved,setCourseAproved]=useState<any>([])
     const [loading, setLoading] = useState<boolean>(true); 
+    const [checkData,setCheckData]=useState<number>(0)
     const{userData}=useContext(SidcaContext)
     const analytics = getFirestore(firebaseconn) 
     const data=collection(analytics,'usuarios')
@@ -25,7 +26,9 @@ export default function CoursesTakenByMe({setActionType}:HandleOptionsCourse){
                     const subQuerySnapshot = (await getDocs(subColRef)).docs; //Array con todos los cursos
                     let filterCourses=subQuerySnapshot.filter(item=>item.data().estado === "terminado")
                     setCourseAproved(filterCourses)
-                }    
+                }else{
+                    setCheckData(1)
+                } 
             } catch (error) {
                 alert(`Error:${error}`)                
             }finally{
@@ -44,6 +47,7 @@ export default function CoursesTakenByMe({setActionType}:HandleOptionsCourse){
                 <Text style={{fontSize:18,marginLeft:5}}>Volver</Text>
             </TouchableOpacity>
         </View>        
+        <Text style={{fontSize:20,color:'#ffffff',width:'90%',marginHorizontal:'auto',height:'auto'}}>{checkData === 1 ? 'No haz finalizado ningun curso' : null}</Text>
         <ScrollView  style={{width:'95%',height:'80%',margin:'auto',paddingTop:20}}
             contentContainerStyle={{justifyContent:'space-between',alignItems:'center',display:'flex',rowGap:15,paddingBottom:40}}
         >
