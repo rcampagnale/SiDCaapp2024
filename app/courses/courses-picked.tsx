@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, View, ActivityIndicator, ScrollView } from "react-native";
+import { TouchableOpacity, Text, View, ActivityIndicator, ScrollView, Image } from "react-native";
 import styles from '../../styles/courses/courses-styles'
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { collection, getDocs, getFirestore } from "firebase/firestore";
@@ -56,7 +56,8 @@ export default function CoursesTakenByMe({setActionType}:HandleOptionsCourse){
                 ) : (
                     courseAproved.map((e: any, i: number) => (
                         <View style={styles.coursesDoneBox} key={i}>
-                            <Text style={{ fontWeight: 'bold',width:'90%' }}>{e.data().titulo}</Text>                            
+                            <Text style={{ fontWeight: 'bold',width:'90%' }}>{e.data().titulo}</Text>  
+                            <Image src={e.data().imagen} style={{width:200,height:250}} resizeMode="cover"/>                          
                             <Text style={{fontSize:18,fontWeight:'bold'}}>{e.data().aprobo === true ? 'Curso Aprobado' : 'Curso NO Aprobado'}</Text>
                         </View>
                     ))

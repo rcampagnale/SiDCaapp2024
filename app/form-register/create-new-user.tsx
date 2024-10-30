@@ -7,11 +7,11 @@ import {regexRegister} from './regex-form'
 interface NewUserTypes {
     nombre: string,
     apellido: string,
-    documento: string,
+    dni: string,
     email: string,
     celular: string,
     departamento: string,
-    establecimiento: string,
+    establecimientos: string,
     descuento: string,
     fecha: string
 }
@@ -45,11 +45,11 @@ export default function CreateNewUser() {
     const [newUser, setNewUser] = useState<NewUserTypes>({
         nombre: '',
         apellido: '',
-        documento: '',
+        dni: '',
         email: '',
         celular: '',
         departamento: '',
-        establecimiento: '',
+        establecimientos: '',
         descuento: "si",
         fecha: formattedDate
     });
@@ -66,16 +66,16 @@ export default function CreateNewUser() {
     const onSubmitForm = async () => {
         if(Object.values(newUser).includes('')) return alert('Debe completar todos los campos')
         if(regexRegister.names.test(newUser.nombre) === false ||regexRegister.names.test(newUser.apellido) ===false ) return alert('nombre u apellido no valido')
-        if(regexRegister.dni.test(newUser.documento)===false) return alert('DNI no valido')
+        if(regexRegister.dni.test(newUser.dni)===false) return alert('DNI no valido')
         const newAfiliate = await addDoc(dataAdd, newUser);
         setNewUser({
             nombre: '',
             apellido: '',
-            documento: '',
+            dni: '',
             email: '',
             celular: '',
             departamento: '',
-            establecimiento: '',
+            establecimientos: '',
             descuento: "si",
             fecha: formattedDate
         })
@@ -120,8 +120,8 @@ export default function CreateNewUser() {
                     <View style={styles.inputContainer}>
                         <Text style={{ color: '#ffffff', alignSelf: 'flex-start', fontSize: 18 }}>DNI</Text>
                         <TextInput style={styles.inputForm}
-                            value={newUser.documento}
-                            onChangeText={(getValue) => handleNewUserData('documento', getValue)}
+                            value={newUser.dni}
+                            onChangeText={(getValue) => handleNewUserData('dni', getValue)}
                         />
                     </View>
                     <View style={styles.inputContainer}>
@@ -148,10 +148,10 @@ export default function CreateNewUser() {
                         </TouchableOpacity>
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text style={{ color: '#ffffff', alignSelf: 'flex-start', fontSize: 18 }}>Establecimientos</Text>
+                        <Text style={{ color: '#ffffff', alignSelf: 'flex-start', fontSize: 18 }}>establecimientoss</Text>
                         <TextInput style={styles.inputForm}
-                            value={newUser.establecimiento}
-                            onChangeText={(getValue) => handleNewUserData('establecimiento', getValue)}
+                            value={newUser.establecimientos}
+                            onChangeText={(getValue) => handleNewUserData('establecimientos', getValue)}
                         />
                     </View>
                     <TouchableOpacity

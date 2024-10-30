@@ -11,6 +11,7 @@ interface HandleOptionsCourse{
 export default function CourseAviablesForMe({setActionType}:HandleOptionsCourse){
     const[currentCourses,setCurrentCourses]=useState<any>([])
     const [loading, setLoading] = useState<boolean>(true); 
+    const [checkData,setCheckData]=useState<number>(0)
     const analytics = getFirestore(firebaseconn) 
     const data=collection(analytics,'cursos')
     const openLinks=(urlMedia:string)=>{
@@ -39,6 +40,7 @@ export default function CourseAviablesForMe({setActionType}:HandleOptionsCourse)
                 <Text style={{fontSize:18,marginLeft:5}}>Volver</Text>
             </TouchableOpacity>
         </View>
+        <Text style={{fontSize:20,color:'#ffffff',width:'90%',marginHorizontal:'auto',height:'auto'}}>{checkData === 1 ? 'No haz finalizado ningun curso' : null}</Text>
         <ScrollView  style={{width:'95%',height:'80%',margin:'auto',paddingTop:20}}
             contentContainerStyle={{justifyContent:'space-between',alignItems:'center',display:'flex',rowGap:15,paddingBottom:40}}
         >
