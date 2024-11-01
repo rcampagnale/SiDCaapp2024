@@ -73,5 +73,15 @@ export default signInStyles=StyleSheet.create({
         justifyContent:'center',
         alignItems:'center',
         backgroundColor:'#ffffff'
-    }  
+    },
+    btnWhatsApp:{
+        width:'100%',
+        height:'100%',
+        backgroundColor:'#25d366',
+        borderRadius:7,
+        display:'flex',
+        justifyContent:'space-around',
+        alignItems:'center',
+        flexDirection:'row',
+    }
 })

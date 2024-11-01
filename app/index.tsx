@@ -82,7 +82,9 @@ export default function SignInApp() {
       keyboardDidHideListener.remove();
     };
   }, []);
-
+  const openWspNumber=(urlMedia:string)=>{
+    Linking.openURL(urlMedia)
+}
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
       <View style={styles.container}>
@@ -135,6 +137,16 @@ export default function SignInApp() {
               <Text style={{ fontSize: 20, fontWeight: "500" }}>AFILIARSE</Text>
             </TouchableOpacity>
           </ImageBackground>
+          <View style={{width:'80%',height:40,marginTop:40}}>
+          <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
+                        onPress={()=>openWspNumber('https://wa.me/5493832437803')}                    
+                    >
+                        <Text style={{fontSize:18}}>Soporte Tecnico</Text>
+                        <Image
+                        style={{width:30,height:30}}
+                        source={require('../assets/logos/whatsapp.png')}/>
+                    </TouchableOpacity>
+          </View>
         </View>
         {isKeyboardVisible === false ? (
           <ImageBackground
