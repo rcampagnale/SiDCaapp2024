@@ -11,9 +11,9 @@ const windowHeight = Dimensions.get('window').height;
             <ImageBackground style={styles.container} source={require('../../assets/home/credencial.jpg')} resizeMode="cover">
             <View style={styles.viewInfoContainer}>
                 <View style={[{width:windowHeight - 20},styles.mainInformationContainer]}>
-                    <Text style={{fontSize:18,fontWeight:'bold'}}>{userData?.apellido}, {userData?.nombre}</Text>
+                    <Text style={{fontSize:18,fontWeight:'bold'}}> {userData?.nombre}</Text>
                     <Text style={{fontSize:18,fontWeight:'bold'}}>SiDCa</Text>
-                    <Text style={{fontSize:18,fontWeight:'bold'}}>Departamento: {userData?.departamento}</Text>
+                    <Text style={{fontSize:18,fontWeight:'bold'}}>Departamento: {userData?.departamento === undefined ? 'Sin asignar' :userData?.departamento }</Text>
                 </View>            
             </View>            
             <View style={styles.cardNameContainer}>

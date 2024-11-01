@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import styles from "../../styles/new-user-styles/create-user-styles";
 import React, { useState } from "react";
@@ -58,7 +59,8 @@ export default function CreateNewUser() {
   const month = String(currentDay.getMonth() + 1).padStart(2, "0");
   const year = currentDay.getFullYear();
   const formattedDate = `${day}/${month}/${year}`;
-
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [loading,setLoading]=useState<boolean>(false)
   const [newUser, setNewUser] = useState<NewUserTypes>({
     nombre: "",
     apellido: "",
@@ -71,7 +73,6 @@ export default function CreateNewUser() {
     fecha: formattedDate,
   });
 
-  const [modalVisible, setModalVisible] = useState(false);
 
   const analytics = getFirestore(firebaseconn);
   const usuariosRef = collection(analytics, "usuarios");
@@ -94,9 +95,9 @@ export default function CreateNewUser() {
 
     try {
       // Verificar si el DNI ya existe en la colección "usuarios"
+      setLoading(true)
       const dniQuery = query(usuariosRef, where("dni", "==", newUser.dni));
       const querySnapshot = await getDocs(dniQuery);
-
       if (querySnapshot.empty) {
         // DNI no existe, agregar a ambas colecciones
         await addDoc(usuariosRef, newUser);
@@ -129,6 +130,8 @@ export default function CreateNewUser() {
     } catch (error) {
       console.error("Error al afiliar usuario: ", error);
       alert("Hubo un problema al procesar tu solicitud. Intenta nuevamente.");
+    }finally{
+      setLoading(false)
     }
   };
 
@@ -303,7 +306,11 @@ export default function CreateNewUser() {
             onPress={onSubmitForm}
             style={styles.btnSendInfo}
           >
-            <Text style={{ fontSize: 20, fontWeight: "500" }}>Afiliarse</Text>
+            {loading ? (
+                <ActivityIndicator size="large" color="#ffffff" />
+              ) :(<Text style={{ fontSize: 20, fontWeight: "500" }}>Afiliarse
+            </Text>)}
+            
           </TouchableOpacity>
         </View>
         <Modal
