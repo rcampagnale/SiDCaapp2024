@@ -17,14 +17,14 @@ export default function InformationParts({setActionType}:HandleAdviceStatus){
     const[partInfo,setPartInfo]=useState<any>([])
     const [loading,setLoading]=useState<boolean>(false)
     const db = getFirestore(firebaseconn);
-    const enlacesCollection = collection(db, "enlaces");
+    const asesoramientoCollection = collection(db, "asesoramiento");
    
     
     useEffect(()=>{
         const seeData=async()=>{
             try {
                 setLoading(true)
-                const queryFirebase = query(enlacesCollection, where("categoria", "==", "paritarias"));
+                const queryFirebase = query(asesoramientoCollection, where("categoria", "==", "paritarias"));
                 const querySnapshot = (await getDocs(queryFirebase)).docs;
                 setPartInfo(querySnapshot)      
             } catch (error) {
