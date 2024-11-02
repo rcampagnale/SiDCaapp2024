@@ -99,6 +99,15 @@ export default advicerStyles=StyleSheet.create({
         justifyContent:'space-between',
         alignItems:'center',
         backgroundColor:'#091d24'               
+    },
+    coursesDoneBox:{
+        width:'100%',
+        height:460,
+        backgroundColor:'#fea200',
+        borderRadius:10,
+        display:'flex',
+        justifyContent:'space-around',
+        alignItems:'center'      
     }
     
 })

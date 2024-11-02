@@ -26,5 +26,14 @@ export default linkStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'center',
         alignItems:'center'
+    },
+    coursesDoneBox:{
+        width:'100%',
+        height:460,
+        backgroundColor:'#fea200',
+        borderRadius:10,
+        display:'flex',
+        justifyContent:'space-around',
+        alignItems:'center'      
     }
 })

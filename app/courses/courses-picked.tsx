@@ -112,8 +112,8 @@ export default function CoursesTakenByMe({
               </Text>
               <Image
                 src={e.data().imagen}
-                style={{ width: 200, height: 250 }}
-                resizeMode="cover"
+                style={{ width: '80%', height: '70%' }}
+                resizeMode="contain"
               />
               <Text style={{ fontSize: 18, fontWeight: "bold" }}>
                 {e.data().aprobo === true

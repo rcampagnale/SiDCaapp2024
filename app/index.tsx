@@ -41,8 +41,8 @@ export default function SignInApp() {
     if (dniNumber === "") return alert("Ingrese un Numero Valido!!");
     setLoading(true);
     try {
-      const q = query(usuariosCollection, where("dni", "==", dniNumber));
-      const querySnapshot = await getDocs(q);
+      const queryFirebase = query(usuariosCollection, where("dni", "==", dniNumber));
+      const querySnapshot = await getDocs(queryFirebase);
       if (querySnapshot.empty) {
         alert("DNI no encontrado");
       } else {
@@ -114,7 +114,7 @@ export default function SignInApp() {
               activeOpacity={1}
               onPress={findUser}
             >
-              {loading ? (
+              {loading  ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
                 <Text style={{ fontSize: 20, fontWeight: "500" }}>
