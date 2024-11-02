@@ -8,6 +8,7 @@ import {
   Modal,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import styles from "../../styles/new-user-styles/create-user-styles";
 import React, { useState } from "react";
@@ -21,6 +22,7 @@ import {
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { regexRegister } from "./regex-form";
+import { router } from "expo-router";
 
 interface NewUserTypes {
   nombre: string;
@@ -102,7 +104,8 @@ export default function CreateNewUser() {
         // DNI no existe, agregar a ambas colecciones
         await addDoc(usuariosRef, newUser);
         await addDoc(nuevoAfiliadoRef, newUser);
-        alert("Afiliación completada con éxito");
+        Alert.alert('SiDCa', 'Afiliado exisotasamente')
+        router.navigate("/");
       } else {
         // DNI ya existe, solo agregar a "nuevoAfiliado" con error
         const errorData = {
