@@ -104,8 +104,9 @@ export default function CreateNewUser() {
         // DNI no existe, agregar a ambas colecciones
         await addDoc(usuariosRef, newUser);
         await addDoc(nuevoAfiliadoRef, newUser);
-        Alert.alert('SiDCa', 'Afiliado exisotasamente')
-        router.navigate("/");
+        Alert.alert('SiDCa', 'Afiliado exisotasamente',
+         [ {text: 'OK', onPress: () => router.navigate("/")}]
+        )        
       } else {
         // DNI ya existe, solo agregar a "nuevoAfiliado" con error
         const errorData = {
