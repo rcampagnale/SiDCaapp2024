@@ -39,19 +39,20 @@ interface NewUserTypes {
 const departamentos = [
   "Ambato",
   "Ancasti",
+  "Andalgalá",
+  "Antofagasta de la Sierra",
   "Belén",
   "Capayán",
-  "Chacabuco",
+  "Capital",
   "El Alto",
   "Fray Mamerto Esquiú",
   "La Paz",
-  "La Puerta",
+  "Paclín",
   "Pomán",
   "Santa María",
   "Santa Rosa",
   "Tinogasta",
   "Valle Viejo",
-  "Capital",
 ];
 
 export default function CreateNewUser() {
