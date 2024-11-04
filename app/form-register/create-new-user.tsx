@@ -103,7 +103,7 @@ export default function CreateNewUser() {
         // DNI no existe, agregar a ambas colecciones
         await addDoc(usuariosRef, newUser);
         await addDoc(nuevoAfiliadoRef, newUser);
-        Alert.alert("SiDCa", "Afiliado exisotasamente", [
+        Alert.alert("SiDCa", "Afiliado exitosamente", [
           { text: "OK", onPress: () => router.navigate("/") },
         ]);
       } else {
