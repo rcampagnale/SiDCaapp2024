@@ -62,7 +62,7 @@ export default function CreateNewUser() {
   const year = currentDay.getFullYear();
   const formattedDate = `${day}/${month}/${year}`;
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [loading,setLoading]=useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false);
   const [newUser, setNewUser] = useState<NewUserTypes>({
     nombre: "",
     apellido: "",
@@ -74,7 +74,6 @@ export default function CreateNewUser() {
     descuento: "si",
     fecha: formattedDate,
   });
-
 
   const analytics = getFirestore(firebaseconn);
   const usuariosRef = collection(analytics, "usuarios");
@@ -97,16 +96,16 @@ export default function CreateNewUser() {
 
     try {
       // Verificar si el DNI ya existe en la colección "usuarios"
-      setLoading(true)
+      setLoading(true);
       const dniQuery = query(usuariosRef, where("dni", "==", newUser.dni));
       const querySnapshot = await getDocs(dniQuery);
       if (querySnapshot.empty) {
         // DNI no existe, agregar a ambas colecciones
         await addDoc(usuariosRef, newUser);
         await addDoc(nuevoAfiliadoRef, newUser);
-        Alert.alert('SiDCa', 'Afiliado exisotasamente',
-         [ {text: 'OK', onPress: () => router.navigate("/")}]
-        )        
+        Alert.alert("SiDCa", "Afiliado exisotasamente", [
+          { text: "OK", onPress: () => router.navigate("/") },
+        ]);
       } else {
         // DNI ya existe, solo agregar a "nuevoAfiliado" con error
         const errorData = {
@@ -134,8 +133,8 @@ export default function CreateNewUser() {
     } catch (error) {
       console.error("Error al afiliar usuario: ", error);
       alert("Hubo un problema al procesar tu solicitud. Intenta nuevamente.");
-    }finally{
-      setLoading(false)
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,21 +157,21 @@ export default function CreateNewUser() {
           <Text
             style={{ fontSize: 22, fontWeight: "600", alignSelf: "center" }}
           >
-            Beneficios para afiliados:
+            Beneficios para Afiliados:
           </Text>
           <Text>ASESORAMIENTO LEGAL, PREVISIONAL Y SINDICAL</Text>
           <Text>CAJA COMPLEMENTARIA DOCENTE</Text>
-          <Text>GESTION DE TRAMITES DE EXPEDIENTES</Text>
+          <Text>GESTIÓN DE TRÁMITES DE EXPEDIENTES</Text>
           <Text>RECLAMOS ADMINISTRATIVOS</Text>
-          <Text>CAPACITACION DOCENTE GRATUITA</Text>
+          <Text>CAPACITACIÓN DOCENTE GRATUITA</Text>
           <Text>ALOJAMIENTO EN CASA DE DOCENTE</Text>
           <Text>CONVENIO DE ALOJAMIENTO EN OTRAS PROVINCIAS</Text>
           <Text>PLANES DE TURISMO FAMILIAR</Text>
         </View>
         <View style={styles.viewFormContainer}>
           <Text style={{ color: "#ffffff", fontWeight: "bold", width: "95%" }}>
-            Al afiliarse, acepta que se descontarán cuotas y servicios sociales
-            de su salario.
+            Al afiliarse, ACEPTA que se descontarán cuotas y servicios sociales
+            de su Salario.
           </Text>
 
           <View style={styles.inputContainer}>
@@ -311,10 +310,10 @@ export default function CreateNewUser() {
             style={styles.btnSendInfo}
           >
             {loading ? (
-                <ActivityIndicator size="large" color="#ffffff" />
-              ) :(<Text style={{ fontSize: 20, fontWeight: "500" }}>Afiliarse
-            </Text>)}
-            
+              <ActivityIndicator size="large" color="#ffffff" />
+            ) : (
+              <Text style={{ fontSize: 20, fontWeight: "500" }}>Afiliarse</Text>
+            )}
           </TouchableOpacity>
         </View>
         <Modal

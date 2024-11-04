@@ -41,7 +41,10 @@ export default function SignInApp() {
     if (dniNumber === "") return alert("Ingrese un Numero Valido!!");
     setLoading(true);
     try {
-      const queryFirebase = query(usuariosCollection, where("dni", "==", dniNumber));
+      const queryFirebase = query(
+        usuariosCollection,
+        where("dni", "==", dniNumber)
+      );
       const querySnapshot = await getDocs(queryFirebase);
       if (querySnapshot.empty) {
         alert("DNI no encontrado");
@@ -82,9 +85,9 @@ export default function SignInApp() {
       keyboardDidHideListener.remove();
     };
   }, []);
-  const openWspNumber=(urlMedia:string)=>{
-    Linking.openURL(urlMedia)
-}
+  const openWspNumber = (urlMedia: string) => {
+    Linking.openURL(urlMedia);
+  };
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
       <View style={styles.container}>
@@ -101,7 +104,7 @@ export default function SignInApp() {
           />
           <View style={styles.formContainer}>
             <Text style={{ fontSize: 20, color: "#ffffff" }}>
-              Ingresar con tu DNI de afiliado
+              Ingresar con tu DNI de Afiliado
             </Text>
             <TextInput
               style={styles.inputForm}
@@ -114,7 +117,7 @@ export default function SignInApp() {
               activeOpacity={1}
               onPress={findUser}
             >
-              {loading  ? (
+              {loading ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
                 <Text style={{ fontSize: 20, fontWeight: "500" }}>
@@ -137,15 +140,18 @@ export default function SignInApp() {
               <Text style={{ fontSize: 20, fontWeight: "500" }}>AFILIARSE</Text>
             </TouchableOpacity>
           </ImageBackground>
-          <View style={{width:'80%',height:40,marginTop:40}}>
-          <TouchableOpacity style={styles.btnWhatsApp} activeOpacity={1}
-                        onPress={()=>openWspNumber('https://wa.me/5493832437803')}                    
-                    >
-                        <Text style={{fontSize:18}}>Soporte Tecnico</Text>
-                        <Image
-                        style={{width:30,height:30}}
-                        source={require('../assets/logos/whatsapp.png')}/>
-                    </TouchableOpacity>
+          <View style={{ width: "80%", height: 40, marginTop: 40 }}>
+            <TouchableOpacity
+              style={styles.btnWhatsApp}
+              activeOpacity={1}
+              onPress={() => openWspNumber("https://wa.me/5493832437803")}
+            >
+              <Text style={{ fontSize: 18 }}>Soporte Técnico</Text>
+              <Image
+                style={{ width: 30, height: 30 }}
+                source={require("../assets/logos/whatsapp.png")}
+              />
+            </TouchableOpacity>
           </View>
         </View>
         {isKeyboardVisible === false ? (
