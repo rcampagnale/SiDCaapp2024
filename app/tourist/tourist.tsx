@@ -18,10 +18,10 @@ export default function HandleTourist() {
   const statusBarHeight = StatusBar.currentHeight;
   const [modalVisible, setModalVisible] = useState<boolean>(false); 
   const [loading,setLoading]=useState<boolean>(false)
-  const [dataImg,setDataImg]=useState<string>("")
+  const [dataTravel,setDataTravel]=useState<any>([])
   const analytics = getFirestore(firebaseconn) 
     const data=collection(analytics,'novedades')
-  const openWspNumber = (urlMedia: string) => {
+  const openOtherData = (urlMedia: string) => {
     Linking.openURL(urlMedia);
   };
   const toggleModal = () => {
@@ -32,7 +32,7 @@ export default function HandleTourist() {
         try {
           setLoading(true)
             const res=(await getDocs(data)).docs
-            setDataImg(res[0].data().imagen)
+            setDataTravel(res[0].data())
         } catch (error) {
             alert(`Error:${error}`)
         }finally {
@@ -112,7 +112,7 @@ export default function HandleTourist() {
           <TouchableOpacity
             style={styles.btnWhatsApp}
             activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834283151")}
+            onPress={() => openOtherData("https://wa.me/5493834283151")}
           >
             <Text style={{ fontSize: 18 }}>Contacto</Text>
             <Image
@@ -138,14 +138,24 @@ export default function HandleTourist() {
             <View style={styles.modalContainer}>
             {loading ? ( 
                     <ActivityIndicator size="large" color="#ffffff" />
-                ) : (                                            
-                  <Image src={dataImg} style={{width:'100%',height:'90%'}} resizeMode="contain"/>
+                ) : (   
+                  <>
+                  <Image src={dataTravel.imagen} style={{width:'95%',height:'85%'}} resizeMode="contain"/>
+                  <Text style={{width:'95%',height:'auto'}}>{dataTravel.descripcion}</Text>
+                  </>                                         
                 )}
+                <View>
+                <TouchableOpacity style={styles.btnGetLink}
+                    onPress={()=>openOtherData(dataTravel.link)}
+                >
+                  <Text style={{fontSize:18,fontWeight:'bold',color:'#ffffff'}}>Reservar</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.btnGetLink}
                   onPress={toggleModal}
                 >
                   <Text style={{fontSize:18,fontWeight:'bold',color:'#ffffff'}}>Cerrar</Text>
                 </TouchableOpacity>
+                </View>
             </View>
           </View>
         </Modal>

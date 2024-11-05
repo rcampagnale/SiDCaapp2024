@@ -85,12 +85,14 @@ export default touristStyles=StyleSheet.create({
         textAlign: "center",
       },
       btnGetLink: {
-        width: "80%",
+        width: "auto",
         height: 40,
         borderRadius: 5,
         backgroundColor: "#005CFE",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        paddingLeft:10,
+        paddingRight:10
       },
 })
