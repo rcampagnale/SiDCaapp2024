@@ -1,4 +1,4 @@
-import { ActivityIndicator, StatusBar, Text, TouchableOpacity, View, Image } from "react-native";
+import { ActivityIndicator, StatusBar, Text, TouchableOpacity, View, Image, Linking } from "react-native";
 import styles from "../../styles/quota/quota-styles";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { collection, getDocs, getFirestore } from "firebase/firestore";
@@ -11,6 +11,9 @@ export default function FileForQuotaPayment() {
   const [loading,setLoading]=useState<boolean>(false)
   const analytics = getFirestore(firebaseconn) 
   const data=collection(analytics,'cuotas')
+  const openWspNumber = (urlMedia: string) => {
+    Linking.openURL(urlMedia);
+  };
   useEffect(()=>{
     const getData=async()=>{
         try {
@@ -35,8 +38,8 @@ export default function FileForQuotaPayment() {
                     <ActivityIndicator size="large" color="#ffffff" />
                 ) : (   
                   <View style={styles.quotaBox}>
-                  <Image src={quotaData.imagen} style={{width:'95%',height:'80%',borderWidth:1,borderColor:'#ff0000'}} resizeMode="contain"/>
-                  <Text style={{width:'95%',height:'auto'}}>{quotaData.descripcion}</Text>
+                  <Image src={quotaData.imagen} style={{width:'95%',height:'65%'}} resizeMode="contain"/>
+                  <Text style={{width:'90%',height:'auto'}}>{quotaData.descripcion}</Text>
                     <TouchableOpacity style={styles.btnGetAlias}
                       onPress={copyToClipboard}
                       >
@@ -46,6 +49,17 @@ export default function FileForQuotaPayment() {
                     </TouchableOpacity>
                   </View>                                         
                 )}
+                <TouchableOpacity
+            style={styles.btnWhatsApp}
+            activeOpacity={1}
+            onPress={() => openWspNumber("https://wa.me/5493834539754")}
+          >
+            <Text style={{ fontSize: 18, marginLeft:10 }}>Afiliado Adherente</Text>
+            <Image
+              style={{ width: 30, height: 30,marginRight:10 }}
+              source={require("../../assets/logos/whatsapp.png")}
+            />
+          </TouchableOpacity>
       </View>
     </View>
   );

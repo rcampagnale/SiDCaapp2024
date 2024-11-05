@@ -6,14 +6,14 @@ export default quotaStyles=StyleSheet.create({
         height:'100%',
         display:'flex',
         flexDirection:'column',
-        justifyContent:'space-between',
+        justifyContent:'space-around',
         alignItems:'center',
         backgroundColor:'#091d24',
         paddingTop:10
     },
     quotaBox:{
         width: "90%",
-    height: 460,
+    height: '78%',
     backgroundColor: "#fea200",
     borderRadius: 10,
     display: "flex",
@@ -28,5 +28,15 @@ export default quotaStyles=StyleSheet.create({
         display:'flex',
         justifyContent:'center',
         alignItems:'center'
+    },
+    btnWhatsApp:{
+        width:'80%',
+        height:40,
+        backgroundColor:'#25d366',
+        borderRadius:7,
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center',
+        flexDirection:'row',
     }
 })

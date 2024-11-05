@@ -44,14 +44,14 @@ export default function ReferenceLinks(){
                     (
                         linkTo.map((e: any, i: number) => (
                           <View style={styles.coursesDoneBox} key={i}>
-                            <Text style={{ fontWeight: "bold", width: "90%" }}>
+                            <Text style={{ fontWeight: "bold", width: "90%",textAlign:'center' }}>
                               {e.data().titulo}
                             </Text>            
                             <Text style={{ fontSize:18, width: "90%" }}>
                               {e.data().descripcion}
                             </Text>                 
                             <TouchableOpacity style={styles.btnGetLink}>
-                                <Text>Ver Informacion</Text>
+                                <Text style={{fontSize:18,color:'#ffffff',fontWeight:'bold'}}>Ver Informacion</Text>
                             </TouchableOpacity>                               
                           </View>
                         ))
