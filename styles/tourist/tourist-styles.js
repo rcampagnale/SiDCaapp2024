@@ -84,6 +84,15 @@ export default touristStyles=StyleSheet.create({
         marginBottom: 20,
         textAlign: "center",
       },
+      btnsBox:{
+        width:'90%',
+        height:'auto',
+        display:'flex',
+        flexDirection:'row',
+        justifyContent:'space-around',
+        alignItems:'center',     
+        marginTop:10
+      },
       btnGetLink: {
         width: "auto",
         height: 40,
@@ -95,4 +104,9 @@ export default touristStyles=StyleSheet.create({
         paddingLeft:10,
         paddingRight:10
       },
+      textAbout:{
+        width:'95%',
+        height:'auto',
+        textAlign:'center'
+      }
 })

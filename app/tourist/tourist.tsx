@@ -141,10 +141,10 @@ export default function HandleTourist() {
                 ) : (   
                   <>
                   <Image src={dataTravel.imagen} style={{width:'95%',height:'85%'}} resizeMode="contain"/>
-                  <Text style={{width:'95%',height:'auto'}}>{dataTravel.descripcion}</Text>
+                  <Text style={styles.textAbout}>{dataTravel.descripcion}</Text>
                   </>                                         
                 )}
-                <View>
+                <View style={styles.btnsBox}>
                 <TouchableOpacity style={styles.btnGetLink}
                     onPress={()=>openOtherData(dataTravel.link)}
                 >
