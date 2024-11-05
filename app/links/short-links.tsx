@@ -51,7 +51,7 @@ export default function ReferenceLinks(){
                               {e.data().descripcion}
                             </Text>                 
                             <TouchableOpacity style={styles.btnGetLink}>
-                                <Text style={{fontSize:18,color:'#ffffff',fontWeight:'bold'}}>Ver Informacion</Text>
+                                <Text style={{fontSize:18,color:'#ffffff',fontWeight:'bold'}}>Ver Información</Text>
                             </TouchableOpacity>                               
                           </View>
                         ))
