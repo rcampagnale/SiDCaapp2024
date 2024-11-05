@@ -49,7 +49,7 @@ export default function CourseAviablesForMe({setActionType}:HandleOptionsCourse)
                 ) : (
                     currentCourses.map((e: any, i: number) => (
                         <View style={styles.linksBox} key={i}>
-                            <Text style={{ fontWeight: 'bold',width:'90%' }}>{e.data().titulo}</Text>
+                            <Text style={{ fontWeight: 'bold',width:'90%',textAlign:'center',height:'auto',paddingBottom:5 }}>{e.data().titulo}</Text>
                             <Image src={e.data().imagen} style={{width:'80%', height: '70%'}} resizeMode="contain"/>
                             <Text style={{width:'90%',height:'auto',textAlign:'center'}}>
                                 {e.data().descripcion}

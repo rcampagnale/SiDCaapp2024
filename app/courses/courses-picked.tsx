@@ -107,7 +107,7 @@ export default function CoursesTakenByMe({
         ) : (
           courseAproved.map((e: any, i: number) => (
             <View style={styles.coursesDoneBox} key={i}>
-              <Text style={{ fontWeight: "bold", width: "90%" }}>
+              <Text style={{ fontWeight: "bold", width: "90%",textAlign:'center',height:'auto',paddingBottom:5 }}>
                 {e.data().titulo}
               </Text>
               <Image

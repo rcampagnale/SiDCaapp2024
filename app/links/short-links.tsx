@@ -46,7 +46,13 @@ export default function ReferenceLinks(){
                           <View style={styles.coursesDoneBox} key={i}>
                             <Text style={{ fontWeight: "bold", width: "90%" }}>
                               {e.data().titulo}
-                            </Text>                                                
+                            </Text>            
+                            <Text style={{ fontSize:18, width: "90%" }}>
+                              {e.data().descripcion}
+                            </Text>                 
+                            <TouchableOpacity style={styles.btnGetLink}>
+                                <Text>Ver Informacion</Text>
+                            </TouchableOpacity>                               
                           </View>
                         ))
                       )

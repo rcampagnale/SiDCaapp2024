@@ -63,6 +63,34 @@ export default touristStyles=StyleSheet.create({
         justifyContent:'center',
         alignItems:'center',
         marginBottom:100
-    }
-
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo oscuro translúcido
+      },
+      modalContainer: {
+        width: "95%",
+        height:'90%',
+        padding: 20,
+        backgroundColor: "#fea200", // Color de fondo que pediste
+        borderRadius: 10,
+        alignItems: "center",
+      },
+      modalText: {
+        fontSize: 18,
+        color: "#fff",
+        marginBottom: 20,
+        textAlign: "center",
+      },
+      btnGetLink: {
+        width: "80%",
+        height: 40,
+        borderRadius: 5,
+        backgroundColor: "#005CFE",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      },
 })

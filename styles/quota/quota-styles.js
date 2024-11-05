@@ -12,15 +12,15 @@ export default quotaStyles=StyleSheet.create({
         paddingTop:10
     },
     quotaBox:{
-        width:'85%',
-        height:150,
-        backgroundColor:'#fea200',
-        borderRadius:10,
-        display:'flex',
-        justifyContent:'space-around',
-        alignItems:'center'
+        width: "90%",
+    height: 460,
+    backgroundColor: "#fea200",
+    borderRadius: 10,
+    display: "flex",
+    justifyContent: "space-around",
+    alignItems: "center",
     },
-    btnGetForm:{
+    btnGetAlias:{
         width:'80%',
         height:40,
         borderRadius:5,
