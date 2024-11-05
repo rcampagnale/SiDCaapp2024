@@ -12,7 +12,7 @@ const windowHeight = Dimensions.get('window').height;
             <View style={styles.viewInfoContainer}>
                 <View style={[{width:windowHeight - 20},styles.mainInformationContainer]}>
                     <Text style={{fontSize:18,fontWeight:'bold'}}> {userData?.nombre}</Text>
-                    <Text style={{fontSize:18,fontWeight:'bold'}}>SiDCa</Text>
+                    <Text style={{fontSize:18,fontWeight:'bold'}}>DNI: {userData?.dni}</Text>
                     <Text style={{fontSize:18,fontWeight:'bold'}}>Departamento: {userData?.departamento === undefined ? 'Sin asignar' :userData?.departamento }</Text>
                 </View>            
             </View>            
