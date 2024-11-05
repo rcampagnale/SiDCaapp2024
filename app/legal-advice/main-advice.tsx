@@ -1,9 +1,12 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Linking } from "react-native";
 import styles from "../../styles/advices/advices-styles";
 interface HandleAdviceStatus {
   setActionType: (value: null | string) => void;
 }
 export default function MainLegalAdvice({ setActionType }: HandleAdviceStatus) {
+  const openWspNumber = (urlMedia: string) => {
+    Linking.openURL(urlMedia);
+  };
   return (
     <View style={styles.container}>
       <View style={styles.titleView}>
@@ -57,7 +60,9 @@ export default function MainLegalAdvice({ setActionType }: HandleAdviceStatus) {
           </Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.btnWhatsApp}>
+      <TouchableOpacity style={styles.btnWhatsApp}
+            onPress={() => openWspNumber("https://wa.me/5493834051983")}      
+      >
         <Text style={{ fontSize: 18 }}>Contacto</Text>
         <Image
           style={{ width: 30, height: 30 }}
