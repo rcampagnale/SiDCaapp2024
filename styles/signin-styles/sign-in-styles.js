@@ -83,5 +83,23 @@ export default signInStyles=StyleSheet.create({
         justifyContent:'space-around',
         alignItems:'center',
         flexDirection:'row',
+    },
+    viewRadio:{
+        width:'100%',
+        height:80,        
+        display:'flex',
+        flexDirection:'column',
+        justifyContent:'space-around',
+        alignItems:'center',
+    },
+    radioBtn:{
+        width:'80%',
+        height:40,
+        backgroundColor:'#005CFE',
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        borderRadius:10,
+        flexDirection:'row'
     }
 })

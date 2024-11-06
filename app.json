@@ -17,8 +17,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logos/logo-01.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/apk.jpeg",
+        "resizeMode": "contain"
       },
       "package": "com.jakiro12.one"
     },

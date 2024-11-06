@@ -22,6 +22,7 @@ import {
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { SidcaContext } from "./_layout";
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 export default function SignInApp() {
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
@@ -111,6 +112,7 @@ export default function SignInApp() {
               placeholder="D.N.I."
               value={dniNumber}
               onChangeText={handleDniChange}
+              keyboardType="numeric"
             />
             <TouchableOpacity
               style={styles.btnGetIn}
@@ -140,7 +142,7 @@ export default function SignInApp() {
               <Text style={{ fontSize: 20, fontWeight: "500" }}>AFILIARSE</Text>
             </TouchableOpacity>
           </ImageBackground>
-          <View style={{ width: "80%", height: 40, marginTop: 40 }}>
+          <View style={{ width: "80%", height: 40, marginTop: 20 }}>
             <TouchableOpacity
               style={styles.btnWhatsApp}
               activeOpacity={1}
@@ -155,6 +157,18 @@ export default function SignInApp() {
           </View>
         </View>
         {isKeyboardVisible === false ? (
+          <>
+          <ImageBackground
+            source={require("../assets/signinFotos/redes.png")}
+            resizeMode="cover"
+            style={styles.viewRadio}
+          >
+            <Text style={{fontSize:18,color:'#ffffff'}}>Escuchar Radio SiDCa</Text>
+            <TouchableOpacity style={styles.radioBtn}>
+              <Text style={{fontSize:18,fontWeight:'bold',marginRight:10}}> PLAY FM 106.5</Text>
+              <FontAwesome6 name="radio" size={24} color="black" />
+            </TouchableOpacity>
+          </ImageBackground>
           <ImageBackground
             source={require("../assets/signinFotos/redes.png")}
             resizeMode="cover"
@@ -209,6 +223,7 @@ export default function SignInApp() {
               />
             </TouchableOpacity>
           </ImageBackground>
+          </>
         ) : null}
       </View>
     </View>

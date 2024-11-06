@@ -1,4 +1,4 @@
-import { View, StatusBar,ScrollView, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, StatusBar,ScrollView, Text, TouchableOpacity, ActivityIndicator, Linking } from "react-native";
 import styles from '../../styles/links/links-styles'
 import { useState, useEffect } from "react";
 import { firebaseconn } from "@/constants/FirebaseConn";
@@ -15,7 +15,9 @@ export default function ReferenceLinks(){
     const [loading,setLoading]=useState<boolean>(false)
     const db = getFirestore(firebaseconn);
     const enlacesCollection = collection(db, "enlaces");
-   
+    const openInformation = (urlMedia: string) => {
+        Linking.openURL(urlMedia);
+      };
     
     useEffect(()=>{
         const seeData=async()=>{
@@ -50,7 +52,9 @@ export default function ReferenceLinks(){
                             <Text style={{ fontSize:18, width: "90%" }}>
                               {e.data().descripcion}
                             </Text>                 
-                            <TouchableOpacity style={styles.btnGetLink}>
+                            <TouchableOpacity style={styles.btnGetLink}
+                                onPress={()=>openInformation(e.data().link)}
+                            >
                                 <Text style={{fontSize:18,color:'#ffffff',fontWeight:'bold'}}>Ver Información</Text>
                             </TouchableOpacity>                               
                           </View>
