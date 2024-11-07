@@ -159,12 +159,14 @@ export default function SignInApp() {
         {isKeyboardVisible === false ? (
           <>
           <ImageBackground
-            source={require("../assets/signinFotos/redes.png")}
+            source={require("../assets/signinFotos/radio.jpeg")}
             resizeMode="cover"
             style={styles.viewRadio}
           >
             <Text style={{fontSize:18,color:'#ffffff'}}>Escuchar Radio SiDCa</Text>
-            <TouchableOpacity style={styles.radioBtn}>
+            <TouchableOpacity style={styles.radioBtn}
+                onPress={()=>openSocialMedia('http://server.gostreaming.com.ar:8025/stream.aac')}
+            >
               <Text style={{fontSize:18,fontWeight:'bold',marginRight:10}}> PLAY FM 106.5</Text>
               <FontAwesome6 name="radio" size={24} color="black" />
             </TouchableOpacity>

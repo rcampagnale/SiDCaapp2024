@@ -8,7 +8,7 @@ export default function GetCredentialCard(){
 const windowHeight = Dimensions.get('window').height;
     return(
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
-            <ImageBackground style={styles.container} source={require('../../assets/home/credencial.jpg')} resizeMode="cover">
+            <ImageBackground style={styles.container} source={require('../../assets/home/credential.jpeg')} resizeMode="cover">
             <View style={styles.viewInfoContainer}>
                 <View style={[{width:windowHeight - 20},styles.mainInformationContainer]}>
                     <Text style={{fontSize:18,fontWeight:'bold'}}> {userData?.nombre}</Text>

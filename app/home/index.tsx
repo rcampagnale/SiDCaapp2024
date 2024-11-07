@@ -15,7 +15,7 @@ export default function HomePage(){
         <View  style={{height:'100%',paddingTop:statusBarHeight}}>
             <View style={styles.topBar}>
                 <View>
-                <Image source={require('../../assets/logos/cea.jpg')} style={{width:80,height:80}} resizeMode="contain"/> 
+                <Image source={require('../../assets/logos/cea_2.jpeg')} style={{width:80,height:80}} resizeMode="contain"/> 
                 </View>
                 <View>
                     <Image source={require('../../assets/logos/logo-01.png')} style={{width:80,height:80}} resizeMode="contain"/>                     
