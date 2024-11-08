@@ -159,7 +159,7 @@ export default function SignInApp() {
         {isKeyboardVisible === false ? (
           <>
           <ImageBackground
-            source={require("../assets/signinFotos/radio.jpeg")}
+            source={require("../assets/signinFotos/radio_1.jpg")}
             resizeMode="cover"
             style={styles.viewRadio}
           >
