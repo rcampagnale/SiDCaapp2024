@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "SiDCa",
-    "slug": "testear",
+    "slug": "sidca",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logos/logo-01.png",
@@ -35,9 +35,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "caf19429-e775-437b-8fa6-b8a2d8948f59"
+        "projectId": "4914455f-9037-4d80-b27c-ca5ac02ba57a"
+      },
+      "router": {
+        "origin": false
       }
     },
-    "owner": "jakiro12"
+    "owner": "rcampagnale"
   }
 }
