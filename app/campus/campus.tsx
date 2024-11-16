@@ -20,7 +20,7 @@ export default function HandleCampusTeachers() {
           </Text>
         </View>
         <View style={styles.viewInformation}>
-          <Text>
+          <Text style={styles.text}>
             SIDCA próximamente inaugurará su predio deportivo cultural y
             recreativo, para todos sus afiliados. Salón de usos múltiples,
             cancha de futbol y vóley. Un predio para la familia docente en Banda

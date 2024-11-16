@@ -18,7 +18,7 @@ export default function MainComponent({ setActionType }: HandleAdviceStatus) {
         resizeMode="cover"
       />
       <View style={styles.viewInformation}>
-        <Text style={{ width: "95%" }}>
+        <Text style={{ textAlign: "justify", width: "95%" }}>
           SIDCA, Sindicato de Docentes de Catamarca, te ofrece su equipo
           asesoramiento jurídico, en defensa de derechos. Reclamos y
           presentaciones administrativas, orientación y asesoramiento en

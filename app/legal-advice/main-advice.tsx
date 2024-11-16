@@ -20,7 +20,7 @@ export default function MainLegalAdvice({ setActionType }: HandleAdviceStatus) {
         resizeMode="cover"
       />
       <View style={styles.viewInformation}>
-        <Text style={{ width: "95%" }}>
+        <Text style={{ textAlign: "justify", width: "95%" }}>
           SIDCA, Sindicato de Docentes de Catamarca, te ofrece su equipo
           asesoramiento jurídico, en defensa de derechos. Reclamos y
           presentaciones administrativas, orientación y asesoramiento en
@@ -60,8 +60,9 @@ export default function MainLegalAdvice({ setActionType }: HandleAdviceStatus) {
           </Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.btnWhatsApp}
-            onPress={() => openWspNumber("https://wa.me/5493834051983")}      
+      <TouchableOpacity
+        style={styles.btnWhatsApp}
+        onPress={() => openWspNumber("https://wa.me/5493834051983")}
       >
         <Text style={{ fontSize: 18 }}>Contacto</Text>
         <Image

@@ -71,7 +71,13 @@ export default function AboutUs() {
             paddingTop: 10,
           }}
         >
-          <Text style={{ fontSize: 16, textAlign: "justify", width: "95%" }}>
+          <Text
+            style={{
+              fontSize: 16,
+              textAlign: "justify",
+              paddingHorizontal: 10,
+            }}
+          >
             SIDCA, el sindicato de docentes de Catamarca, inscripción gremial
             2902, adherido a la Confederación Argentina de Educadores, CEA,
             Personería gremial 1716. Trabaja en la firme defensa de los derechos

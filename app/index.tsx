@@ -22,7 +22,7 @@ import {
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { SidcaContext } from "./_layout";
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
 export default function SignInApp() {
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
@@ -158,73 +158,96 @@ export default function SignInApp() {
         </View>
         {isKeyboardVisible === false ? (
           <>
-          <ImageBackground
-            source={require("../assets/signinFotos/radio_1.jpg")}
-            resizeMode="cover"
-            style={styles.viewRadio}
-          >
-            <Text style={{fontSize:18,color:'#ffffff'}}>Escuchar Radio SiDCa</Text>
-            <TouchableOpacity style={styles.radioBtn}
-                onPress={()=>openSocialMedia('http://server.gostreaming.com.ar:8025/stream.aac')}
+            <ImageBackground
+              source={require("../assets/signinFotos/radio_1.jpg")}
+              resizeMode="cover"
+              style={styles.viewRadio}
             >
-              <Text style={{fontSize:18,fontWeight:'bold',marginRight:10}}> PLAY FM 106.5</Text>
-              <FontAwesome6 name="radio" size={24} color="black" />
-            </TouchableOpacity>
-          </ImageBackground>
-          <ImageBackground
-            source={require("../assets/signinFotos/redes.png")}
-            resizeMode="cover"
-            style={styles.viewShowMedias}
-          >
-            <TouchableOpacity
-              style={styles.mediasBtns}
-              onPress={() =>
-                openSocialMedia(
-                  "https://youtube.com/@sidcacatamarca2424?si=dQTZ6oWZQLSizYLN"
-                )
-              }
+              <Text
+                style={{ fontSize: 20, color: "#ffffff", fontWeight: "600" }}
+              >
+                Escuchar Radio SiDCa
+              </Text>
+              <TouchableOpacity
+                style={styles.radioBtn}
+                onPress={() =>
+                  openSocialMedia(
+                    "https://streaming.gostreaming.com.ar:10982/stream"
+                  )
+                }
+              >
+                <Text
+                  style={{ fontSize: 18, fontWeight: "bold", marginRight: 10 }}
+                >
+                  {" "}
+                  PLAY FM 106.5
+                </Text>
+                <FontAwesome6 name="radio" size={24} color="black" />
+              </TouchableOpacity>
+            </ImageBackground>
+            <View style={{ alignItems: "center", marginVertical: 10 }}>
+              <Text
+                style={{ fontSize: 20, color: "#ffffff", fontWeight: "500" }}
+              >
+                ¡Síguenos en nuestras Redes Sociales!
+              </Text>
+            </View>
+            <ImageBackground
+              source={require("../assets/signinFotos/redes.png")}
+              resizeMode="cover"
+              style={styles.viewShowMedias}
             >
-              <Image
-                style={{ width: "100%", height: "100%" }}
-                source={require("../assets/logos/youtube.png")}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.mediasBtns}
-              onPress={() =>
-                openSocialMedia(
-                  "https://www.facebook.com/profile.php?id=100058046356234"
-                )
-              }
-            >
-              <Image
-                style={{ width: "100%", height: "100%" }}
-                source={require("../assets/logos/facebook.png")}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.mediasBtns}
-              onPress={() => openSocialMedia("https://www.sidcagremio.com.ar")}
-            >
-              <Image
-                style={{ width: "100%", height: "100%" }}
-                source={require("../assets/logos/cromo.png")}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.mediasBtns}
-              onPress={() =>
-                openSocialMedia(
-                  "https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl"
-                )
-              }
-            >
-              <Image
-                style={{ width: "100%", height: "100%" }}
-                source={require("../assets/logos/instagram.png")}
-              />
-            </TouchableOpacity>
-          </ImageBackground>
+              <TouchableOpacity
+                style={styles.mediasBtns}
+                onPress={() =>
+                  openSocialMedia(
+                    "https://youtube.com/@sidcacatamarca2424?si=dQTZ6oWZQLSizYLN"
+                  )
+                }
+              >
+                <Image
+                  style={{ width: "100%", height: "100%" }}
+                  source={require("../assets/logos/youtube.png")}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mediasBtns}
+                onPress={() =>
+                  openSocialMedia(
+                    "https://www.facebook.com/profile.php?id=100058046356234"
+                  )
+                }
+              >
+                <Image
+                  style={{ width: "100%", height: "100%" }}
+                  source={require("../assets/logos/facebook1.png")}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mediasBtns}
+                onPress={() =>
+                  openSocialMedia("https://www.sidcagremio.com.ar")
+                }
+              >
+                <Image
+                  style={{ width: "122%", height: "122%" }}
+                  source={require("../assets/logos/cromo1.png")}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mediasBtns}
+                onPress={() =>
+                  openSocialMedia(
+                    "https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl"
+                  )
+                }
+              >
+                <Image
+                  style={{ width: "100%", height: "100%" }}
+                  source={require("../assets/logos/instagram.png")}
+                />
+              </TouchableOpacity>
+            </ImageBackground>
           </>
         ) : null}
       </View>

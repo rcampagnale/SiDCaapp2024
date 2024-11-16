@@ -1,105 +1,105 @@
-import {StyleSheet} from 'react-native'
+import { StyleSheet } from "react-native";
 
-export default signInStyles=StyleSheet.create({
-    container:{
-        width:'100%',
-        height:'100%',
-        display:'flex',
-        flexDirection:'column',
-        justifyContent:'space-between',
-        backgroundColor:'#091d24'
-    },
-    viewGetData:{
-        width:'100%',               
-        display:'flex',
-        justifyContent:'space-between',
-        alignItems:'center',
-        flexDirection:'column'
-    },
-    viewShowMedias:{
-        width:'100%',
-        height:150,        
-        display:'flex',
-        flexDirection:'row',
-        justifyContent:'space-around',
-        alignItems:'center'
-    },
-    mediasBtns:{
-        width:43,
-        height:43,        
-        borderRadius:5,
-    },    
-    logoSignin:{
-        width:'100%',
-        height:170,        
-    },
-    formContainer:{
-        width:'80%',
-        height:'35%',      
-        display:'flex',
-        flexDirection:'column',
-        justifyContent:'space-between',
-        alignItems:'center'
-    },
-    inputForm:{
-        width:'100%',
-        height:45,
-        backgroundColor:'#fea200',
-        borderRadius:5,
-        paddingLeft:10
-    },
-    btnGetIn:{
-        width:'100%',
-        height:45,
-        backgroundColor:'#fea200',
-        borderRadius:5,
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center'
-    },
-    btnAfiliate:{
-        width:'80%',
-        height:45,
-        backgroundColor:'#fea200',
-        borderRadius:5,
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center'
-    },
-    viewAfiliate:{
-        width:'100%',
-        height:100,
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center',
-        backgroundColor:'#ffffff'
-    },
-    btnWhatsApp:{
-        width:'100%',
-        height:'100%',
-        backgroundColor:'#25d366',
-        borderRadius:7,
-        display:'flex',
-        justifyContent:'space-around',
-        alignItems:'center',
-        flexDirection:'row',
-    },
-    viewRadio:{
-        width:'100%',
-        height:80,        
-        display:'flex',
-        flexDirection:'column',
-        justifyContent:'space-around',
-        alignItems:'center',
-    },
-    radioBtn:{
-        width:'80%',
-        height:40,
-        backgroundColor:'#005CFE',
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center',
-        borderRadius:10,
-        flexDirection:'row'
-    }
-})
+export default signInStyles = StyleSheet.create({
+  container: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    backgroundColor: "#091d24",
+  },
+  viewGetData: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexDirection: "column",
+  },
+  viewShowMedias: {
+    width: "100%",
+    height: 150,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  mediasBtns: {
+    width: 43,
+    height: 43,
+    borderRadius: 5,
+  },
+  logoSignin: {
+    width: "100%",
+    height: 170,
+  },
+  formContainer: {
+    width: "80%",
+    height: "35%",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  inputForm: {
+    width: "100%",
+    height: 45,
+    backgroundColor: "#fea200",
+    borderRadius: 5,
+    paddingLeft: 10,
+  },
+  btnGetIn: {
+    width: "100%",
+    height: 45,
+    backgroundColor: "#fea200",
+    borderRadius: 5,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  btnAfiliate: {
+    width: "80%",
+    height: 45,
+    backgroundColor: "#fea200",
+    borderRadius: 5,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  viewAfiliate: {
+    width: "100%",
+    height: 100,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+  },
+  btnWhatsApp: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#25d366",
+    borderRadius: 7,
+    display: "flex",
+    justifyContent: "space-around",
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  viewRadio: {
+    width: "100%",
+    height: 80,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  radioBtn: {
+    width: "80%",
+    height: 40,
+    backgroundColor: "#005CFE",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    flexDirection: "row",
+  },
+});

@@ -160,14 +160,14 @@ export default function CreateNewUser() {
           >
             Beneficios para Afiliados:
           </Text>
-          <Text>ASESORAMIENTO LEGAL, PREVISIONAL Y SINDICAL</Text>
-          <Text>CAJA COMPLEMENTARIA DOCENTE</Text>
-          <Text>GESTIÓN DE TRÁMITES DE EXPEDIENTES</Text>
-          <Text>RECLAMOS ADMINISTRATIVOS</Text>
-          <Text>CAPACITACIÓN DOCENTE GRATUITA</Text>
-          <Text>ALOJAMIENTO EN CASA DE DOCENTE</Text>
-          <Text>CONVENIO DE ALOJAMIENTO EN OTRAS PROVINCIAS</Text>
-          <Text>PLANES DE TURISMO FAMILIAR</Text>
+          <Text> ASESORAMIENTO LEGAL, PREVISIONAL Y SINDICAL</Text>
+          <Text> CAJA COMPLEMENTARIA DOCENTE</Text>
+          <Text> GESTIÓN DE TRÁMITES DE EXPEDIENTES</Text>
+          <Text> RECLAMOS ADMINISTRATIVOS</Text>
+          <Text> CAPACITACIÓN DOCENTE GRATUITA</Text>
+          <Text> ALOJAMIENTO EN CASA DE DOCENTE</Text>
+          <Text> CONVENIO DE ALOJAMIENTO EN OTRAS PROVINCIAS</Text>
+          <Text> PLANES DE TURISMO FAMILIAR</Text>
         </View>
         <View style={styles.viewFormContainer}>
           <Text style={{ color: "#ffffff", fontWeight: "bold", width: "95%" }}>

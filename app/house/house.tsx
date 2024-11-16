@@ -22,7 +22,7 @@ export default function HandleTeacherHouse() {
           </Text>
         </View>
         <View style={styles.viewInformation}>
-          <Text>
+          <Text style={styles.text}>
             En Lavalle 815 en la ciudad capital en Catamarca, la casa del
             docente es el anexo de servicios que ofrece SIDCA. Hospedaje, bar y
             cocina compartida, Salón de conferencias y sala de computación. Más

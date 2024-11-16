@@ -16,31 +16,31 @@ import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 export default function HandleTourist() {
   const statusBarHeight = StatusBar.currentHeight;
-  const [modalVisible, setModalVisible] = useState<boolean>(false); 
-  const [loading,setLoading]=useState<boolean>(false)
-  const [dataTravel,setDataTravel]=useState<any>([])
-  const analytics = getFirestore(firebaseconn) 
-    const data=collection(analytics,'novedades')
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [dataTravel, setDataTravel] = useState<any>([]);
+  const analytics = getFirestore(firebaseconn);
+  const data = collection(analytics, "novedades");
   const openOtherData = (urlMedia: string) => {
     Linking.openURL(urlMedia);
   };
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
-  useEffect(()=>{
-    const getData=async()=>{
-        try {
-          setLoading(true)
-            const res=(await getDocs(data)).docs
-            setDataTravel(res[0].data())
-        } catch (error) {
-            alert(`Error:${error}`)
-        }finally {
-            setLoading(false); 
-        }
-    }
-    getData()
-    },[])
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        setLoading(true);
+        const res = (await getDocs(data)).docs;
+        setDataTravel(res[0].data());
+      } catch (error) {
+        alert(`Error:${error}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getData();
+  }, []);
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
       <View style={styles.container}>
@@ -48,7 +48,7 @@ export default function HandleTourist() {
           <Text style={{ fontSize: 24, color: "#ffffff" }}>Turismo</Text>
         </View>
         <View style={styles.viewInformation}>
-          <Text>
+          <Text style={styles.text}>
             SIDCA desarrolla su programa de turismo social para sus afiliados,
             con la firma de convenios con otras entidades gremiales a nivel país
             que permiten disfrutar del tiempo libre y vacacional mediante sus
@@ -136,26 +136,48 @@ export default function HandleTourist() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-            {loading ? ( 
-                    <ActivityIndicator size="large" color="#ffffff" />
-                ) : (   
-                  <>
-                  <Image src={dataTravel.imagen} style={{width:'95%',height:'85%'}} resizeMode="contain"/>
+              {loading ? (
+                <ActivityIndicator size="large" color="#ffffff" />
+              ) : (
+                <>
+                  <Image
+                    src={dataTravel.imagen}
+                    style={{ width: "95%", height: "85%" }}
+                    resizeMode="contain"
+                  />
                   <Text style={styles.textAbout}>{dataTravel.descripcion}</Text>
-                  </>                                         
-                )}
-                <View style={styles.btnsBox}>
-                <TouchableOpacity style={styles.btnGetLink}
-                    onPress={()=>openOtherData(dataTravel.link)}
+                </>
+              )}
+              <View style={styles.btnsBox}>
+                <TouchableOpacity
+                  style={styles.btnGetLink}
+                  onPress={() => openOtherData(dataTravel.link)}
                 >
-                  <Text style={{fontSize:18,fontWeight:'bold',color:'#ffffff'}}>Reservar</Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: "#ffffff",
+                    }}
+                  >
+                    Reservar
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.btnGetLink}
+                <TouchableOpacity
+                  style={styles.btnGetLink}
                   onPress={toggleModal}
                 >
-                  <Text style={{fontSize:18,fontWeight:'bold',color:'#ffffff'}}>Cerrar</Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: "#ffffff",
+                    }}
+                  >
+                    Cerrar
+                  </Text>
                 </TouchableOpacity>
-                </View>
+              </View>
             </View>
           </View>
         </Modal>

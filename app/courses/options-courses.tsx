@@ -52,7 +52,9 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
         </ScrollView>
       </View>
       <View style={styles.textAboutCourse}>
-        <Text style={{ fontSize: 18, width: "90%" }}>
+        <Text
+          style={{ fontSize: 17, textAlign: "justify", paddingHorizontal: 10 }}
+        >
           El programa de capacitación de SIDCA brinda durante todo el año
           ofertas de capacitación y perfeccionamiento docente gratuita a sus
           afiliados, mediante cursos, talleres, congresos y seminarios que
