@@ -74,7 +74,7 @@ export default touristStyles = StyleSheet.create({
     width: "95%",
     height: "90%",
     padding: 20,
-    backgroundColor: "#fea200", // Color de fondo que pediste
+    backgroundColor: "#fea200", // Color de fondo del modal
     borderRadius: 10,
     alignItems: "center",
   },
@@ -83,6 +83,17 @@ export default touristStyles = StyleSheet.create({
     color: "#fff",
     marginBottom: 20,
     textAlign: "center",
+  },
+  modalContent: {
+    width: "100%",
+    height: "100%",
+  },
+  modalItem: {
+    marginBottom: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1, // Mantén el ancho de la línea
+    borderBottomColor: "#000000", // Línea separadora en color negro
+    width: "100%",
   },
   btnsBox: {
     width: "90%",
@@ -107,11 +118,13 @@ export default touristStyles = StyleSheet.create({
   textAbout: {
     width: "95%",
     height: "auto",
-    textAlign: "center",
+    textAlign: "justify",
+    fontSize: 16,
+    color: "#000",
+    marginVertical: 10,
   },
   text: {
     textAlign: "justify", // Justifica el texto
-    // Puedes agregar otros estilos aquí, como color, tamaño, etc.
     fontSize: 16,
     color: "#000",
     width: "97%",

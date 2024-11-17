@@ -6,41 +6,54 @@ import {
   Image,
   TouchableOpacity,
   Linking,
-  Button,
   Modal,
   ActivityIndicator,
 } from "react-native";
 import styles from "../../styles/tourist/tourist-styles";
 import { useEffect, useState } from "react";
-import { collection, getDocs, getFirestore } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  query,
+  where,
+} from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
+
 export default function HandleTourist() {
   const statusBarHeight = StatusBar.currentHeight;
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const [dataTravel, setDataTravel] = useState<any>([]);
+  const [dataTravel, setDataTravel] = useState<any[]>([]); // Ahora es un array para manejar múltiples documentos
   const analytics = getFirestore(firebaseconn);
-  const data = collection(analytics, "novedades");
+
   const openOtherData = (urlMedia: string) => {
     Linking.openURL(urlMedia);
   };
+
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
+
   useEffect(() => {
     const getData = async () => {
       try {
         setLoading(true);
-        const res = (await getDocs(data)).docs;
-        setDataTravel(res[0].data());
+        const dataRef = collection(analytics, "novedades");
+        const q = query(dataRef, where("categoria", "==", "turismo"));
+        const res = await getDocs(q);
+        const filteredData = res.docs.map((doc) => doc.data());
+        setDataTravel(filteredData); // Guardar todos los documentos relacionados con turismo
       } catch (error) {
-        alert(`Error:${error}`);
+        alert(`Error: ${error}`);
       } finally {
         setLoading(false);
       }
     };
+
     getData();
   }, []);
+
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
       <View style={styles.container}>
@@ -73,7 +86,6 @@ export default function HandleTourist() {
               source={require("../../assets/turismo/turismo.jpg")}
               resizeMode="cover"
             />
-
             <Image
               style={{ width: 200, height: 130 }}
               source={require("../../assets/turismo/turismo1.jpg")}
@@ -108,7 +120,9 @@ export default function HandleTourist() {
           </ScrollView>
         </View>
         <View style={styles.viewGetInformation}>
-          <Text style={{ fontSize: 24, fontWeight: 600 }}>Hace tu reserva</Text>
+          <Text style={{ fontSize: 24, fontWeight: "600" }}>
+            Hace tu reserva
+          </Text>
           <TouchableOpacity
             style={styles.btnWhatsApp}
             activeOpacity={1}
@@ -139,45 +153,50 @@ export default function HandleTourist() {
               {loading ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
-                <>
-                  <Image
-                    src={dataTravel.imagen}
-                    style={{ width: "95%", height: "85%" }}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.textAbout}>{dataTravel.descripcion}</Text>
-                </>
+                <ScrollView style={styles.modalContent}>
+                  {dataTravel.length > 0 ? (
+                    dataTravel.map((item, index) => (
+                      <View key={index} style={styles.modalItem}>
+                        {item.imagen && (
+                          <Image
+                            source={{ uri: item.imagen }}
+                            style={{ width: "100%", height: 200 }}
+                            resizeMode="contain"
+                          />
+                        )}
+                        {item.descripcion && (
+                          <Text style={styles.textAbout}>
+                            {item.descripcion}
+                          </Text>
+                        )}
+                        {item.link && (
+                          <TouchableOpacity
+                            style={styles.btnGetLink}
+                            onPress={() => openOtherData(item.link)}
+                          >
+                            <Text
+                              style={{ color: "#ffffff", fontWeight: "bold" }}
+                            >
+                              Reservar
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={{ color: "#ffffff", textAlign: "center" }}>
+                      No hay novedades disponibles.
+                    </Text>
+                  )}
+                </ScrollView>
               )}
-              <View style={styles.btnsBox}>
-                <TouchableOpacity
-                  style={styles.btnGetLink}
-                  onPress={() => openOtherData(dataTravel.link)}
+              <TouchableOpacity style={styles.btnGetLink} onPress={toggleModal}>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "bold", color: "#ffffff" }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "bold",
-                      color: "#ffffff",
-                    }}
-                  >
-                    Reservar
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.btnGetLink}
-                  onPress={toggleModal}
-                >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "bold",
-                      color: "#ffffff",
-                    }}
-                  >
-                    Cerrar
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                  Cerrar
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>
