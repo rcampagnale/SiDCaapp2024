@@ -6,40 +6,63 @@ import {
   Image,
   TouchableOpacity,
   Modal,
-  FlatList,
+  ActivityIndicator,
+  Linking,
 } from "react-native";
 import styles from "../../styles/convenio/convenio-styles";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  query,
+  where,
+} from "firebase/firestore";
+import { firebaseconn } from "@/constants/FirebaseConn";
 
 export default function HandleCampusTeachers() {
   const statusBarHeight = StatusBar.currentHeight;
 
   // Estado para manejar la visibilidad del modal
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true); // Estado para controlar la carga de datos
+  const [dataTravel, setDataTravel] = useState<any>([]); // Cambié el tipo de estado para ser un array
 
-  // Lista de comercios adheridos (puedes cargarla desde una base de datos o archivo si es necesario)
-  const businesses = [
-    { id: "1", name: "Comercio 1", address: "Dirección 1" },
-    { id: "2", name: "Comercio 2", address: "Dirección 2" },
-    { id: "3", name: "Comercio 3", address: "Dirección 3" },
-    { id: "4", name: "Comercio 4", address: "Dirección 3" },
-    { id: "5", name: "Comercio 5", address: "Dirección 3" },
-    { id: "6", name: "Comercio 6", address: "Dirección 3" },
-    { id: "7", name: "Comercio 7", address: "Dirección 3" },
-    { id: "8", name: "Comercio 1", address: "Dirección 1" },
-    { id: "9", name: "Comercio 2", address: "Dirección 2" },
-    { id: "10", name: "Comercio 3", address: "Dirección 3" },
-    { id: "11", name: "Comercio 4", address: "Dirección 3" },
-    { id: "12", name: "Comercio 5", address: "Dirección 3" },
-    { id: "13", name: "Comercio 6", address: "Dirección 3" },
-    { id: "14", name: "Comercio 7", address: "Dirección 3" },
-    // Agrega más comercios aquí
-  ];
+  const analytics = getFirestore(firebaseconn);
+  const data = collection(analytics, "novedades"); // Colección de novedades
+
+  // Función para abrir el enlace
+  const openOtherData = (urlMedia: string) => {
+    Linking.openURL(urlMedia);
+  };
+
+  // Filtrar por categoría "Predio"
+  const filteredData = query(data, where("categoria", "==", "predio"));
 
   // Función para abrir o cerrar el modal
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
+
+  // Cargar datos desde Firebase
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        setLoading(true);
+        const res = await getDocs(filteredData); // Usamos la consulta filtrada
+        const dataList = res.docs.map((doc) => doc.data());
+
+        // Asegúrate de que los datos sean un array
+        setDataTravel(dataList);
+      } catch (error) {
+        console.error("Error al cargar los datos:", error);
+        alert(`Error: ${error}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getData();
+  }, []);
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
@@ -63,6 +86,8 @@ export default function HandleCampusTeachers() {
             disfrutar!
           </Text>
         </View>
+
+        {/* Carrusel de imágenes (se mantienen las imágenes estáticas) */}
         <View style={styles.carruselContainer}>
           <ScrollView
             style={styles.carrusel}
@@ -112,13 +137,13 @@ export default function HandleCampusTeachers() {
           </ScrollView>
         </View>
 
-        {/* Botón de "Lista de Comercio Adherido" */}
+        {/* Botón para ver la lista de comercios adheridos */}
         <TouchableOpacity
           style={styles.btnNews}
           activeOpacity={1}
           onPress={toggleModal}
         >
-          <Text>Lista de Comercio Adherido</Text>
+          <Text>Lista de Comercios Adheridos</Text>
         </TouchableOpacity>
 
         {/* Modal con la lista de comercios */}
@@ -127,28 +152,50 @@ export default function HandleCampusTeachers() {
           animationType="slide"
           transparent={true}
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={{ fontSize: 24, fontWeight: "bold" }}>
-                Comercios Adheridos
-              </Text>
-              <FlatList
-                data={businesses}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.modalItem}>
-                    <Text style={styles.modalItemText}>
-                      {item.name} - {item.address}
-                    </Text>
-                  </View>
-                )}
-              />
-              <TouchableOpacity
-                onPress={toggleModal}
-                style={styles.closeModalBtn}
-              >
-                <Text style={{ color: "#fff" }}>Cerrar</Text>
-              </TouchableOpacity>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              {loading ? (
+                <ActivityIndicator size="large" color="#ffffff" />
+              ) : (
+                <ScrollView style={styles.modalContent}>
+                  {dataTravel.length > 0 && (
+                    <>
+                      {dataTravel.map((item, index) => (
+                        <View key={index} style={styles.modalItem}>
+                          {item.imagen && (
+                            <Image
+                              source={{ uri: item.imagen }}
+                              style={styles.modalItemImage}
+                              resizeMode="contain"
+                            />
+                          )}
+                          {item.descripcion && (
+                            <Text style={styles.textAbout}>
+                              {item.descripcion}
+                            </Text>
+                          )}
+                          {item.link && (
+                            <TouchableOpacity
+                              style={styles.btnCommon} // Estilo común para botones
+                              onPress={() => openOtherData(item.link)}
+                            >
+                              <Text style={styles.commonBtnText}>Contacto</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      ))}
+                    </>
+                  )}
+                </ScrollView>
+              )}
+              <View style={styles.btnsBox}>
+                <TouchableOpacity
+                  style={styles.btnCommon} // Estilo común para botones
+                  onPress={toggleModal}
+                >
+                  <Text style={styles.commonBtnText}>Cerrar</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>

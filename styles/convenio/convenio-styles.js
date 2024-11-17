@@ -28,8 +28,7 @@ const convenioStyles = StyleSheet.create({
     paddingTop: 10,
   },
   text: {
-    textAlign: "justify", // Justifica el texto
-    // Puedes agregar otros estilos aquí, como color, tamaño, etc.
+    textAlign: "justify",
     fontSize: 16,
     color: "#000",
     width: "97%",
@@ -69,33 +68,93 @@ const convenioStyles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo oscuro translúcido
   },
   modalContainer: {
-    width: "95%",
+    width: "98%",
     height: "90%",
     padding: 20,
-    backgroundColor: "#fea200", // Color de fondo que pediste
+    backgroundColor: "#fea200",
     borderRadius: 10,
     alignItems: "center",
+    justifyContent: "space-between", // Ajustar para que haya espacio entre el contenido y el botón
+    alignSelf: "center",
+    paddingBottom: 0, // Asegurarse de que no haya padding extra que cause desalineación
   },
   modalContent: {
-    width: "80%",
-    backgroundColor: "#fff",
-    padding: 20,
+    backgroundColor: "#fea200",
+    width: "100%",
+    height: "auto",
+    maxHeight: "80%", // Limitar la altura máxima
     borderRadius: 10,
-    alignItems: "center",
+    padding: 10,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 20,
   },
   modalItem: {
-    marginVertical: 10,
+    marginBottom: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    width: "100%",
   },
   modalItemText: {
-    fontSize: 18,
-    color: "#333",
+    fontSize: 16,
+    color: "#555",
   },
-  closeModalBtn: {
-    marginTop: 20,
-    backgroundColor: "#fea200", // Botón de cerrar con el mismo color
-    padding: 10,
+
+  // Estilo unificado para botones
+  btnCommon: {
+    width: "auto", // Deja el ancho automático para ajustarse al contenido
+    height: 40,
     borderRadius: 5,
+    backgroundColor: "#005CFE", // El mismo color de fondo
+    display: "flex",
+    justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 20, // Añadir algo de padding para hacerlo más visible
+    marginTop: 10, // Espacio entre el contenido y el botón
+    alignSelf: "center", // Asegura que el botón esté centrado
+  },
+  commonBtnText: {
+    color: "#fff", // Color blanco para el texto
+    fontWeight: "bold", // Negrita
+    fontSize: 16, // Tamaño de fuente igual para ambos botones
+    textAlign: "center", // Asegura que el texto esté centrado
+  },
+
+  // Nuevo estilo para aumentar el tamaño de las imágenes
+  modalItemImage: {
+    width: "200%", // Ajuste para que la imagen ocupe el 100% del ancho
+    height: 400, // Aumento del tamaño de la imagen
+    marginBottom: 10,
+    alignSelf: "center", // Centrado de la imagen
+  },
+
+  // Estilos adicionales para el contenido
+  textAbout: {
+    width: "95%",
+    height: "auto",
+    textAlign: "justify",
+  },
+  btnsBox: {
+    width: "100%",
+    marginTop: 10,
+    alignItems: "center", // Asegurar que el botón esté centrado
+    paddingBottom: 20, // Espacio en la parte inferior
+  },
+  btnGetLink: {
+    width: "auto", // Deja el ancho automático para ajustarse al contenido
+    height: 40,
+    borderRadius: 5,
+    backgroundColor: "#005CFE",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20, // Añadir algo de padding para hacerlo más visible
+    marginTop: 10, // Espacio entre el contenido y el botón
+    alignSelf: "center", // Asegura que el botón esté centrado
   },
 });
 
