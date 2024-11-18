@@ -18,6 +18,7 @@ import {
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { useContext, useEffect, useState } from "react";
 import { SidcaContext } from "../_layout";
+import * as FileSystem from "expo-file-system"; // Importamos expo-file-system
 
 interface HandleOptionsCourse {
   setActionType: (value: null | string) => void;
@@ -70,6 +71,19 @@ export default function CoursesTakenByMe({
     seeInfo();
   }, [userData]);
 
+  // Función para descargar el archivo (aunque no haya archivoUrl, simula la descarga)
+  const downloadFile = async (filename: string) => {
+    try {
+      const fileUri = FileSystem.documentDirectory + filename;
+      const dummyData = "Este es un archivo de ejemplo para la descarga.";
+      await FileSystem.writeAsStringAsync(fileUri, dummyData);
+      alert("Archivo descargado con éxito: " + filename);
+    } catch (error) {
+      console.error("Error al descargar el archivo:", error);
+      alert("Error al descargar el archivo");
+    }
+  };
+
   return (
     <View style={{ height: "100%", width: "100%", backgroundColor: "#091d24" }}>
       <View style={styles.btnBackToOptions}>
@@ -107,12 +121,19 @@ export default function CoursesTakenByMe({
         ) : (
           courseAproved.map((e: any, i: number) => (
             <View style={styles.coursesDoneBox} key={i}>
-              <Text style={{ fontWeight: "bold", width: "90%",textAlign:'center',height:'auto',paddingBottom:5 }}>
+              <Text
+                style={{
+                  fontWeight: "bold",
+                  width: "90%",
+                  textAlign: "center",
+                  paddingBottom: 5,
+                }}
+              >
                 {e.data().titulo}
               </Text>
               <Image
                 src={e.data().imagen}
-                style={{ width: '80%', height: '70%' }}
+                style={{ width: "80%", height: "70%" }}
                 resizeMode="contain"
               />
               <Text style={{ fontSize: 18, fontWeight: "bold" }}>
@@ -120,6 +141,15 @@ export default function CoursesTakenByMe({
                   ? "Curso Aprobado"
                   : "Curso NO Aprobado"}
               </Text>
+              {/* Siempre se muestra el botón de descarga */}
+              <TouchableOpacity
+                style={styles.downloadButton}
+                onPress={() => downloadFile(`${e.data().titulo}.pdf`)}
+              >
+                <Text style={styles.downloadButtonText}>
+                  Descargar Certificado Digital
+                </Text>
+              </TouchableOpacity>
             </View>
           ))
         )}
