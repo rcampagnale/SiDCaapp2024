@@ -8,13 +8,19 @@ import {
   Linking,
 } from "react-native";
 import styles from "../../styles/courses/courses-styles";
+import { useRouter } from "expo-router"; // Importa el hook para la navegación
+
 interface HandleOptionsCourse {
   setActionType: (value: null | string) => void;
 }
+
 export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
+  const router = useRouter(); // Inicializa el router
+
   const openClassroom = (urlMedia: string) => {
     Linking.openURL(urlMedia);
   };
+
   return (
     <>
       <View style={styles.scrollContainer}>
@@ -93,7 +99,7 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
         source={require("../../assets/home/capacitaciones.png")}
         resizeMode="cover"
       >
-        <Text style={{ color: "#ffffff", fontSize: 20, fontWeight: 600 }}>
+        <Text style={{ color: "#ffffff", fontSize: 22, fontWeight: 600 }}>
           Mis Cursos
         </Text>
         <TouchableOpacity
@@ -106,15 +112,30 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
       </ImageBackground>
       <ImageBackground
         style={styles.cardCourses}
-        source={require("../../assets/home/capacitaciones.png")}
+        source={require("../../assets/home/capacitaciones2.png")}
         resizeMode="cover"
       >
-        <Text style={{ color: "#ffffff", fontSize: 20, fontWeight: 600 }}>
+        <Text style={{ color: "#ffffff", fontSize: 22, fontWeight: 600 }}>
           Cursos Disponibles
         </Text>
         <TouchableOpacity
           style={styles.btnSeeInfo}
           onPress={() => setActionType("verify")}
+        >
+          <Text style={{ color: "#ffffff", fontSize: 20 }}>Ver</Text>
+        </TouchableOpacity>
+      </ImageBackground>
+      <ImageBackground
+        style={styles.cardCourses}
+        source={require("../../assets/home/capacitaciones1.png")}
+        resizeMode="cover"
+      >
+        <Text style={{ color: "#ffffff", fontSize: 22, fontWeight: 600 }}>
+          Registro de Asistencia
+        </Text>
+        <TouchableOpacity
+          style={styles.btnSeeInfo}
+          onPress={() => router.push("/asistencia/asistencia")} // Usa router.push para la navegación
         >
           <Text style={{ color: "#ffffff", fontSize: 20 }}>Ver</Text>
         </TouchableOpacity>

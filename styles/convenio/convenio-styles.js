@@ -25,7 +25,7 @@ const convenioStyles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingBottom: 20,
-    paddingTop: 10,
+    paddingTop: 20,
   },
   text: {
     textAlign: "justify",
