@@ -32,6 +32,7 @@ export default function HandleCampusTeachers() {
   const [loading, setLoading] = useState(true);
   const [dataTravel, setDataTravel] = useState<any>([]); // Cursos
   const [selectedCourse, setSelectedCourse] = useState(""); // Curso seleccionado
+  const [selectedLevel, setSelectedLevel] = useState(""); // Nivel educativo seleccionado
 
   const analytics = getFirestore(firebaseconn);
   const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
@@ -120,17 +121,12 @@ export default function HandleCampusTeachers() {
           transparent={true}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
+            <View style={[styles.modalContainer, { margin: 20 }]}>
               {loading ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
                 <View style={styles.modalContent}>
-                  <View
-                    style={[
-                      { width: windowHeight - 20 },
-                      styles.mainInformationContainer,
-                    ]}
-                  >
+                  <View style={styles.mainInformationContainer}>
                     <Text style={{ fontSize: 18, fontWeight: "bold" }}>
                       {userData?.apellido !== undefined
                         ? `${userData.apellido},`
@@ -147,6 +143,32 @@ export default function HandleCampusTeachers() {
                         : userData?.departamento}
                     </Text>
                   </View>
+
+                  {/* Selección de nivel educativo - Ahora encima del curso */}
+                  <Text style={styles.modalText}>Nivel Educativo:</Text>
+                  <Picker
+                    selectedValue={selectedLevel}
+                    style={styles.input}
+                    onValueChange={(itemValue) => setSelectedLevel(itemValue)}
+                  >
+                    <Picker.Item
+                      label="Seleccione un nivel educativo"
+                      value=""
+                    />
+                    <Picker.Item label="Nivel Inicial" value="Nivel Inicial" />
+                    <Picker.Item
+                      label="Nivel Primario"
+                      value="Nivel Primario"
+                    />
+                    <Picker.Item
+                      label="Nivel Secundario"
+                      value="Nivel Secundario"
+                    />
+                    <Picker.Item
+                      label="Nivel Superior"
+                      value="Nivel Superior"
+                    />
+                  </Picker>
 
                   {/* Selección del curso */}
                   <Text style={styles.modalText}>Seleccionar Curso:</Text>
@@ -172,7 +194,9 @@ export default function HandleCampusTeachers() {
                   <TouchableOpacity
                     style={styles.btnCommon}
                     onPress={() =>
-                      alert(`Curso seleccionado: ${selectedCourse}`)
+                      alert(
+                        `Curso seleccionado: ${selectedCourse}, Nivel: ${selectedLevel}`
+                      )
                     }
                   >
                     <Text style={styles.commonBtnText}>
