@@ -93,18 +93,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignSelf: "center",
   },
-  btnCommon: {
-    width: "auto",
-    height: 40,
-    borderRadius: 5,
-    backgroundColor: "#005CFE",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginTop: 10,
-    alignSelf: "center",
-  },
   commonBtnText: {
     color: "#fff",
     fontWeight: "bold",
@@ -155,7 +143,26 @@ const styles = StyleSheet.create({
   },
   mainInformationContainer: {
     marginBottom: 15,
-    alignItems: "flex-start",
+    alignItems: "flex-start", // Alineación a la izquierda
+    width: "100%", // Asegúrate de que ocupe todo el ancho disponible
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+    textAlign: "left", // Alineación a la izquierda
+  },
+  input: {
+    width: "100%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    fontSize: 16,
+    backgroundColor: "#fff",
   },
 });
 

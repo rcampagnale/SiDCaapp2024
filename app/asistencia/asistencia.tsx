@@ -33,6 +33,7 @@ export default function HandleCampusTeachers() {
   const [dataTravel, setDataTravel] = useState<any>([]); // Cursos
   const [selectedCourse, setSelectedCourse] = useState(""); // Curso seleccionado
   const [selectedLevel, setSelectedLevel] = useState(""); // Nivel educativo seleccionado
+  const [currentDate, setCurrentDate] = useState<string>(""); // Fecha actual
 
   const analytics = getFirestore(firebaseconn);
   const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
@@ -46,7 +47,6 @@ export default function HandleCampusTeachers() {
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        // Consultar la colección filtrando por categoría "titulo"
         const q = query(coursesCollection);
         const querySnapshot = await getDocs(q);
 
@@ -70,6 +70,15 @@ export default function HandleCampusTeachers() {
     };
 
     fetchCourses();
+  }, []);
+
+  // Obtener la fecha actual
+  useEffect(() => {
+    const date = new Date();
+    const formattedDate = `${date.getDate()}/${
+      date.getMonth() + 1
+    }/${date.getFullYear()}`;
+    setCurrentDate(formattedDate);
   }, []);
 
   return (
@@ -128,13 +137,14 @@ export default function HandleCampusTeachers() {
                 <View style={styles.modalContent}>
                   <View style={styles.mainInformationContainer}>
                     <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                      Afiliado:{" "}
                       {userData?.apellido !== undefined
                         ? `${userData.apellido},`
                         : null}{" "}
                       {userData?.nombre}
                     </Text>
                     <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                      DNI: {userData?.dni}
+                      D.N.I.: {userData?.dni}
                     </Text>
                     <Text style={{ fontSize: 18, fontWeight: "bold" }}>
                       Departamento:{" "}
@@ -190,6 +200,13 @@ export default function HandleCampusTeachers() {
                       ))
                     )}
                   </Picker>
+
+                  {/* Mostrar la fecha debajo de la lista de cursos */}
+                  <Text
+                    style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}
+                  >
+                    Fecha: {currentDate}
+                  </Text>
 
                   <TouchableOpacity
                     style={styles.btnCommon}
