@@ -9,13 +9,7 @@ import {
 } from "react-native";
 import styles from "../../styles/sala_de_reuniones/sala_de_reuniones";
 import { useState, useEffect } from "react";
-import {
-  collection,
-  getDocs,
-  getFirestore,
-  query,
-  where,
-} from "firebase/firestore";
+import { doc, getDoc, getFirestore } from "firebase/firestore"; // Cambié la consulta
 import { firebaseconn } from "@/constants/FirebaseConn";
 
 export default function HandleCampusTeachers() {
@@ -23,29 +17,23 @@ export default function HandleCampusTeachers() {
 
   // Estado para controlar la carga de datos
   const [loading, setLoading] = useState(true);
-  const [dataTravel, setDataTravel] = useState<any>([]); // Cambié el tipo de estado para ser un array
+  const [dataTravel, setDataTravel] = useState<any>(null); // Cambié el tipo de estado para un solo objeto
 
   const analytics = getFirestore(firebaseconn);
-  const data = collection(analytics, "cuotas"); // Colección de novedades
-
-  // Función para abrir el enlace
-  const openOtherData = (urlMedia: string) => {
-    Linking.openURL(urlMedia);
-  };
-
-  // Filtrar por categoría "Predio"
-  const filteredData = query(data, where("categoria", "==", "predio"));
+  const docRef = doc(analytics, "cuotas", "sala"); // Accede al documento "sala" dentro de la colección "cuotas"
 
   // Cargar datos desde Firebase
   useEffect(() => {
     const getData = async () => {
       try {
         setLoading(true);
-        const res = await getDocs(filteredData); // Usamos la consulta filtrada
-        const dataList = res.docs.map((doc) => doc.data());
+        const docSnap = await getDoc(docRef); // Obtén el documento "sala"
 
-        // Asegúrate de que los datos sean un array
-        setDataTravel(dataList);
+        if (docSnap.exists()) {
+          setDataTravel(docSnap.data()); // Si existe, guarda los datos del documento
+        } else {
+          alert("El documento 'sala' no existe en la colección 'cuotas'.");
+        }
       } catch (error) {
         console.error("Error al cargar los datos:", error);
         alert(`Error: ${error}`);
@@ -130,13 +118,22 @@ export default function HandleCampusTeachers() {
         </View>
 
         {/* Botón para ingresar a la reunión */}
-        <TouchableOpacity
-          style={styles.btnNews}
-          activeOpacity={1}
-          onPress={() => alert("Redirigiendo a la reunión...")}
-        >
-          <Text>Ingresar a la Reunión</Text>
-        </TouchableOpacity>
+        {loading ? (
+          <Text>Cargando...</Text>
+        ) : (
+          <>
+            {/* Botón que redirige al enlace de la reunión si existe */}
+            {dataTravel && dataTravel.link && (
+              <TouchableOpacity
+                style={styles.btnNews}
+                activeOpacity={1}
+                onPress={() => Linking.openURL(dataTravel.link)} // Abre el enlace con Linking
+              >
+                <Text>Unirse a la Reunión</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
       </View>
     </View>
   );
