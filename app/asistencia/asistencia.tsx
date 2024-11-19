@@ -17,7 +17,7 @@ import {
   getDocs,
   getFirestore,
   query,
-  where,
+  addDoc,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 
@@ -37,6 +37,7 @@ export default function HandleCampusTeachers() {
 
   const analytics = getFirestore(firebaseconn);
   const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
+  const registroPruebaCollection = collection(analytics, "registro_prueba"); // Colección de prueba para registros de asistencia
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -58,7 +59,6 @@ export default function HandleCampusTeachers() {
             id: doc.id,
             titulo: doc.data().titulo, // Extrae el campo 'titulo'
           }));
-          console.log("Cursos recuperados de Firebase:", courses);
           setDataTravel(courses); // Almacena los cursos en el estado
         }
       } catch (error) {
@@ -80,6 +80,36 @@ export default function HandleCampusTeachers() {
     }/${date.getFullYear()}`;
     setCurrentDate(formattedDate);
   }, []);
+
+  // Función para registrar la asistencia (en la colección de prueba)
+  const registerAttendance = async () => {
+    try {
+      if (!selectedCourse || !selectedLevel) {
+        alert("Por favor, seleccione un curso y un nivel educativo.");
+        return;
+      }
+
+      // Agregar los datos de la asistencia a la colección de prueba en Firebase
+      await addDoc(registroPruebaCollection, {
+        apellido: userData?.apellido,
+        nombre: userData?.nombre,
+        dni: userData?.dni,
+        departamento: userData?.departamento,
+        nivel: selectedLevel,
+        curso: selectedCourse,
+        fecha: currentDate,
+      });
+
+      // Mostrar mensaje de éxito
+      alert("Asistencia cargada con éxito");
+
+      // Cerrar el modal después de registrar la asistencia
+      toggleModal();
+    } catch (error) {
+      console.error("Error al registrar la asistencia:", error);
+      alert("Error al registrar la asistencia. Intente nuevamente.");
+    }
+  };
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
@@ -154,7 +184,7 @@ export default function HandleCampusTeachers() {
                     </Text>
                   </View>
 
-                  {/* Selección de nivel educativo - Ahora encima del curso */}
+                  {/* Selección de nivel educativo */}
                   <Text style={styles.modalText}>Nivel Educativo:</Text>
                   <Picker
                     selectedValue={selectedLevel}
@@ -210,11 +240,7 @@ export default function HandleCampusTeachers() {
 
                   <TouchableOpacity
                     style={styles.btnCommon}
-                    onPress={() =>
-                      alert(
-                        `Curso seleccionado: ${selectedCourse}, Nivel: ${selectedLevel}`
-                      )
-                    }
+                    onPress={registerAttendance} // Registrar asistencia
                   >
                     <Text style={styles.commonBtnText}>
                       Registrar Asistencia

@@ -77,7 +77,7 @@ export default function HomePage() {
               onPress={() => router.navigate("/aboutus/about-sidca")}
             >
               <View style={styles.logoContainer}>
-                <Ionicons name="heart" size={24} color="black" />
+                <Ionicons name="heart" size={25} color="black" />
               </View>
               <Text style={{ fontSize: 18 }}>Quienes somos</Text>
             </TouchableOpacity>
@@ -87,11 +87,7 @@ export default function HomePage() {
               onPress={() => router.navigate("/credential")}
             >
               <View style={styles.logoContainer}>
-                <MaterialCommunityIcons
-                  name="card-text"
-                  size={24}
-                  color="black"
-                />
+                <Entypo name="v-card" size={26} color="black" />
               </View>
               <Text style={{ fontSize: 18 }}>Credencial de Afiliado</Text>
             </TouchableOpacity>
