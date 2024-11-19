@@ -5,10 +5,10 @@ import {
   Modal,
   ActivityIndicator,
   TouchableOpacity,
-  TextInput,
   Image,
   Dimensions,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import styles from "../../styles/asistencia/asistencia";
 import { SidcaContext } from "../_layout";
 import { useContext, useState, useEffect } from "react";
@@ -21,7 +21,6 @@ import {
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 
-// Importación de la imagen local
 const localImage = require("../../assets/logos/secretaria.png");
 
 export default function HandleCampusTeachers() {
@@ -31,25 +30,36 @@ export default function HandleCampusTeachers() {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [dataTravel, setDataTravel] = useState<any>([]);
-  const [courseName, setCourseName] = useState("");
+  const [dataTravel, setDataTravel] = useState<any>([]); // Cursos
+  const [selectedCourse, setSelectedCourse] = useState(""); // Curso seleccionado
 
   const analytics = getFirestore(firebaseconn);
-  const coursesCollection = collection(analytics, "cursos");
+  const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
 
+  // Cargar los cursos desde Firebase
   useEffect(() => {
-    const getData = async () => {
+    const fetchCourses = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const res = await getDocs(
-          query(coursesCollection, where("categoria", "==", "titulo"))
-        );
-        const coursesList = res.docs.map((doc) => doc.data());
-        setDataTravel(coursesList);
+        // Consultar la colección filtrando por categoría "titulo"
+        const q = query(coursesCollection, where("categoria", "==", "titulo"));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          console.log("No se encontraron cursos en Firebase.");
+          setDataTravel([]); // Limpia la lista si no hay cursos
+        } else {
+          const courses = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            titulo: doc.data().titulo, // Extrae el campo 'titulo'
+          }));
+          console.log("Cursos recuperados de Firebase:", courses);
+          setDataTravel(courses); // Almacena los cursos en el estado
+        }
       } catch (error) {
         console.error("Error al cargar los cursos:", error);
         alert(`Error: ${error}`);
@@ -57,7 +67,8 @@ export default function HandleCampusTeachers() {
         setLoading(false);
       }
     };
-    getData();
+
+    fetchCourses();
   }, []);
 
   return (
@@ -114,7 +125,6 @@ export default function HandleCampusTeachers() {
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
                 <View style={styles.modalContent}>
-                  {/* Información del usuario desde Firebase */}
                   <View
                     style={[
                       { width: windowHeight - 20 },
@@ -138,18 +148,32 @@ export default function HandleCampusTeachers() {
                     </Text>
                   </View>
 
-                  {/* Entrada de datos adicionales */}
-                  <Text style={styles.modalText}>Nombre del Curso:</Text>
-                  <TextInput
+                  {/* Selección del curso */}
+                  <Text style={styles.modalText}>Seleccionar Curso:</Text>
+                  <Picker
+                    selectedValue={selectedCourse}
                     style={styles.input}
-                    value={courseName}
-                    onChangeText={setCourseName}
-                    placeholder="Nombre del curso"
-                  />
+                    onValueChange={(itemValue) => setSelectedCourse(itemValue)}
+                  >
+                    <Picker.Item label="Seleccione un curso" value="" />
+                    {dataTravel.length === 0 ? (
+                      <Picker.Item label="No se encontraron cursos" value="" />
+                    ) : (
+                      dataTravel.map((course: any) => (
+                        <Picker.Item
+                          key={course.id}
+                          label={course.titulo}
+                          value={course.titulo}
+                        />
+                      ))
+                    )}
+                  </Picker>
 
                   <TouchableOpacity
                     style={styles.btnCommon}
-                    onPress={() => alert("Registro enviado con éxito")}
+                    onPress={() =>
+                      alert(`Curso seleccionado: ${selectedCourse}`)
+                    }
                   >
                     <Text style={styles.commonBtnText}>
                       Registrar Asistencia

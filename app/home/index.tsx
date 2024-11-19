@@ -142,6 +142,18 @@ export default function HomePage() {
             <TouchableOpacity
               style={styles.btnActions}
               activeOpacity={1}
+              onPress={() =>
+                router.navigate("/sala_de_reuniones/sala_de_reuniones")
+              }
+            >
+              <View style={styles.logoContainer}>
+                <FontAwesome5 name="user-graduate" size={24} color="black" />
+              </View>
+              <Text style={{ fontSize: 18 }}>Sala de Reuniones</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.btnActions}
+              activeOpacity={1}
               onPress={() => router.navigate("/links/short-links")}
             >
               <View style={styles.logoContainer}>

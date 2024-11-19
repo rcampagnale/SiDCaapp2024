@@ -122,6 +122,25 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 10,
   },
+  modalText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  pickerContainer: {
+    marginBottom: 20,
+  },
 });
 
 export default styles;
