@@ -93,6 +93,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignSelf: "center",
   },
+  btnCommon: {
+    width: "auto",
+    height: 40,
+    borderRadius: 5,
+    backgroundColor: "#005CFE",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginTop: 10,
+    alignSelf: "center",
+  },
   commonBtnText: {
     color: "#fff",
     fontWeight: "bold",
@@ -140,6 +152,10 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     marginBottom: 20,
+  },
+  mainInformationContainer: {
+    marginBottom: 15,
+    alignItems: "flex-start",
   },
 });
 

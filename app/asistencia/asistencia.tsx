@@ -46,7 +46,7 @@ export default function HandleCampusTeachers() {
       setLoading(true);
       try {
         // Consultar la colección filtrando por categoría "titulo"
-        const q = query(coursesCollection, where("categoria", "==", "titulo"));
+        const q = query(coursesCollection);
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
