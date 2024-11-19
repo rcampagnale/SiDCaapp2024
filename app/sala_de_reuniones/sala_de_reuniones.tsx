@@ -101,21 +101,28 @@ export default function HandleCampusTeachers() {
             />
             <Image
               style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio4.jpg")}
+              source={require("../../assets/sala/sala5.jpg")}
               resizeMode="cover"
             />
             <Image
               style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio5.jpg")}
+              source={require("../../assets/sala/sala6.jpg")}
               resizeMode="cover"
             />
             <Image
               style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio6.jpg")}
+              source={require("../../assets/sala/sala7.jpg")}
               resizeMode="cover"
             />
           </ScrollView>
         </View>
+
+        {/* Mostrar descripción si existe */}
+        {dataTravel && dataTravel.descripcion && (
+          <View style={styles.viewInformation}>
+            <Text style={styles.descripcionText}>{dataTravel.descripcion}</Text>
+          </View>
+        )}
 
         {/* Botón para ingresar a la reunión */}
         {loading ? (

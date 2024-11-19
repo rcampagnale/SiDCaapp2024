@@ -156,6 +156,13 @@ const sala_de_reuniones = StyleSheet.create({
     marginTop: 10, // Espacio entre el contenido y el botón
     alignSelf: "center", // Asegura que el botón esté centrado
   },
+  descripcionText: {
+    fontSize: 16, // Tamaño de fuente para la descripción
+    color: "#333", // Color del texto
+    marginVertical: 10, // Espaciado arriba y abajo
+    paddingHorizontal: 15, // Espaciado horizontal
+    textAlign: "justify", // Justificado para que se vea más ordenado
+  },
 });
 
 export default sala_de_reuniones;

@@ -18,6 +18,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import CloseApp from "./log-out";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Fontisto from "react-native-vector-icons/Fontisto";
+import AntDesign from "@expo/vector-icons/AntDesign";
 export default function HomePage() {
   const statusBarHeight: number | undefined = StatusBar.currentHeight;
 
@@ -147,7 +148,7 @@ export default function HomePage() {
               }
             >
               <View style={styles.logoContainer}>
-                <FontAwesome5 name="user-graduate" size={24} color="black" />
+                <AntDesign name="customerservice" size={27} color="black" />
               </View>
               <Text style={{ fontSize: 18 }}>Sala de Reuniones</Text>
             </TouchableOpacity>
