@@ -88,9 +88,6 @@ export default function HandleCampusTeachers() {
         return;
       }
 
-      // Registrar los datos del usuario para depuración
-      console.log("Datos del usuario antes de registrar:", userData);
-
       // Preparar datos con valores predeterminados para evitar errores en Firebase
       const asistencia = {
         apellido: userData?.apellido || "Sin apellido",
@@ -112,15 +109,6 @@ export default function HandleCampusTeachers() {
       alert("Error al registrar la asistencia. Intente nuevamente.");
     }
   };
-
-  // Depuración adicional al cargar el componente
-  useEffect(() => {
-    if (!userData) {
-      console.error("Los datos del usuario no están disponibles.");
-    } else {
-      console.log("Datos del usuario cargados al iniciar:", userData);
-    }
-  }, [userData]);
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
