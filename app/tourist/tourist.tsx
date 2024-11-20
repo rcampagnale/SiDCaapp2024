@@ -184,8 +184,15 @@ export default function HandleTourist() {
                       </View>
                     ))
                   ) : (
-                    <Text style={{ color: "#ffffff", textAlign: "center" }}>
-                      No hay novedades disponibles.
+                    <Text
+                      style={{
+                        color: "#000000",
+                        fontSize: 25,
+                        textAlign: "center",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Actualmente no hay viajes de Turismo disponibles
                     </Text>
                   )}
                 </ScrollView>

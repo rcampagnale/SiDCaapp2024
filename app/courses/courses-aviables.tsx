@@ -85,6 +85,17 @@ export default function CourseAviablesForMe({
       >
         {loading ? (
           <ActivityIndicator size="large" color="#ffffff" />
+        ) : currentCourses.length === 0 ? ( // Condición para mostrar la leyenda si no hay cursos
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: 25,
+              textAlign: "center",
+              fontWeight: "bold",
+            }}
+          >
+            Actualmente, no hay cursos disponibles.
+          </Text>
         ) : (
           currentCourses.map((e: any, i: number) => (
             <View style={styles.linksBox} key={i}>

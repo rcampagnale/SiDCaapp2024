@@ -143,33 +143,42 @@ export default function HandleCampusTeachers() {
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
                 <ScrollView style={styles.modalContent}>
-                  {dataTravel.length > 0 && (
-                    <>
-                      {dataTravel.map((item, index) => (
-                        <View key={index} style={styles.modalItem}>
-                          {item.imagen && (
-                            <Image
-                              source={{ uri: item.imagen }}
-                              style={styles.modalItemImage}
-                              resizeMode="contain"
-                            />
-                          )}
-                          {item.descripcion && (
-                            <Text style={styles.textAbout}>
-                              {item.descripcion}
-                            </Text>
-                          )}
-                          {item.link && (
-                            <TouchableOpacity
-                              style={styles.btnCommon} // Estilo común para botones
-                              onPress={() => openOtherData(item.link)}
-                            >
-                              <Text style={styles.commonBtnText}>Contacto</Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      ))}
-                    </>
+                  {dataTravel.length > 0 ? (
+                    dataTravel.map((item, index) => (
+                      <View key={index} style={styles.modalItem}>
+                        {item.imagen && (
+                          <Image
+                            source={{ uri: item.imagen }}
+                            style={styles.modalItemImage}
+                            resizeMode="contain"
+                          />
+                        )}
+                        {item.descripcion && (
+                          <Text style={styles.textAbout}>
+                            {item.descripcion}
+                          </Text>
+                        )}
+                        {item.link && (
+                          <TouchableOpacity
+                            style={styles.btnCommon} // Estilo común para botones
+                            onPress={() => openOtherData(item.link)}
+                          >
+                            <Text style={styles.commonBtnText}>Contacto</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    ))
+                  ) : (
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        color: "#000000",
+                        fontSize: 25,
+                        textAlign: "center",
+                      }}
+                    >
+                      Actualmente no disponemos de convenios activos.
+                    </Text>
                   )}
                 </ScrollView>
               )}

@@ -24,8 +24,8 @@ const convenioStyles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: 20,
-    paddingTop: 20,
+    paddingBottom: 10,
+    paddingTop: 10,
   },
   text: {
     textAlign: "justify",
@@ -52,7 +52,7 @@ const convenioStyles = StyleSheet.create({
   },
 
   btnNews: {
-    width: "75%",
+    width: "80%",
     height: 40,
     backgroundColor: "#005CFE",
     borderRadius: 5,
@@ -68,7 +68,7 @@ const convenioStyles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo oscuro translúcido
   },
   modalContainer: {
-    width: "98%",
+    width: "95%",
     height: "90%",
     padding: 20,
     backgroundColor: "#fea200",
@@ -106,7 +106,7 @@ const convenioStyles = StyleSheet.create({
 
   // Estilo unificado para botones
   btnCommon: {
-    width: "auto", // Deja el ancho automático para ajustarse al contenido
+    width: 350,
     height: 40,
     borderRadius: 5,
     backgroundColor: "#005CFE", // El mismo color de fondo
@@ -142,7 +142,7 @@ const convenioStyles = StyleSheet.create({
     width: "100%",
     marginTop: 10,
     alignItems: "center", // Asegurar que el botón esté centrado
-    paddingBottom: 20, // Espacio en la parte inferior
+    paddingBottom: 25, // Espacio en la parte inferior
   },
   btnGetLink: {
     width: "auto", // Deja el ancho automático para ajustarse al contenido

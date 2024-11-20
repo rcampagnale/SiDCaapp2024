@@ -105,7 +105,7 @@ export default touristStyles = StyleSheet.create({
     marginTop: 10,
   },
   btnGetLink: {
-    width: "auto",
+    width: 350,
     height: 40,
     borderRadius: 5,
     backgroundColor: "#005CFE",
