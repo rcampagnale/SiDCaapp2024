@@ -101,37 +101,22 @@ export default function HandleCampusTeachers() {
           >
             <Image
               style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio.jpg")}
+              source={require("../../assets/convenio/convenio1.jpg")}
               resizeMode="cover"
             />
             <Image
               style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio1.jpg")}
+              source={require("../../assets/convenio/convenio2.jpg")}
               resizeMode="cover"
             />
             <Image
               style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio2.jpg")}
+              source={require("../../assets/convenio/convenio3.jpg")}
               resizeMode="cover"
             />
             <Image
               style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio3.jpg")}
-              resizeMode="cover"
-            />
-            <Image
-              style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio4.jpg")}
-              resizeMode="cover"
-            />
-            <Image
-              style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio5.jpg")}
-              resizeMode="cover"
-            />
-            <Image
-              style={{ width: 200, height: 130 }}
-              source={require("../../assets/predio/predio6.jpg")}
+              source={require("../../assets/convenio/convenio4.jpg")}
               resizeMode="cover"
             />
           </ScrollView>

@@ -76,41 +76,55 @@ export default function CoursesTakenByMe({ setActionType }) {
     seeInfo();
   }, [userData]);
 
-  // Función para mostrar el mensaje de mantenimiento en lugar de descargar
+  // Función para descargar el certificado
   const downloadFile = async (courseCode, dni) => {
-    alert(
-      "Servicio en mantenimiento, no es posible descargar el certificado en este momento."
-    );
-    // Si necesitas realizar una acción de mantenimiento en lugar de la descarga:
-    // Puedes descomentar el siguiente código para mantener la estructura de la función
+    try {
+      // Validar el código del curso
+      if (!courseCode || typeof courseCode !== "string") {
+        alert("El código del curso no es válido. Contacta al administrador.");
+        console.log("Error: Código de curso inválido:", courseCode);
+        return;
+      }
 
-    // try {
-    //   const fileRef = ref(
-    //     storage,
-    //     `certificados_digitales/${courseCode}/${courseCode}_${dni}.pdf`
-    //   );
-    //   const url = await getDownloadURL(fileRef);
-    //   console.log("URL de descarga obtenida:", url);
+      // Limpiar el código del curso (en caso de tener espacios extra)
+      const cleanedCourseCode = courseCode.trim();
+      const fileName = `curso${cleanedCourseCode}_${dni}.pdf`;
+      const fileRef = ref(storage, `certificados_digitales/${fileName}`);
 
-    //   const fileUri = FileSystem.documentDirectory + `${courseCode}_${dni}.pdf`;
-    //   console.log("Ruta de archivo local:", fileUri);
+      console.log("Verificando la existencia del archivo:", fileName);
 
-    //   const response = await FileSystem.downloadAsync(url, fileUri);
+      // Obtener la URL del archivo en Firebase Storage
+      const certificadoURL = await getDownloadURL(fileRef);
 
-    //   if (response.status === 200) {
-    //     alert("Archivo descargado con éxito: " + `${courseCode}_${dni}.pdf`);
-    //     if (await Sharing.isAvailableAsync()) {
-    //       await Sharing.shareAsync(fileUri);
-    //     } else {
-    //       alert("No se puede compartir el archivo en este dispositivo.");
-    //     }
-    //   } else {
-    //     alert("Error al descargar el archivo: " + response.status);
-    //   }
-    // } catch (error) {
-    //   console.error("Error al descargar el archivo:", error);
-    //   alert("Error al descargar el archivo");
-    // }
+      console.log("URL del certificado:", certificadoURL);
+
+      // Descargar el archivo a una ruta local
+      const fileUri = FileSystem.documentDirectory + fileName;
+      const response = await FileSystem.downloadAsync(certificadoURL, fileUri);
+
+      if (response.status === 200) {
+        alert("Archivo descargado con éxito: " + fileName);
+
+        // Compartir el archivo si es posible
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(fileUri);
+        } else {
+          alert("No se puede compartir el archivo en este dispositivo.");
+        }
+      } else {
+        alert("Error al descargar el archivo: " + response.status);
+      }
+    } catch (error) {
+      // Manejar el error si el archivo no existe
+      if (error.code === "storage/object-not-found") {
+        alert(
+          "El certificado no está disponible. Por favor, contacta al administrador."
+        );
+      } else {
+        console.error("Error al obtener el certificado:", error);
+        alert("Error inesperado al descargar el certificado.");
+      }
+    }
   };
 
   return (
@@ -172,7 +186,11 @@ export default function CoursesTakenByMe({ setActionType }) {
               </Text>
               <TouchableOpacity
                 style={styles.downloadButton}
-                onPress={() => downloadFile(e.data().curso, userData.dni)}
+                onPress={() => {
+                  const cursoCode = e.data().curso?.trim(); // Limpiar espacios en blanco
+                  console.log("Código del curso obtenido:", cursoCode);
+                  downloadFile(cursoCode, userData.dni);
+                }}
               >
                 <Text style={styles.downloadButtonText}>
                   Descargar Certificado Digital
