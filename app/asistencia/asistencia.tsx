@@ -103,7 +103,7 @@ export default function HandleCampusTeachers() {
       await addDoc(asistenciaCollection, asistencia);
 
       alert("Asistencia registrada con éxito");
-      toggleModal();
+      toggleModal(); // Cerrar el modal automáticamente después de registrar la asistencia
     } catch (error) {
       console.error("Error al registrar la asistencia:", error);
       alert("Error al registrar la asistencia. Intente nuevamente.");
