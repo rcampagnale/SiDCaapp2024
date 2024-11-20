@@ -37,7 +37,7 @@ export default function HandleCampusTeachers() {
 
   const analytics = getFirestore(firebaseconn);
   const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
-  const registroPruebaCollection = collection(analytics, "registro_prueba"); // Colección de prueba para registros de asistencia
+  const asistenciaCollection = collection(analytics, "asistencia");
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -81,7 +81,6 @@ export default function HandleCampusTeachers() {
     setCurrentDate(formattedDate);
   }, []);
 
-  // Función para registrar la asistencia (en la colección de prueba)
   const registerAttendance = async () => {
     try {
       if (!selectedCourse || !selectedLevel) {
@@ -89,27 +88,39 @@ export default function HandleCampusTeachers() {
         return;
       }
 
-      // Agregar los datos de la asistencia a la colección de prueba en Firebase
-      await addDoc(registroPruebaCollection, {
-        apellido: userData?.apellido,
-        nombre: userData?.nombre,
-        dni: userData?.dni,
-        departamento: userData?.departamento,
-        nivel: selectedLevel,
+      // Registrar los datos del usuario para depuración
+      console.log("Datos del usuario antes de registrar:", userData);
+
+      // Preparar datos con valores predeterminados para evitar errores en Firebase
+      const asistencia = {
+        apellido: userData?.apellido || "Sin apellido",
+        nombre: userData?.nombre || "Sin nombre",
+        dni: userData?.dni || "Sin DNI",
+        departamento: userData?.departamento || "Sin departamento",
+        nivelEducativo: selectedLevel,
         curso: selectedCourse,
         fecha: currentDate,
-      });
+      };
 
-      // Mostrar mensaje de éxito
-      alert("Asistencia cargada con éxito");
+      // Guardar en Firebase
+      await addDoc(asistenciaCollection, asistencia);
 
-      // Cerrar el modal después de registrar la asistencia
+      alert("Asistencia registrada con éxito");
       toggleModal();
     } catch (error) {
       console.error("Error al registrar la asistencia:", error);
       alert("Error al registrar la asistencia. Intente nuevamente.");
     }
   };
+
+  // Depuración adicional al cargar el componente
+  useEffect(() => {
+    if (!userData) {
+      console.error("Los datos del usuario no están disponibles.");
+    } else {
+      console.log("Datos del usuario cargados al iniciar:", userData);
+    }
+  }, [userData]);
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
