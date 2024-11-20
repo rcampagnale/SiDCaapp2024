@@ -82,7 +82,7 @@ export default function HandleTeacherHouse() {
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.btnNews} activeOpacity={1}>
-          <Text>Novedades</Text>
+          <Text style={styles.btnText1}>Novedades</Text>
         </TouchableOpacity>
       </View>
     </View>

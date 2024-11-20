@@ -57,7 +57,7 @@ export default touristStyles = StyleSheet.create({
   btnNews: {
     width: "75%",
     height: 40,
-    backgroundColor: "#fea200",
+    backgroundColor: "#005CFE",
     borderRadius: 5,
     display: "flex",
     justifyContent: "center",
@@ -128,5 +128,10 @@ export default touristStyles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
     width: "97%",
+  },
+  btnText1: {
+    color: "#ffffff", // Color blanco
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

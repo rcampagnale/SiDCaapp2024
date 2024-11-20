@@ -54,7 +54,7 @@ const sala_de_reuniones = StyleSheet.create({
   btnNews: {
     width: "75%",
     height: 40,
-    backgroundColor: "#fea200",
+    backgroundColor: "#005CFE",
     borderRadius: 5,
     display: "flex",
     justifyContent: "center",
@@ -158,10 +158,15 @@ const sala_de_reuniones = StyleSheet.create({
   },
   descripcionText: {
     fontSize: 16, // Tamaño de fuente para la descripción
-    color: "#333", // Color del texto
+    color: "#555", // Color del texto
     marginVertical: 10, // Espaciado arriba y abajo
     paddingHorizontal: 15, // Espaciado horizontal
     textAlign: "justify", // Justificado para que se vea más ordenado
+  },
+  btnText: {
+    color: "#ffffff", // Color blanco
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

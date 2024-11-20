@@ -84,7 +84,7 @@ export default coursesStyles = StyleSheet.create({
     alignItems: "center",
   },
   downloadButton: {
-    backgroundColor: "#00bfff",
+    backgroundColor: "#005CFE",
     padding: 10,
     borderRadius: 5,
     alignItems: "center",

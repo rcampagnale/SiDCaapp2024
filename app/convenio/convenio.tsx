@@ -128,7 +128,7 @@ export default function HandleCampusTeachers() {
           activeOpacity={1}
           onPress={toggleModal}
         >
-          <Text>Lista de Comercios Adheridos</Text>
+          <Text style={styles.btnText1}>Lista de Comercios Adheridos</Text>
         </TouchableOpacity>
 
         {/* Modal con la lista de comercios */}

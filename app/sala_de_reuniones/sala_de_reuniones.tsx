@@ -136,7 +136,7 @@ export default function HandleCampusTeachers() {
                 activeOpacity={1}
                 onPress={() => Linking.openURL(dataTravel.link)} // Abre el enlace con Linking
               >
-                <Text>Unirse a la Reunión</Text>
+                <Text style={styles.btnText}>Unirse a la Reunión</Text>
               </TouchableOpacity>
             )}
           </>

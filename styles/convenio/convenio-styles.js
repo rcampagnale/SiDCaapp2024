@@ -54,7 +54,7 @@ const convenioStyles = StyleSheet.create({
   btnNews: {
     width: "75%",
     height: 40,
-    backgroundColor: "#fea200",
+    backgroundColor: "#005CFE",
     borderRadius: 5,
     display: "flex",
     justifyContent: "center",
@@ -155,6 +155,11 @@ const convenioStyles = StyleSheet.create({
     paddingHorizontal: 20, // Añadir algo de padding para hacerlo más visible
     marginTop: 10, // Espacio entre el contenido y el botón
     alignSelf: "center", // Asegura que el botón esté centrado
+  },
+  btnText1: {
+    color: "#ffffff", // Color blanco
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
