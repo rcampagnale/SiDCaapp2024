@@ -100,7 +100,7 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
         resizeMode="cover"
       >
         <Text style={{ color: "#ffffff", fontSize: 22, fontWeight: 600 }}>
-          Mis Cursos
+          Cursos Aprobados
         </Text>
         <TouchableOpacity
           style={styles.btnSeeInfo}

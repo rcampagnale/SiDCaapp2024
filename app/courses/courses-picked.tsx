@@ -79,93 +79,6 @@ export default function CoursesTakenByMe({ setActionType }) {
     seeInfo();
   }, [userData]);
 
-  // Función para descargar el certificado
-  const downloadFile = async (courseCode, dni, title) => {
-    try {
-      if (!dni || typeof dni !== "string") {
-        alert("El DNI no es válido.");
-        console.log("Error: DNI inválido:", dni);
-        return;
-      }
-
-      const course = courseAproved.find(
-        (curso) => curso.data().curso === courseCode
-      );
-      if (!course || course.data().aprobo !== true) {
-        alert("Este curso no está aprobado o no existe.");
-        return;
-      }
-
-      setCourseName(title);
-
-      const fileName = `${courseCode}_${dni}.pdf`;
-      const fileRef = ref(
-        storage,
-        `certificados_digitales/${courseCode}/${fileName}`
-      );
-
-      console.log(
-        "Buscando archivo en Firebase en la ruta: ",
-        `certificados_digitales/${courseCode}/${fileName}`
-      );
-
-      // Intentar obtener la URL del archivo
-      let certificadoURL;
-      try {
-        certificadoURL = await getDownloadURL(fileRef);
-        console.log("URL del certificado encontrada:", certificadoURL);
-      } catch (error) {
-        if (error.code === "storage/object-not-found") {
-          alert("El certificado no existe en el servidor.");
-        } else if (error.code === "storage/unauthorized") {
-          alert("No tienes permisos para acceder al certificado.");
-        } else {
-          console.error("Error inesperado al buscar el certificado:", error);
-        }
-        return; // Salir si no se puede obtener la URL
-      }
-
-      const fileUri = FileSystem.documentDirectory + fileName;
-      const response = await FileSystem.downloadAsync(certificadoURL, fileUri);
-
-      if (response.status === 200) {
-        alert("Archivo descargado con éxito: " + fileName);
-
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(fileUri);
-        } else {
-          alert("No se puede compartir el archivo en este dispositivo.");
-        }
-
-        // Guardar el enlace del certificado en Firestore
-        const courseId = course.id;
-        const courseDocRef = doc(
-          analytics,
-          "usuarios",
-          userData.id,
-          "cursos",
-          courseId
-        );
-
-        await setDoc(
-          courseDocRef,
-          {
-            certificadoURL: certificadoURL,
-            actualizadoEl: new Date(),
-          },
-          { merge: true }
-        );
-
-        console.log("Enlace del certificado guardado en Firestore.");
-      } else {
-        alert("Error al descargar el archivo: " + response.status);
-      }
-    } catch (error) {
-      console.error("Error inesperado:", error);
-      alert("Hubo un error inesperado. Por favor, intente nuevamente.");
-    }
-  };
-
   return (
     <View style={{ height: "100%", width: "100%", backgroundColor: "#091d24" }}>
       <View style={styles.btnBackToOptions}>
@@ -225,11 +138,11 @@ export default function CoursesTakenByMe({ setActionType }) {
               </Text>
               <TouchableOpacity
                 style={styles.downloadButton}
-                onPress={() => {
-                  const cursoCode = e.data().curso?.trim(); // Limpiar espacios en blanco
-                  console.log("Código del curso obtenido:", cursoCode);
-                  downloadFile(cursoCode, userData.dni, e.data().titulo); // Pasar título como argumento
-                }}
+                onPress={() =>
+                  alert(
+                    "La funcionalidad de descarga de certificados estará disponible próximamente."
+                  )
+                }
               >
                 <Text style={styles.downloadButtonText}>
                   Descargar Certificado Digital

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import styles from "../../styles/sala_de_reuniones/sala_de_reuniones";
 import { useState, useEffect } from "react";
-import { doc, getDoc, getFirestore } from "firebase/firestore"; // Cambié la consulta
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 
 export default function HandleCampusTeachers() {
@@ -43,6 +43,9 @@ export default function HandleCampusTeachers() {
     };
     getData();
   }, []);
+
+  // Verificar si el botón debe estar habilitado
+  const isButtonEnabled = dataTravel && dataTravel.link;
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
@@ -128,18 +131,20 @@ export default function HandleCampusTeachers() {
         {loading ? (
           <Text>Cargando...</Text>
         ) : (
-          <>
-            {/* Botón que redirige al enlace de la reunión si existe */}
-            {dataTravel && dataTravel.link && (
-              <TouchableOpacity
-                style={styles.btnNews}
-                activeOpacity={1}
-                onPress={() => Linking.openURL(dataTravel.link)} // Abre el enlace con Linking
-              >
-                <Text style={styles.btnText}>Unirse a la Reunión</Text>
-              </TouchableOpacity>
-            )}
-          </>
+          <TouchableOpacity
+            style={[
+              styles.btnNews,
+              {
+                backgroundColor: isButtonEnabled ? "#005CFE" : "#A9A9A9",
+              },
+            ]}
+            onPress={
+              isButtonEnabled ? () => Linking.openURL(dataTravel.link) : null
+            }
+            activeOpacity={isButtonEnabled ? 0.7 : 1}
+          >
+            <Text style={styles.btnText}>Unirse a la Reunión</Text>
+          </TouchableOpacity>
         )}
       </View>
     </View>
