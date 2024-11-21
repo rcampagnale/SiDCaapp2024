@@ -31,6 +31,9 @@ export default function CoursesTakenByMe({ setActionType }) {
   const analytics = getFirestore(firebaseconn);
   const storage = getStorage(firebaseconn);
 
+  // Estado para guardar el nombre del curso
+  const [courseName, setCourseName] = useState("");
+
   // Solicitar permisos para acceder a la biblioteca de medios (si es necesario)
   const requestPermission = async () => {
     const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -77,53 +80,89 @@ export default function CoursesTakenByMe({ setActionType }) {
   }, [userData]);
 
   // Función para descargar el certificado
-  const downloadFile = async (courseCode, dni) => {
+  const downloadFile = async (courseCode, dni, title) => {
     try {
-      // Validar el código del curso
-      if (!courseCode || typeof courseCode !== "string") {
-        alert("El código del curso no es válido. Contacta al administrador.");
-        console.log("Error: Código de curso inválido:", courseCode);
+      if (!dni || typeof dni !== "string") {
+        alert("El DNI no es válido.");
+        console.log("Error: DNI inválido:", dni);
         return;
       }
 
-      // Limpiar el código del curso (en caso de tener espacios extra)
-      const cleanedCourseCode = courseCode.trim();
-      const fileName = `curso${cleanedCourseCode}_${dni}.pdf`;
-      const fileRef = ref(storage, `certificados_digitales/${fileName}`);
+      const course = courseAproved.find(
+        (curso) => curso.data().curso === courseCode
+      );
+      if (!course || course.data().aprobo !== true) {
+        alert("Este curso no está aprobado o no existe.");
+        return;
+      }
 
-      console.log("Verificando la existencia del archivo:", fileName);
+      setCourseName(title);
 
-      // Obtener la URL del archivo en Firebase Storage
-      const certificadoURL = await getDownloadURL(fileRef);
+      const fileName = `${courseCode}_${dni}.pdf`;
+      const fileRef = ref(
+        storage,
+        `certificados_digitales/${courseCode}/${fileName}`
+      );
 
-      console.log("URL del certificado:", certificadoURL);
+      console.log(
+        "Buscando archivo en Firebase en la ruta: ",
+        `certificados_digitales/${courseCode}/${fileName}`
+      );
 
-      // Descargar el archivo a una ruta local
+      // Intentar obtener la URL del archivo
+      let certificadoURL;
+      try {
+        certificadoURL = await getDownloadURL(fileRef);
+        console.log("URL del certificado encontrada:", certificadoURL);
+      } catch (error) {
+        if (error.code === "storage/object-not-found") {
+          alert("El certificado no existe en el servidor.");
+        } else if (error.code === "storage/unauthorized") {
+          alert("No tienes permisos para acceder al certificado.");
+        } else {
+          console.error("Error inesperado al buscar el certificado:", error);
+        }
+        return; // Salir si no se puede obtener la URL
+      }
+
       const fileUri = FileSystem.documentDirectory + fileName;
       const response = await FileSystem.downloadAsync(certificadoURL, fileUri);
 
       if (response.status === 200) {
         alert("Archivo descargado con éxito: " + fileName);
 
-        // Compartir el archivo si es posible
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(fileUri);
         } else {
           alert("No se puede compartir el archivo en este dispositivo.");
         }
+
+        // Guardar el enlace del certificado en Firestore
+        const courseId = course.id;
+        const courseDocRef = doc(
+          analytics,
+          "usuarios",
+          userData.id,
+          "cursos",
+          courseId
+        );
+
+        await setDoc(
+          courseDocRef,
+          {
+            certificadoURL: certificadoURL,
+            actualizadoEl: new Date(),
+          },
+          { merge: true }
+        );
+
+        console.log("Enlace del certificado guardado en Firestore.");
       } else {
         alert("Error al descargar el archivo: " + response.status);
       }
     } catch (error) {
-      // Manejar el error si el archivo no existe
-      if (error.code === "storage/object-not-found") {
-        alert(
-          "El certificado no está disponible. Por favor, contacta al administrador."
-        );
-      } else {
-        console.error("Error al obtener el certificado:", error);
-        alert("Error inesperado al descargar el certificado.");
-      }
+      console.error("Error inesperado:", error);
+      alert("Hubo un error inesperado. Por favor, intente nuevamente.");
     }
   };
 
@@ -189,7 +228,7 @@ export default function CoursesTakenByMe({ setActionType }) {
                 onPress={() => {
                   const cursoCode = e.data().curso?.trim(); // Limpiar espacios en blanco
                   console.log("Código del curso obtenido:", cursoCode);
-                  downloadFile(cursoCode, userData.dni);
+                  downloadFile(cursoCode, userData.dni, e.data().titulo); // Pasar título como argumento
                 }}
               >
                 <Text style={styles.downloadButtonText}>

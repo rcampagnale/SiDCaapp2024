@@ -18,6 +18,8 @@ import {
   getFirestore,
   query,
   addDoc,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 
@@ -34,6 +36,7 @@ export default function HandleCampusTeachers() {
   const [selectedCourse, setSelectedCourse] = useState(""); // Curso seleccionado
   const [selectedLevel, setSelectedLevel] = useState(""); // Nivel educativo seleccionado
   const [currentDate, setCurrentDate] = useState<string>(""); // Fecha actual
+  const [isButtonEnabled, setIsButtonEnabled] = useState(false); // Estado del botón
 
   const analytics = getFirestore(firebaseconn);
   const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
@@ -71,6 +74,26 @@ export default function HandleCampusTeachers() {
 
     fetchCourses();
   }, []);
+
+  // Verificar el estado del botón al cargar el modal
+  useEffect(() => {
+    const fetchButtonState = async () => {
+      try {
+        const docRef = doc(asistenciaCollection, "boton"); // Referencia al documento
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().cargar === "si") {
+          setIsButtonEnabled(true); // Habilitar botón
+        } else {
+          setIsButtonEnabled(false); // Deshabilitar botón
+        }
+      } catch (error) {
+        console.error("Error al verificar el estado del botón:", error);
+        setIsButtonEnabled(false); // Deshabilitar en caso de error
+      }
+    };
+
+    fetchButtonState(); // Llamar a la función
+  }, [isModalVisible]); // Solo se ejecuta cuando el modal cambia de estado
 
   // Obtener la fecha actual
   useEffect(() => {
@@ -238,8 +261,16 @@ export default function HandleCampusTeachers() {
                   </Text>
 
                   <TouchableOpacity
-                    style={styles.btnCommon}
-                    onPress={registerAttendance} // Registrar asistencia
+                    style={[
+                      styles.btnCommon,
+                      {
+                        backgroundColor: isButtonEnabled
+                          ? "#005CFE"
+                          : "#A9A9A9",
+                      },
+                    ]}
+                    onPress={isButtonEnabled ? registerAttendance : null}
+                    activeOpacity={isButtonEnabled ? 0.7 : 1}
                   >
                     <Text style={styles.commonBtnText}>
                       Registrar Asistencia
