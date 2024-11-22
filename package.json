@@ -15,6 +15,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@ant-design/icons-react-native": "^2.3.2",
     "@expo/vector-icons": "^14.0.2",
     "@react-native-firebase/app": "^21.5.0",
     "@react-native-firebase/storage": "^21.5.0",
