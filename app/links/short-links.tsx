@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Image,
 } from "react-native";
 import styles from "../../styles/links/links-styles";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -86,6 +87,7 @@ export default function ReferenceLinks() {
           alignItems: "center",
           paddingHorizontal: 20,
           paddingTop: StatusBar.currentHeight || 0, // Ajuste para no cubrir la cámara
+          marginTop: StatusBar.currentHeight || 20, // Espaciado desde la parte superior
         }}
       >
         <Text
@@ -95,10 +97,10 @@ export default function ReferenceLinks() {
             color: "#ffffff",
             marginBottom: 30,
             textAlign: "center",
-            top: -100, // Alineamos el rectángulo en la parte superior
+            top: -90, // Alineamos el rectángulo en la parte superior
           }}
         >
-          ¿Qué deseas hacer?
+          Red de Contactos e Información para el Docente
         </Text>
         {/* Rectángulo naranja */}
         <View
@@ -108,10 +110,11 @@ export default function ReferenceLinks() {
             backgroundColor: "#fea200", // Color de fondo naranja
             marginBottom: 2, // Espacio debajo del rectángulo
             position: "absolute", // Fijamos la posición para que quede detrás de los botones
-            top: 370, // Alineamos el rectángulo en la parte superior
+            top: 200, // Alineamos el rectángulo en la parte superior
             zIndex: -1, // Colocamos el rectángulo detrás de los botones
           }}
         />
+
         <View
           style={{
             width: "100%",
@@ -165,7 +168,7 @@ export default function ReferenceLinks() {
                 fontWeight: "bold",
               }}
             >
-              Servicio Docente
+              Directorio de Contactos Docentes
             </Text>
           </TouchableOpacity>
         </View>
@@ -173,46 +176,24 @@ export default function ReferenceLinks() {
           style={{
             fontSize: 15,
             color: "#091d24",
-            marginTop: 20,
+            marginTop: 150,
             textAlign: "center",
             fontWeight: "bold",
           }}
         >
           Selecciona una opción para continuar
         </Text>
+        {/* Imagen debajo del rectángulo */}
+        <Image
+          style={{ width: 500, height: 140 }}
+          source={require("../../assets/somos/link.jpg")} // Ruta local de la imagen
+          resizeMode="cover"
+        />
       </View>
     );
   }
 
-  if (selectedOption === "Mi App Catamarca") {
-    // Aquí podrías agregar la funcionalidad de "Mi App Catamarca"
-    return (
-      <View
-        style={{
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#f0f0f0",
-        }}
-      >
-        <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>
-          Bienvenido a Mi App Catamarca
-        </Text>
-        <Text
-          style={{
-            fontSize: 16,
-            textAlign: "center",
-            paddingHorizontal: 20,
-          }}
-        >
-          Esta opción estará disponible muy pronto. ¡Mantente atento!
-        </Text>
-      </View>
-    );
-  }
-
-  // Funcionalidad actual de "Link Docente"
+  // Funcionalidad de "Servicio Docente"
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
       <View style={styles.container}>
@@ -234,7 +215,7 @@ export default function ReferenceLinks() {
               color: "#ffffff",
             }}
           >
-            Servicio Docente
+            Directorio de Contactos Docentes
           </Text>
           {loading ? (
             <ActivityIndicator size="large" color="#ffffff" />
