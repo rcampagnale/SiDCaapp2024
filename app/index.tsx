@@ -9,6 +9,7 @@ import {
   Image,
   StatusBar,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import styles from "../styles/signin-styles/sign-in-styles";
 import { useEffect, useState, useContext } from "react";
@@ -39,7 +40,7 @@ export default function SignInApp() {
   const usuariosCollection = collection(db, "usuarios");
 
   const findUser = async () => {
-    if (dniNumber === "") return alert("Ingrese un Numero Valido!!");
+    if (dniNumber === "") return alert("Ingrese un Número Válido!!");
     setLoading(true);
     try {
       const queryFirebase = query(
@@ -86,11 +87,16 @@ export default function SignInApp() {
       keyboardDidHideListener.remove();
     };
   }, []);
+
   const openWspNumber = (urlMedia: string) => {
     Linking.openURL(urlMedia);
   };
+
   return (
-    <View style={{ height: "100%", paddingTop: statusBarHeight }}>
+    <ScrollView
+      style={{ height: "100%", paddingTop: statusBarHeight }}
+      contentContainerStyle={{ flexGrow: 1 }}
+    >
       <View style={styles.container}>
         <View
           style={[
@@ -159,7 +165,7 @@ export default function SignInApp() {
         {isKeyboardVisible === false ? (
           <>
             <ImageBackground
-              source={require("../assets/signinFotos/radio_1.jpg")}
+              source={require("../assets/signinFotos/radio_1.png")}
               resizeMode="cover"
               style={styles.viewRadio}
             >
@@ -179,7 +185,6 @@ export default function SignInApp() {
                 <Text
                   style={{ fontSize: 18, fontWeight: "bold", marginRight: 10 }}
                 >
-                  {" "}
                   PLAY FM 106.5
                 </Text>
                 <FontAwesome6 name="radio" size={24} color="black" />
@@ -251,6 +256,6 @@ export default function SignInApp() {
           </>
         ) : null}
       </View>
-    </View>
+    </ScrollView>
   );
 }

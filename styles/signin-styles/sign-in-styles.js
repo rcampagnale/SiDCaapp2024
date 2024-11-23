@@ -18,7 +18,7 @@ export default signInStyles = StyleSheet.create({
   },
   viewShowMedias: {
     width: "100%",
-    height: 150,
+    height: 90,
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-around",
@@ -83,14 +83,16 @@ export default signInStyles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     flexDirection: "row",
+    marginTop: 18,
   },
   viewRadio: {
     width: "100%",
-    height: 80,
+    height: 100,
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-around",
     alignItems: "center",
+    marginTop: 60,
   },
   radioBtn: {
     width: "80%",
