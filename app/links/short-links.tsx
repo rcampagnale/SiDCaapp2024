@@ -9,7 +9,7 @@ import {
   Linking,
   Image,
 } from "react-native";
-import styles from "../../styles/links/links-styles";
+import styles from "../../styles/links/links-styles"; // Importando estilos
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import {
@@ -23,21 +23,11 @@ import {
 const BackButton = ({ onPress }: { onPress: () => void }) => {
   return (
     <TouchableOpacity
-      style={{
-        width: "100%",
-        backgroundColor: "#fea200", // Color de fondo naranja
-        paddingVertical: 10, // Ajusta el tamaño vertical del botón
-        flexDirection: "row", // Alinea el ícono a la izquierda del texto
-        justifyContent: "flex-start", // Alinea los elementos al inicio (a la izquierda)
-        alignItems: "center", // Centra verticalmente los elementos dentro del botón
-        marginBottom: 20, // Espacio debajo del botón
-      }}
+      style={styles.backButton} // Usamos el estilo extraído
       onPress={onPress}
     >
-      {/* Ícono a la izquierda */}
       <AntDesign name="back" size={24} color="black" />
-      {/* Texto "Volver" */}
-      <Text style={{ fontSize: 18, marginLeft: 5 }}>Volver</Text>
+      <Text style={styles.backButtonText}>Volver</Text>
     </TouchableOpacity>
   );
 };
@@ -46,7 +36,7 @@ export default function ReferenceLinks() {
   const statusBarHeight: number | undefined = StatusBar.currentHeight;
   const [linkTo, setLinksTo] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null); // Estado para manejar la opción seleccionada
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const db = getFirestore(firebaseconn);
   const enlacesCollection = collection(db, "enlaces");
 
@@ -57,7 +47,6 @@ export default function ReferenceLinks() {
   useEffect(() => {
     const seeData = async () => {
       if (selectedOption === "Link Docente") {
-        // Solo carga los enlaces si se selecciona "Link Docente"
         try {
           setLoading(true);
           const queryFirebase = query(
@@ -79,121 +68,53 @@ export default function ReferenceLinks() {
 
   if (!selectedOption) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#091d24", // Color de fondo especificado
-          justifyContent: "center",
-          alignItems: "center",
-          paddingHorizontal: 20,
-          paddingTop: StatusBar.currentHeight || 0, // Ajuste para no cubrir la cámara
-          marginTop: StatusBar.currentHeight || 20, // Espaciado desde la parte superior
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 24,
-            fontWeight: "bold",
-            color: "#ffffff",
-            marginBottom: 30,
-            textAlign: "center",
-            top: -90, // Alineamos el rectángulo en la parte superior
-          }}
-        >
-          Red de Contactos e Información para el Docente
-        </Text>
-        {/* Rectángulo naranja */}
-        <View
-          style={{
-            width: "200%", // Ancho completo
-            height: 250, // Altura del rectángulo
-            backgroundColor: "#fea200", // Color de fondo naranja
-            marginBottom: 2, // Espacio debajo del rectángulo
-            position: "absolute", // Fijamos la posición para que quede detrás de los botones
-            top: 200, // Alineamos el rectángulo en la parte superior
-            zIndex: -1, // Colocamos el rectángulo detrás de los botones
-          }}
+      <View style={[styles.container, { paddingTop: statusBarHeight }]}>
+        {/* Agregamos el StatusBar con fondo blanco y translucido */}
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="#ffffff"
+          translucent={true} // Hacer la barra de estado translucida
         />
 
-        <View
-          style={{
-            width: "100%",
-            flexDirection: "column",
-            justifyContent: "space-evenly",
-            alignItems: "center",
-            gap: 20,
-            zIndex: 1, // Aseguramos que los botones queden encima
-          }}
-        >
-          {/* Botón Mi App Catamarca */}
+        <Text style={styles.title1}>
+          Red de Contactos e Información para el Docente
+        </Text>
+
+        {/* Agregando el rectángulo naranja */}
+        <View style={styles.orangeRectangle}></View>
+
+        <View style={styles.buttonWrapper}>
           <TouchableOpacity
-            style={{
-              width: "100%",
-              padding: 20,
-              borderRadius: 10,
-              backgroundColor: "#005CFE", // Color gris para el estado deshabilitado
-              alignItems: "center",
-              elevation: 5,
-            }}
+            style={styles.button}
             onPress={() => {}}
-            disabled={true} // Deshabilita el botón
+            disabled={true}
           >
-            <Text
-              style={{
-                fontSize: 18,
-                color: "#fff",
-                fontWeight: "bold",
-              }}
-            >
-              Mi Catamarca
-            </Text>
+            <Text style={styles.buttonText}>Mi Catamarca</Text>
           </TouchableOpacity>
 
-          {/* Botón Link Docente */}
           <TouchableOpacity
-            style={{
-              width: "100%",
-              padding: 20,
-              borderRadius: 10,
-              backgroundColor: "#005CFE",
-              alignItems: "center",
-              elevation: 5,
-            }}
+            style={styles.button}
             onPress={() => setSelectedOption("Link Docente")}
           >
-            <Text
-              style={{
-                fontSize: 18,
-                color: "#fff",
-                fontWeight: "bold",
-              }}
-            >
+            <Text style={styles.buttonText}>
               Directorio de Contactos Docentes
             </Text>
           </TouchableOpacity>
         </View>
-        <Text
-          style={{
-            fontSize: 15,
-            color: "#091d24",
-            marginTop: 170,
-            textAlign: "center",
-            fontWeight: "bold",
-          }}
-        >
+        <Text style={styles.footerText}>
           Selecciona una opción para continuar
         </Text>
-        {/* Imagen debajo del rectángulo */}
+
+        {/* Ajustando la imagen al ancho de la pantalla */}
         <Image
-          style={{ width: 500, height: 140 }}
-          source={require("../../assets/somos/link.jpg")} // Ruta local de la imagen
-          resizeMode="cover"
+          style={styles.image}
+          source={require("../../assets/somos/link.jpg")}
+          resizeMode="contain" // Ajuste automático de la imagen
         />
       </View>
     );
   }
 
-  // Funcionalidad de "Servicio Docente"
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
       <View style={styles.container}>
@@ -207,16 +128,7 @@ export default function ReferenceLinks() {
             rowGap: 10,
           }}
         >
-          <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              marginBottom: 20,
-              color: "#ffffff",
-            }}
-          >
-            Directorio de Contactos Docentes
-          </Text>
+          <Text style={styles.title}>Directorio de Contactos Docentes</Text>
           {loading ? (
             <ActivityIndicator size="large" color="#ffffff" />
           ) : (
@@ -238,15 +150,7 @@ export default function ReferenceLinks() {
                   style={styles.btnGetLink}
                   onPress={() => openInformation(e.data().link)}
                 >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      color: "#ffffff",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Ver Información
-                  </Text>
+                  <Text style={styles.btnText}>Ver Información</Text>
                 </TouchableOpacity>
               </View>
             ))
