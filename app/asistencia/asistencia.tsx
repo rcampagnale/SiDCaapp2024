@@ -255,7 +255,7 @@ export default function HandleCampusTeachers() {
 
                   {/* Mostrar la fecha debajo de la lista de cursos */}
                   <Text
-                    style={{ fontSize: 16, fontWeight: "bold", marginTop: 10 }}
+                    style={{ fontSize: 16, fontWeight: "bold", marginTop: -8 }}
                   >
                     Fecha: {currentDate}
                   </Text>
