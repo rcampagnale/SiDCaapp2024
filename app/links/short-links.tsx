@@ -176,7 +176,7 @@ export default function ReferenceLinks() {
           style={{
             fontSize: 15,
             color: "#091d24",
-            marginTop: 150,
+            marginTop: 170,
             textAlign: "center",
             fontWeight: "bold",
           }}
