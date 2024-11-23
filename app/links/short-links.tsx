@@ -101,9 +101,6 @@ export default function ReferenceLinks() {
             </Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.footerText}>
-          Selecciona una opción para continuar
-        </Text>
 
         {/* Ajustando la imagen al ancho de la pantalla */}
         <Image
@@ -147,7 +144,6 @@ export default function ReferenceLinks() {
                   {e.data().descripcion}
                 </Text>
                 <TouchableOpacity
-                  style={styles.btnGetLink}
                   onPress={() => openInformation(e.data().link)}
                 >
                   <Text style={styles.btnText}>Ver Información</Text>

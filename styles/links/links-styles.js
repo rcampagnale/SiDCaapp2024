@@ -45,12 +45,13 @@ export default linkStyles = StyleSheet.create({
 
   // Estilos para los botones
   buttonWrapper: {
-    width: "100%",
-    flexDirection: "column",
-    justifyContent: "space-evenly",
-    alignItems: "center",
-    gap: 25,
-    zIndex: 1,
+    width: "100%", // Ajusta al 100% del contenedor
+    flexDirection: "column", // Los botones se dispondrán en columna
+    justifyContent: "space-evenly", // Espacio entre los botones
+    alignItems: "center", // Centra los botones horizontalmente
+    gap: 28, // Espaciado entre los botones
+    zIndex: 1, // Controla la superposición, si es necesario
+    marginTop: -150, // Ajusta este valor para mover los botones hacia abajo
   },
 
   // Estilos comunes de los botones
@@ -69,23 +70,15 @@ export default linkStyles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // Estilos del pie de página
-  footerText: {
-    fontSize: 15,
-    color: "#091d24",
-    marginTop: 170,
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-
   // Estilos del rectángulo naranja
   orangeRectangle: {
-    width: "200%", // Ancho mayor al 100% para hacer que el rectángulo sobresalga
-    height: 220, // Altura del rectángulo
-    backgroundColor: "#fea200", // Color de fondo naranja
-    position: "absolute", // Fijamos la posición para que quede detrás de los botones
-    top: 190, // Alineamos el rectángulo en la parte superior
-    zIndex: 1, // Colocamos el rectángulo detrás de los botones
+    width: "200%",
+    minHeight: 350, // Altura mínima para el rectángulo
+    backgroundColor: "#fea200",
+    position: "absolute",
+    top: 200,
+    left: "-50%", // Centrado
+    zIndex: 0,
   },
 
   // Estilos de la imagen
@@ -123,27 +116,6 @@ export default linkStyles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // Estilos de los botones dentro de las cajas de cursos
-  btnGetLink: {
-    width: "80%",
-    height: 40,
-    borderRadius: 5,
-    backgroundColor: "#005CFE",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  // Estilos adicionales
-  linksBox: {
-    width: "85%",
-    height: 150,
-    backgroundColor: "#fea200",
-    borderRadius: 10,
-    display: "flex",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
   btnText: {
     fontSize: 18, // Tamaño de fuente más grande
     fontWeight: "bold", // Texto en negrita
@@ -153,7 +125,5 @@ export default linkStyles = StyleSheet.create({
     paddingHorizontal: 15, // Espaciado horizontal (izquierda y derecha)
     backgroundColor: "#005CFE", // Fondo azul
     borderRadius: 5, // Bordes redondeados
-    elevation: 3, // Sombra para dar un efecto de profundidad (solo en Android)
-    textTransform: "uppercase", // Transforma el texto a mayúsculas
   },
 });
