@@ -41,6 +41,7 @@ export default function HandleCampusTeachers() {
   const analytics = getFirestore(firebaseconn);
   const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
   const asistenciaCollection = collection(analytics, "asistencia");
+  const cuotasCollection = collection(analytics, "cuotas");
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -79,12 +80,27 @@ export default function HandleCampusTeachers() {
   useEffect(() => {
     const fetchButtonState = async () => {
       try {
-        const docRef = doc(asistenciaCollection, "boton"); // Referencia al documento
+        const docRef = doc(cuotasCollection, "boton"); // Referencia al documento en 'cuotas'
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().cargar === "si") {
+
+        if (!docSnap.exists()) {
+          console.warn(
+            "El documento 'boton' no existe en la colección 'cuotas'."
+          );
+          setIsButtonEnabled(false); // Deshabilitar si el documento no existe
+          return;
+        }
+
+        const cargarValue = docSnap.data().cargar;
+
+        // Verificar el valor del campo 'cargar'
+        if (cargarValue === "si") {
           setIsButtonEnabled(true); // Habilitar botón
-        } else {
+        } else if (cargarValue === "no") {
           setIsButtonEnabled(false); // Deshabilitar botón
+        } else {
+          console.warn(`Valor inesperado para 'cargar': ${cargarValue}`);
+          setIsButtonEnabled(false); // Manejar valores inesperados
         }
       } catch (error) {
         console.error("Error al verificar el estado del botón:", error);

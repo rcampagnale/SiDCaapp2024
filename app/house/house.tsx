@@ -24,7 +24,7 @@ export default function HandleTeacherHouse() {
         <View style={styles.viewInformation}>
           <Text style={styles.text}>
             En Lavalle 815 en la ciudad capital en Catamarca, la casa del
-            docente es el anexo de servicios que ofrece SIDCA. Hospedaje, bar y
+            docente es el anexo de servicios que ofrece SiDCa. Hospedaje, bar y
             cocina compartida, Salón de conferencias y sala de computación. Más
             servicios para la docencia. ¡Súmate a nuestros beneficios ¡
           </Text>

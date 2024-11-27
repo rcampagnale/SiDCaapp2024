@@ -78,11 +78,12 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
                   paddingHorizontal: 10,
                 }}
               >
-                El programa de capacitación de SIDCA brinda durante todo el año
-                ofertas de capacitación y perfeccionamiento docente gratuita a
-                sus afiliados, mediante cursos, talleres, congresos y seminarios
-                que propician el acceso a material innovador y actualizado,
-                contribuyendo en la profesionalización de nuestros docentes.
+                La Secretaría de Capacitación de SiDCa brinda durante todo el
+                año ofertas de capacitación y perfeccionamiento docente gratuita
+                a sus afiliados, mediante cursos, talleres, congresos y
+                seminarios que propician el acceso a material innovador y
+                actualizado, contribuyendo en la profesionalización de nuestros
+                docentes.
               </Text>
             </View>
 

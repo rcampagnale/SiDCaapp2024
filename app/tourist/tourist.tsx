@@ -62,12 +62,12 @@ export default function HandleTourist() {
         </View>
         <View style={styles.viewInformation}>
           <Text style={styles.text}>
-            SIDCA desarrolla su programa de turismo social para sus afiliados,
-            con la firma de convenios con otras entidades gremiales a nivel país
-            que permiten disfrutar del tiempo libre y vacacional mediante sus
-            planes de paseo a corredores turísticos de la Argentina y Catamarca,
-            gozando de los mejores paisajes y servicios. ¡Súmate a los
-            beneficios!
+            La Secretaría de Turismo desarrolla su programa de turismo social
+            para sus afiliados, con la firma de convenios con otras entidades
+            gremiales a nivel país que permiten disfrutar del tiempo libre y
+            vacacional mediante sus planes de paseo a corredores turísticos de
+            la Argentina y Catamarca, gozando de los mejores paisajes y
+            servicios. ¡Súmate a los beneficios!
           </Text>
         </View>
         <View style={styles.carruselContainer}>

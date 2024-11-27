@@ -79,7 +79,7 @@ export default function HandleCampusTeachers() {
             descuentos especiales y condiciones preferenciales en diferentes
             sectores comerciales. Presentando la credencial digital a través de
             la app, los afiliados podrán acceder fácilmente a estos beneficios.
-            Estos convenios reflejan el compromiso del sindicato con el
+            Estos convenios reflejan el compromiso del Sindicato con el
             bienestar de sus miembros, brindando ventajas adicionales en
             productos y servicios de calidad. ¡No pierdas la oportunidad de
             aprovechar estos beneficios exclusivos que solo los afiliados pueden

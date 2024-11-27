@@ -21,7 +21,7 @@ export default function HandleCampusTeachers() {
         </View>
         <View style={styles.viewInformation}>
           <Text style={styles.text}>
-            SIDCA próximamente inaugurará su predio deportivo cultural y
+            SiDCa próximamente inaugurará su predio deportivo cultural y
             recreativo, para todos sus afiliados. Salón de usos múltiples,
             cancha de futbol y vóley. Un predio para la familia docente en Banda
             de Varela a metros de Rio del Valle.! Súmate a nuestros Beneficios ¡
