@@ -41,7 +41,7 @@ export default function HandleCampusTeachers() {
   const analytics = getFirestore(firebaseconn);
   const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
   const asistenciaCollection = collection(analytics, "asistencia");
-  const cuotasCollection = collection(analytics, "cuotas");
+  const codCollection = collection(analytics, "cod");
 
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
@@ -80,7 +80,7 @@ export default function HandleCampusTeachers() {
   useEffect(() => {
     const fetchButtonState = async () => {
       try {
-        const docRef = doc(cuotasCollection, "boton"); // Referencia al documento en 'cuotas'
+        const docRef = doc(codCollection, "boton"); // Referencia al documento en 'cuotas'
         const docSnap = await getDoc(docRef);
 
         if (!docSnap.exists()) {
