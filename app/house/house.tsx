@@ -1,3 +1,4 @@
+import React from "react";
 import {
   View,
   Text,
@@ -7,12 +8,16 @@ import {
   TouchableOpacity,
   Linking,
 } from "react-native";
+import { AntDesign, Entypo } from "@expo/vector-icons"; // Importación de íconos
 import styles from "../../styles/tourist/tourist-styles";
+
 export default function HandleTeacherHouse() {
   const statusBarHeight = StatusBar.currentHeight;
-  const openWspNumber = (urlMedia: string) => {
-    Linking.openURL(urlMedia);
+
+  const openLink = (url: string) => {
+    Linking.openURL(url);
   };
+
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
       <View style={styles.container}>
@@ -68,11 +73,13 @@ export default function HandleTeacherHouse() {
           </ScrollView>
         </View>
         <View style={styles.viewGetInformation}>
-          <Text style={{ fontSize: 24, fontWeight: 600 }}>Hace tu reserva</Text>
+          <Text style={{ fontSize: 24, fontWeight: "600" }}>
+            Hace tu reserva
+          </Text>
           <TouchableOpacity
             style={styles.btnWhatsApp}
             activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834250139")}
+            onPress={() => openLink("https://wa.me/5493834250139")}
           >
             <Text style={{ fontSize: 18 }}>Contacto</Text>
             <Image
@@ -81,8 +88,19 @@ export default function HandleTeacherHouse() {
             />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.btnNews} activeOpacity={1}>
-          <Text style={styles.btnText1}>Novedades</Text>
+        {/* Botón Ver ubicación */}
+        <TouchableOpacity
+          style={[
+            styles.btnNews,
+            { flexDirection: "row", alignItems: "center" },
+          ]}
+          activeOpacity={1}
+          onPress={() => openLink("https://maps.app.goo.gl/uVD5hSbcXxM6APm28")}
+        >
+          <Entypo name="location" size={22} color="white" />
+          <Text style={[styles.btnText1, { marginLeft: 15 }]}>
+            Ver ubicación
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
