@@ -140,7 +140,7 @@ export default function HandleTourist() {
           activeOpacity={1}
           onPress={toggleModal}
         >
-          <Text style={styles.btnText1}>Novedades</Text>
+          <Text style={styles.btnText1}>Pack de viajes disponible</Text>
         </TouchableOpacity>
         <Modal
           animationType="slide"

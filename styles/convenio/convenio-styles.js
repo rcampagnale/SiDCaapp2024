@@ -161,6 +161,13 @@ const convenioStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  Textmodal: {
+    fontSize: 22,
+    color: "#000000", // Cambia el color según el fondo de tu modal
+    textAlign: "center",
+    fontWeight: "bold",
+    marginVertical: 20,
+  },
 });
 
 export default convenioStyles;

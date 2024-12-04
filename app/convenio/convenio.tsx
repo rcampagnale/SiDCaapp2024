@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,8 +10,6 @@ import {
   ActivityIndicator,
   Linking,
 } from "react-native";
-import styles from "../../styles/convenio/convenio-styles";
-import { useState, useEffect } from "react";
 import {
   collection,
   getDocs,
@@ -18,50 +17,76 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import styles from "../../styles/convenio/convenio-styles";
 import { firebaseconn } from "@/constants/FirebaseConn";
 
 export default function HandleCampusTeachers() {
   const statusBarHeight = StatusBar.currentHeight;
 
-  // Estado para manejar la visibilidad del modal
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [loading, setLoading] = useState(true); // Estado para controlar la carga de datos
-  const [dataTravel, setDataTravel] = useState<any>([]); // Cambié el tipo de estado para ser un array
+  // Estados para manejar la visibilidad de los modales
+  const [isModalVisible1, setIsModalVisible1] = useState(false);
+  const [isModalVisible2, setIsModalVisible2] = useState(false);
+
+  // Estados para manejar la carga y los datos de cada modal
+  const [loading1, setLoading1] = useState(true);
+  const [loading2, setLoading2] = useState(true);
+
+  const [dataPredio, setDataPredio] = useState<any[]>([]);
+  const [dataCasa, setDataCasa] = useState<any[]>([]);
 
   const analytics = getFirestore(firebaseconn);
-  const data = collection(analytics, "novedades"); // Colección de novedades
+  const data = collection(analytics, "novedades");
 
-  // Función para abrir el enlace
+  // Función para abrir enlaces externos
   const openOtherData = (urlMedia: string) => {
     Linking.openURL(urlMedia);
   };
 
-  // Filtrar por categoría "Predio"
-  const filteredData = query(data, where("categoria", "==", "predio"));
-
-  // Función para abrir o cerrar el modal
-  const toggleModal = () => {
-    setIsModalVisible(!isModalVisible);
+  // Función para abrir o cerrar los modales
+  const toggleModal1 = () => {
+    setIsModalVisible1(!isModalVisible1);
   };
 
-  // Cargar datos desde Firebase
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        setLoading(true);
-        const res = await getDocs(filteredData); // Usamos la consulta filtrada
-        const dataList = res.docs.map((doc) => doc.data());
+  const toggleModal2 = () => {
+    setIsModalVisible2(!isModalVisible2);
+  };
 
-        // Asegúrate de que los datos sean un array
-        setDataTravel(dataList);
+  // Cargar datos de la categoría "predio"
+  useEffect(() => {
+    const getDataPredio = async () => {
+      try {
+        setLoading1(true);
+        const filteredData = query(data, where("categoria", "==", "predio"));
+        const res = await getDocs(filteredData);
+        const dataList = res.docs.map((doc) => doc.data());
+        setDataPredio(dataList);
       } catch (error) {
-        console.error("Error al cargar los datos:", error);
+        console.error("Error al cargar datos de predio:", error);
         alert(`Error: ${error}`);
       } finally {
-        setLoading(false);
+        setLoading1(false);
       }
     };
-    getData();
+    getDataPredio();
+  }, []);
+
+  // Cargar datos de la categoría "casa"
+  useEffect(() => {
+    const getDataCasa = async () => {
+      try {
+        setLoading2(true);
+        const filteredData = query(data, where("categoria", "==", "casa"));
+        const res = await getDocs(filteredData);
+        const dataList = res.docs.map((doc) => doc.data());
+        setDataCasa(dataList);
+      } catch (error) {
+        console.error("Error al cargar datos de casa:", error);
+        alert(`Error: ${error}`);
+      } finally {
+        setLoading2(false);
+      }
+    };
+    getDataCasa();
   }, []);
 
   return (
@@ -75,19 +100,19 @@ export default function HandleCampusTeachers() {
         <View style={styles.viewInformation}>
           <Text style={styles.text}>
             El Sindicato de Docentes de Catamarca ha firmado convenios con
-            diversas empresas de la ciudad, ofreciendo a sus afiliados
-            descuentos especiales y condiciones preferenciales en diferentes
-            sectores comerciales. Presentando la credencial digital a través de
-            la app, los afiliados podrán acceder fácilmente a estos beneficios.
-            Estos convenios reflejan el compromiso del Sindicato con el
-            bienestar de sus miembros, brindando ventajas adicionales en
-            productos y servicios de calidad. ¡No pierdas la oportunidad de
-            aprovechar estos beneficios exclusivos que solo los afiliados pueden
-            disfrutar!
+            diversas empresas de la ciudad y hoteles en diferentes provincias
+            del país, ofreciendo a sus afiliados descuentos especiales y
+            condiciones preferenciales en distintos sectores comerciales.
+            Presentando la credencial digital a través de la aplicación, los
+            afiliados podrán acceder fácilmente a estos beneficios. Estos
+            convenios reflejan el compromiso del Sindicato con el bienestar de
+            sus miembros, brindando acceso a productos y servicios de calidad en
+            condiciones exclusivas. ¡No pierdas la oportunidad de disfrutar de
+            estos beneficios reservados solo para los afiliados!
           </Text>
         </View>
 
-        {/* Carrusel de imágenes (se mantienen las imágenes estáticas) */}
+        {/* Carrusel de imágenes */}
         <View style={styles.carruselContainer}>
           <ScrollView
             style={styles.carrusel}
@@ -122,29 +147,29 @@ export default function HandleCampusTeachers() {
           </ScrollView>
         </View>
 
-        {/* Botón para ver la lista de comercios adheridos */}
+        {/* Botón 1 para ver la lista de comercios adheridos */}
         <TouchableOpacity
           style={styles.btnNews}
           activeOpacity={1}
-          onPress={toggleModal}
+          onPress={toggleModal1}
         >
           <Text style={styles.btnText1}>Lista de Comercios Adheridos</Text>
         </TouchableOpacity>
 
-        {/* Modal con la lista de comercios */}
+        {/* Modal 1 */}
         <Modal
-          visible={isModalVisible}
+          visible={isModalVisible1}
           animationType="slide"
           transparent={true}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-              {loading ? (
+              {loading1 ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
                 <ScrollView style={styles.modalContent}>
-                  {dataTravel.length > 0 ? (
-                    dataTravel.map((item, index) => (
+                  {dataPredio.length > 0 ? (
+                    dataPredio.map((item, index) => (
                       <View key={index} style={styles.modalItem}>
                         {item.imagen && (
                           <Image
@@ -160,7 +185,7 @@ export default function HandleCampusTeachers() {
                         )}
                         {item.link && (
                           <TouchableOpacity
-                            style={styles.btnCommon} // Estilo común para botones
+                            style={styles.btnCommon}
                             onPress={() => openOtherData(item.link)}
                           >
                             <Text style={styles.commonBtnText}>Contacto</Text>
@@ -169,14 +194,7 @@ export default function HandleCampusTeachers() {
                       </View>
                     ))
                   ) : (
-                    <Text
-                      style={{
-                        fontWeight: "bold",
-                        color: "#000000",
-                        fontSize: 25,
-                        textAlign: "center",
-                      }}
-                    >
+                    <Text style={styles.Textmodal}>
                       Actualmente no disponemos de convenios activos.
                     </Text>
                   )}
@@ -184,8 +202,73 @@ export default function HandleCampusTeachers() {
               )}
               <View style={styles.btnsBox}>
                 <TouchableOpacity
-                  style={styles.btnCommon} // Estilo común para botones
-                  onPress={toggleModal}
+                  style={styles.btnCommon}
+                  onPress={toggleModal1}
+                >
+                  <Text style={styles.commonBtnText}>Cerrar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Botón 2 para ver la lista de convenios de casas */}
+        <TouchableOpacity
+          style={styles.btnNews}
+          activeOpacity={1}
+          onPress={toggleModal2}
+        >
+          <Text style={styles.btnText1}>Convenios - Hoteles Provinciales</Text>
+        </TouchableOpacity>
+
+        {/* Modal 2 */}
+        <Modal
+          visible={isModalVisible2}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              {loading2 ? (
+                <ActivityIndicator size="large" color="#ffffff" />
+              ) : (
+                <ScrollView style={styles.modalContent}>
+                  {dataCasa.length > 0 ? (
+                    dataCasa.map((item, index) => (
+                      <View key={index} style={styles.modalItem}>
+                        {item.imagen && (
+                          <Image
+                            source={{ uri: item.imagen }}
+                            style={styles.modalItemImage}
+                            resizeMode="contain"
+                          />
+                        )}
+                        {item.descripcion && (
+                          <Text style={styles.textAbout}>
+                            {item.descripcion}
+                          </Text>
+                        )}
+                        {item.link && (
+                          <TouchableOpacity
+                            style={styles.btnCommon}
+                            onPress={() => openOtherData(item.link)}
+                          >
+                            <Text style={styles.commonBtnText}>Contacto</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={styles.Textmodal}>
+                      Actualmente no disponemos de convenios activos.
+                    </Text>
+                  )}
+                </ScrollView>
+              )}
+              <View style={styles.btnsBox}>
+                <TouchableOpacity
+                  style={styles.btnCommon}
+                  onPress={toggleModal2}
                 >
                   <Text style={styles.commonBtnText}>Cerrar</Text>
                 </TouchableOpacity>
