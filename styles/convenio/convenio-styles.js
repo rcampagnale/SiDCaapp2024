@@ -24,8 +24,8 @@ const convenioStyles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: 10,
-    paddingTop: 10,
+    paddingBottom: 1,
+    paddingTop: 1,
   },
   text: {
     textAlign: "justify",
@@ -59,7 +59,7 @@ const convenioStyles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 100,
+    marginBottom: 1,
   },
   modalOverlay: {
     flex: 1,
@@ -161,12 +161,28 @@ const convenioStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  btnText2: {
+    color: "#ffffff", // Color blanco
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
   Textmodal: {
     fontSize: 22,
     color: "#000000", // Cambia el color según el fondo de tu modal
     textAlign: "center",
     fontWeight: "bold",
     marginVertical: 20,
+  },
+  btnHotelConv: {
+    width: "80%", // Mantén el mismo ancho que el botón anterior
+    height: 40, // Ajusta la altura del botón
+    backgroundColor: "#005CFE",
+    borderRadius: 5,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 170,
   },
 });
 

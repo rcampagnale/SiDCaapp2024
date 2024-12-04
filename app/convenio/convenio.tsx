@@ -214,11 +214,11 @@ export default function HandleCampusTeachers() {
 
         {/* Botón 2 para ver la lista de convenios de casas */}
         <TouchableOpacity
-          style={styles.btnNews}
+          style={styles.btnHotelConv} // Usamos el nuevo estilo
           activeOpacity={1}
           onPress={toggleModal2}
         >
-          <Text style={styles.btnText1}>Convenios - Hoteles Provinciales</Text>
+          <Text style={styles.btnText2}>Convenios - Hoteles Provinciales</Text>
         </TouchableOpacity>
 
         {/* Modal 2 */}

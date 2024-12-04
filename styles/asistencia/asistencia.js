@@ -24,8 +24,8 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: 20,
-    paddingTop: 20,
+    paddingBottom: 1,
+    paddingTop: 10,
   },
   text: {
     textAlign: "justify",
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 100,
+    marginBottom: 250,
   },
   modalOverlay: {
     flex: 1,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     height: 200,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 2,
+    marginBottom: -35,
   },
   imageOutsideText: {
     width: "100%",
