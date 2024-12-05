@@ -159,7 +159,7 @@ export default function HandleCampusTeachers() {
         {/* Modal 1 */}
         <Modal
           visible={isModalVisible1}
-          animationType="slide"
+          animationType="fade" // Cambiado de "slide" a "fade" para mejorar el rendimiento
           transparent={true}
         >
           <View style={styles.modalOverlay}>
@@ -167,7 +167,12 @@ export default function HandleCampusTeachers() {
               {loading1 ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
-                <ScrollView style={styles.modalContent}>
+                <ScrollView
+                  style={styles.modalContent}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                  keyboardShouldPersistTaps="handled"
+                  removeClippedSubviews={true}
+                >
                   {dataPredio.length > 0 ? (
                     dataPredio.map((item, index) => (
                       <View key={index} style={styles.modalItem}>
@@ -214,7 +219,7 @@ export default function HandleCampusTeachers() {
 
         {/* Botón 2 para ver la lista de convenios de casas */}
         <TouchableOpacity
-          style={styles.btnHotelConv} // Usamos el nuevo estilo
+          style={styles.btnHotelConv}
           activeOpacity={1}
           onPress={toggleModal2}
         >
@@ -224,7 +229,7 @@ export default function HandleCampusTeachers() {
         {/* Modal 2 */}
         <Modal
           visible={isModalVisible2}
-          animationType="slide"
+          animationType="fade"
           transparent={true}
         >
           <View style={styles.modalOverlay}>
@@ -232,7 +237,12 @@ export default function HandleCampusTeachers() {
               {loading2 ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
-                <ScrollView style={styles.modalContent}>
+                <ScrollView
+                  style={styles.modalContent}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                  keyboardShouldPersistTaps="handled"
+                  removeClippedSubviews={true}
+                >
                   {dataCasa.length > 0 ? (
                     dataCasa.map((item, index) => (
                       <View key={index} style={styles.modalItem}>
