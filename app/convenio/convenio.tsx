@@ -263,7 +263,7 @@ export default function HandleCampusTeachers() {
                             style={styles.btnCommon}
                             onPress={() => openOtherData(item.link)}
                           >
-                            <Text style={styles.commonBtnText}>Contacto</Text>
+                            <Text style={styles.commonBtnText}>Reservar</Text>
                           </TouchableOpacity>
                         )}
                       </View>

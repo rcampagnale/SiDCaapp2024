@@ -44,6 +44,10 @@ export default function ReferenceLinks() {
     Linking.openURL(urlMedia);
   };
 
+  // URL para el botón "Mi Catamarca"
+  const miCatamarcaUrl =
+    "https://api-mi.catamarca.gob.ar/accounts/login/?next=/openid/authorize%3Fclient_id%3D990406%26redirect_uri%3Dhttp%253A%252F%252Fmi.catamarca.gob.ar%252F%26response_type%3Dcode%26scope%3Dopenid%2Bprofile%2Bemail%26state%3Db326f7a361474c4697adcd201c4dc0ff%26code_challenge%3D1bUgdLkTi1TAwZLid6RoaVa_HaKLBLd1jrS0f3w8-90%26code_challenge_method%3DS256%26response_mode%3Dquery";
+
   useEffect(() => {
     const seeData = async () => {
       if (selectedOption === "Link Docente") {
@@ -84,14 +88,26 @@ export default function ReferenceLinks() {
         <View style={styles.orangeRectangle}></View>
 
         <View style={styles.buttonWrapper}>
+          {/* Botón "Mi Catamarca" */}
           <TouchableOpacity
             style={styles.button}
-            onPress={() => {}}
-            disabled={true}
+            onPress={() => openInformation(miCatamarcaUrl)}
           >
-            <Text style={styles.buttonText}>Mi Catamarca</Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Image
+                source={require("../../assets/logos/logo_i1.png")} // Imagen como ícono
+                style={{
+                  width: 35,
+                  height: 35,
+                  marginRight: 10,
+                  borderRadius: 10,
+                }} // Ajustando tamaño y margen
+              />
+              <Text style={styles.buttonText}>Mi Catamarca</Text>
+            </View>
           </TouchableOpacity>
 
+          {/* Botón para el directorio de contactos docentes */}
           <TouchableOpacity
             style={styles.button}
             onPress={() => setSelectedOption("Link Docente")}
