@@ -8,6 +8,7 @@ import {
   Image,
 } from "react-native";
 import styles from "../../styles/home-styles/home-styles";
+import subMenuStyles from "../../styles/sub_menu/sub_menu"; // Importamos los estilos del submenú
 import { router } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -19,12 +20,29 @@ import CloseApp from "./log-out";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Fontisto from "react-native-vector-icons/Fontisto";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useState } from "react"; // Necesario para el estado de apertura/cierre
+
 export default function HomePage() {
+  const [menuVisible, setMenuVisible] = useState(false); // Estado para controlar el submenú
   const statusBarHeight: number | undefined = StatusBar.currentHeight;
+
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible); // Cambia el estado del submenú
+  };
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
       <View style={styles.topBar}>
+        {/* Botón de submenú */}
+        <TouchableOpacity
+          style={subMenuStyles.menuButton}
+          activeOpacity={0.7}
+          onPress={toggleMenu} // Al hacer clic, cambia el estado del menú
+        >
+          <MaterialCommunityIcons name="menu" size={32} color="black" />
+        </TouchableOpacity>
+
+        {/* Logos */}
         <View>
           <Image
             source={require("../../assets/logos/cea_1.png")}
@@ -53,8 +71,28 @@ export default function HomePage() {
             resizeMode="contain"
           />
         </View>
-        <CloseApp />
       </View>
+
+      {/* Submenú deslizable */}
+      {menuVisible && (
+        <View style={subMenuStyles.drawer}>
+          {/* Título de opciones */}
+          <Text style={subMenuStyles.menuTitle}>Datos Personales</Text>
+
+          {/* Agregamos el campo Apellido y Nombre */}
+          <Text style={subMenuStyles.dataLabel}>Apellido y Nombre:</Text>
+          <Text style={subMenuStyles.dataLabel}>DNI:</Text>
+          <Text style={subMenuStyles.dataLabel}>Email:</Text>
+          <Text style={subMenuStyles.dataLabel}>Domicilio:</Text>
+          <Text style={subMenuStyles.dataLabel}>Teléfono:</Text>
+          <Text style={subMenuStyles.dataLabel}>Departamento:</Text>
+          <Text style={subMenuStyles.dataLabel}>Establecimiento/s:</Text>
+
+          {/* Botón salir integrado en el submenú */}
+          <CloseApp />
+        </View>
+      )}
+
       <ScrollView
         contentContainerStyle={{
           justifyContent: "space-between",
