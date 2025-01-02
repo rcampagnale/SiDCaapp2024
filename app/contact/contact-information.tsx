@@ -19,7 +19,7 @@ export default function ContactInformation() {
           <Text style={styles.textTitle}>Medios de contacto</Text>
         </View>
         <View style={styles.mediasContactContainer}>
-          <Text style={{ fontSize: 20, fontWeight: 500 }}>
+          <Text style={{ fontSize: 22, fontWeight: 500 }}>
             Números de WhatsApp
           </Text>
           <TouchableOpacity
@@ -27,9 +27,11 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493834051983")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>Asesoramiento General</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              Asesoramiento General
+            </Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -38,9 +40,11 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493834397239")}
           >
-            <Text style={{ fontSize: 18,marginLeft:10 }}>Departamento Jurídico</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              Departamento Jurídico
+            </Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -49,9 +53,11 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493834230813")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>SiDCa Gestión Expediente</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              SiDCa Gestión Expediente
+            </Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -60,9 +66,9 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493834283151")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>SiDCa Turismo</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>SiDCa Turismo</Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -71,9 +77,11 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493834250139")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>Casa del Docente</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              Casa del Docente
+            </Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -82,9 +90,9 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493834220295")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>SiDCa Radio</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>SiDCa Radio</Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -93,9 +101,11 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493835406450")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>Convenio con Hoteles</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              Hotelería Interprovincial SiDCa
+            </Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -104,9 +114,11 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493834012228")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>Secretaría de Capacitación</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              Secretaría de Capacitación
+            </Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -115,9 +127,11 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493832437803")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>Soporte Técnico</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              Soporte Técnico
+            </Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>
@@ -126,9 +140,25 @@ export default function ContactInformation() {
             activeOpacity={1}
             onPress={() => openWspNumber("https://wa.me/5493834539754")}
           >
-            <Text style={{ fontSize: 18, marginLeft:10 }}>Afiliado Adherente</Text>
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              Afiliado Adherente
+            </Text>
             <Image
-              style={{ width: 30, height: 30,marginRight:10 }}
+              style={{ width: 30, height: 30, marginRight: 10 }}
+              source={require("../../assets/logos/whatsapp.png")}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.btnWhatsApp}
+            activeOpacity={1}
+            onPress={() => openWspNumber("https://wa.me/5493834325816")}
+          >
+            <Text style={{ fontSize: 18, marginLeft: 10 }}>
+              Entrega de Certificados
+            </Text>
+            <Image
+              style={{ width: 30, height: 30, marginRight: 10 }}
               source={require("../../assets/logos/whatsapp.png")}
             />
           </TouchableOpacity>

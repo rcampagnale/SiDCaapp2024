@@ -223,7 +223,9 @@ export default function HandleCampusTeachers() {
           activeOpacity={1}
           onPress={toggleModal2}
         >
-          <Text style={styles.btnText2}>Convenios - Hoteles Provinciales</Text>
+          <Text style={styles.btnText2}>
+            Convenio Interprovincial Hoteleros
+          </Text>
         </TouchableOpacity>
 
         {/* Modal 2 */}
