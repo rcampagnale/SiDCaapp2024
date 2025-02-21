@@ -1,7 +1,4 @@
 import { useState, useContext, useEffect } from "react";
-import * as FileSystem from "expo-file-system";
-import * as MediaLibrary from "expo-media-library";
-import * as Sharing from "expo-sharing"; // Importamos expo-sharing
 import { SidcaContext } from "../_layout";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import {
@@ -11,7 +8,6 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import {
   Text,
   View,
@@ -29,23 +25,8 @@ export default function CoursesTakenByMe({ setActionType }) {
   const [checkData, setCheckData] = useState(0);
   const { userData } = useContext(SidcaContext);
   const analytics = getFirestore(firebaseconn);
-  const storage = getStorage(firebaseconn);
-
-  // Estado para guardar el nombre del curso
-  const [courseName, setCourseName] = useState("");
-
-  // Solicitar permisos para acceder a la biblioteca de medios (si es necesario)
-  const requestPermission = async () => {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
-    if (status !== "granted") {
-      alert("Permission to access media library is required!");
-    }
-  };
 
   useEffect(() => {
-    // Solicitar permisos cuando el componente se monta
-    requestPermission();
-
     const seeInfo = async () => {
       try {
         if (!userData) return;
@@ -131,23 +112,11 @@ export default function CoursesTakenByMe({ setActionType }) {
                 style={{ width: "80%", height: "70%" }}
                 resizeMode="contain"
               />
-              <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+              <Text style={{ fontSize: 22, fontWeight: "bold" }}>
                 {e.data().aprobo === true
                   ? "Curso Aprobado"
                   : "Curso NO Aprobado"}
               </Text>
-              <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={() =>
-                  alert(
-                    "La funcionalidad de descarga de certificados estará disponible próximamente."
-                  )
-                }
-              >
-                <Text style={styles.downloadButtonText}>
-                  Descargar Certificado Digital
-                </Text>
-              </TouchableOpacity>
             </View>
           ))
         )}
