@@ -126,4 +126,104 @@ export default linkStyles = StyleSheet.create({
     backgroundColor: "#005CFE", // Fondo azul
     borderRadius: 5, // Bordes redondeados
   },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo oscuro translúcido
+  },
+
+  modalContainer: {
+    width: "95%",
+    height: "90%",
+    padding: 20,
+    backgroundColor: "#fea200",
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "space-between", // Ajustar para que haya espacio entre el contenido y el botón
+    alignSelf: "center",
+    paddingBottom: 20, // Agregado padding para evitar que los botones se solapen
+  },
+
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: -1,
+    textAlign: "center", // Centramos el texto
+  },
+
+  modalDescription: {
+    fontSize: 16,
+    textAlign: "left", // Cambié para que se alineara mejor
+    marginBottom: 10, // Ajustado para más espacio
+    fontWeight: "bold",
+  },
+
+  closeButton: {
+    backgroundColor: "#007BFF",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+
+  closeButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
+
+  // Estilo para el contenedor del Picker
+  pickerContainer: {
+    width: "60%", // Ocupa todo el ancho disponible
+    height: 50, // Ajusta la altura según el diseño
+    borderWidth: 1, // Borde del Picker
+    borderColor: "#ccc", // Color del borde
+    borderRadius: 5, // Bordes redondeados
+    backgroundColor: "#fff", // Fondo blanco
+    marginBottom: -1, // Espacio inferior
+    paddingHorizontal: -1, // Espaciado horizontal interno
+  },
+  rowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10, // Aumenté el espaciado entre las filas
+    width: "100%",
+    justifyContent: "space-between", // Asegura que los elementos se distribuyan correctamente
+  },
+
+  titulodeopciones: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginRight: 1, // Espacio entre el texto y el sueldo
+    flex: 1,
+  },
+
+  sueldo: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    backgroundColor: "#f5f5f5",
+    padding: 5,
+    borderRadius: 5,
+    textAlign: "center",
+    width: "60%",
+    alignSelf: "center", // Centra el sueldo en su contenedor
+  },
+  separator: {
+    height: 2, // Alto de la línea
+    backgroundColor: "black", // Color de la línea
+    width: "100%", // Ocupa todo el ancho disponible
+    marginVertical: 10, // Ajustado para un espaciado adecuado
+  },
+  buttonText1: {
+    fontSize: 16,
+    color: "#fff", // Cambiar el color del texto
+    backgroundColor: "#007bff", // Fondo azul
+    padding: 5,
+    borderRadius: 5,
+    textAlign: "center",
+    marginRight: 52, // Espacio entre el texto y el sueldo
+  },
 });
