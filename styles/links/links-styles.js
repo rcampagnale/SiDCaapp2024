@@ -188,7 +188,7 @@ export default linkStyles = StyleSheet.create({
   rowContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10, // Aumenté el espaciado entre las filas
+    marginBottom: 1, // Aumenté el espaciado entre las filas
     width: "100%",
     justifyContent: "space-between", // Asegura que los elementos se distribuyan correctamente
   },
@@ -226,4 +226,16 @@ export default linkStyles = StyleSheet.create({
     textAlign: "center",
     marginRight: 52, // Espacio entre el texto y el sueldo
   },
+  input: {
+    width: "60%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    backgroundColor: "#fff",
+    paddingHorizontal: 10,
+    fontSize: 16,
+    textAlign: "center",
+  },
+  
 });
