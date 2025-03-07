@@ -54,11 +54,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     0.045
   ).toFixed(2);
 
-  // Calcular descuento SiDCa. (Sindicato)
-  const descuentoSindical = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
-    0.02
-  ).toFixed(2);
+  // Calcular descuento SiDCa. (Sindicato) - 2% de descuento sobre el sueldo básico
+  const descuentoSindical = (sueldoNumerico * 0.02) // Aplica el 2% solo sobre el sueldo básico
+    .toFixed(2);
 
   // Calcular el Sueldo a Cobrar
   const sueldoACobrar = (
@@ -90,7 +88,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
 
   const fondoEspecial = (
     (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
-    0.02
+    0.005
   ).toFixed(2);
 
   // cálculo descuento para "Reg.Prev.Esp. Docente" (2%) :
@@ -99,18 +97,29 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     0.02
   ).toFixed(2);
 
-  // cálculo descuento para "Seguro de Vida Obligatorio" (0.5%) :
-  const seguroVidaObligatorio = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
-    0.02
-  ).toFixed(2);
-  // cálculo descuento para "Subsidio por Sepelio" (0.5%) :
-  const subsidioSepelio = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
-    0.02
-  ).toFixed(2);
+  const seguroVidaObligatorio = 1000; // Monto fijo de Seguro de Vida Obligatorio
 
+  const subsidioSepelio = 1500; // Monto fijo de Subsidio por Sepelio
+  
+// Función que maneja el cálculo del sueldo
+const handleSimulateSalary = () => {
+  // Total haberes
+  const totalHaberes = sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar);
 
+  // Sumar todos los descuentos
+  const totalDescuentos =
+    parseFloat(jubilacion) +
+    parseFloat(fondoEspecial) +
+    parseFloat(descuentoOSEP) +
+    parseFloat(descuentoSindical) +
+    parseFloat(regPrevEspDocente) +
+    seguroVidaObligatorio +
+    subsidioSepelio;
+
+  // Calcular sueldo final a cobrar
+  const finalSueldo = totalHaberes - totalDescuentos;
+  setSueldoACobrar(finalSueldo.toFixed(2)); // Actualizamos el sueldo a cobrar
+};
 
   // Función para limpiar los valores cuando el modal se cierre
   const handleCloseModal = () => {
@@ -419,6 +428,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               <Text style={styles.titulodeopciones}>Sueldo a Cobrar:</Text>
               <Text style={styles.sueldo}>$ {sueldoACobrar}</Text>
             </View>
+
+            {/* Botón "Simular Sueldo" */}
+            <TouchableOpacity
+              style={styles.simularButton}
+              onPress={handleSimulateSalary} // Llama a la función handleSimulateSalary
+            >
+              <Text style={styles.simularButtonText}>Simular Sueldo</Text>
+            </TouchableOpacity>
 
             <View style={styles.separator} />
             <TouchableOpacity

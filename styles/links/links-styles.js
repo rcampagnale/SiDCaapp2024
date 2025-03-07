@@ -237,5 +237,21 @@ export default linkStyles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
+  simularButton: {
+    backgroundColor: "#007bff", // Azul fuerte
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  
+  simularButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  
   
 });
