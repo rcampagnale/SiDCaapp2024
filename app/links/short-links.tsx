@@ -50,14 +50,16 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
 
   // Calcular descuento OSEP
   const descuentoOSEP = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) /
-    4.5
+    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    0.045
   ).toFixed(2);
+
   // Calcular descuento SiDCa. (Sindicato)
   const descuentoSindical = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) /
-    2
+    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    0.02
   ).toFixed(2);
+
   // Calcular el Sueldo a Cobrar
   const sueldoACobrar = (
     sueldoNumerico +
@@ -77,6 +79,39 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
       setZonaPagar("0.00");
     }
   }, [sueldoBasico, zonaFrontera]);
+
+  // calcular jubilación
+  const jubilacion = (
+    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    0.11
+  ).toFixed(2);
+
+  //  cálculo para el fondo especial de trasplantes y tratamiento oncológico (2%):
+
+  const fondoEspecial = (
+    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    0.02
+  ).toFixed(2);
+
+  // cálculo descuento para "Reg.Prev.Esp. Docente" (2%) :
+  const regPrevEspDocente = (
+    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    0.02
+  ).toFixed(2);
+
+  // cálculo descuento para "Seguro de Vida Obligatorio" (0.5%) :
+  const seguroVidaObligatorio = (
+    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    0.02
+  ).toFixed(2);
+  // cálculo descuento para "Subsidio por Sepelio" (0.5%) :
+  const subsidioSepelio = (
+    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    0.02
+  ).toFixed(2);
+
+
+
   // Función para limpiar los valores cuando el modal se cierre
   const handleCloseModal = () => {
     setSueldoBasico("");
@@ -198,7 +233,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 >
                   <Picker.Item label="Seleccione una zona" value="" />
                   <Picker.Item label="Urgano 0 %" value="0" />
-                  <Picker.Item label="Alejado Radio Urbano (ARU) 40 %" value="40" />
+                  <Picker.Item
+                    label="Alejado Radio Urbano (ARU) 40 %"
+                    value="40"
+                  />
                   <Picker.Item label="Desfavorable 75 %" value="75" />
                   <Picker.Item label="Muy Desfavorable 100 %" value="100" />
                   <Picker.Item label="Inhóspito 150 %" value="150" />
@@ -242,8 +280,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               ]}
             >
               <Text style={styles.titulodeopciones}>Aportes Jubilatorios:</Text>
-              <Text style={styles.sueldo}>$ {descuentoOSEP}</Text>
+              <Text style={styles.sueldo}>$ {jubilacion}</Text>
             </View>
+
             <View
               style={[
                 styles.rowContainer,
@@ -259,7 +298,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               <Text style={styles.titulodeopciones}>
                 Fondo Esp. Trasplantes y Trat. Oncol. (O.S.E.P.):
               </Text>
-              <Text style={styles.sueldo}>$ {descuentoOSEP}</Text>
+              <Text style={styles.sueldo}>$ {fondoEspecial}</Text>
             </View>
 
             <View
@@ -308,9 +347,12 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 },
               ]}
             >
-              <Text style={styles.titulodeopciones}>Reg.Prev.Esp. Docente:</Text>
-              <Text style={styles.sueldo}>$ {descuentoSindical}</Text>
+              <Text style={styles.titulodeopciones}>
+                Reg.Prev.Esp. Docente:
+              </Text>
+              <Text style={styles.sueldo}>$ {regPrevEspDocente}</Text>
             </View>
+
             <View
               style={[
                 styles.rowContainer,
@@ -326,8 +368,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               <Text style={styles.titulodeopciones}>
                 Seguro de Vida Obligatorio:
               </Text>
-              <Text style={styles.sueldo}>$ {descuentoSindical}</Text>
+              <Text style={styles.sueldo}>$ {seguroVidaObligatorio}</Text>
             </View>
+
             <View
               style={[
                 styles.rowContainer,
@@ -341,7 +384,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               ]}
             >
               <Text style={styles.titulodeopciones}>Subsidio por Sepelio:</Text>
-              <Text style={styles.sueldo}>$ {descuentoSindical}</Text>
+              <Text style={styles.sueldo}>$ {subsidioSepelio}</Text>
             </View>
 
             <View style={styles.separator} />
