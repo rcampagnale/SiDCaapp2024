@@ -10,12 +10,12 @@ import {
   Image,
   Modal,
   TextInput,
+  StyleSheet,
 } from "react-native";
 import styles from "../../styles/links/links-styles"; // Importando estilos
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { Picker } from "@react-native-picker/picker";
-
 import {
   getFirestore,
   collection,
@@ -38,24 +38,39 @@ const BackButton = ({ onPress }: { onPress: () => void }) => {
 
 const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [sueldoBasico, setSueldoBasico] = useState("");
+  const [selectedOption, setSelectedOption] = useState("cargo");
   const [adicAntiguedad, setAdicAntiguedad] = useState("");
   const [zonaPagar, setZonaPagar] = useState("0.00"); // Nuevo estado
   const [zonaFrontera, setZonaFrontera] = useState("");
+  const [cantidadHoras, setCantidadHoras] = useState("");
+  const [sueldoCalculado, setSueldoCalculado] = useState(0);
+  const [finalSueldo, setFinalSueldo] = useState("0.00"); // Definir la variable de estado para el sueldo final
+  
+  // Actualizar el sueldo base cuando cambian los valores
+  useEffect(() => {
+    if (selectedOption === "catedra" && cantidadHoras && sueldoBasico) {
+      const sueldoBaseCalculado =
+        parseFloat(cantidadHoras) * parseFloat(sueldoBasico);
+      setSueldoCalculado(sueldoBaseCalculado);
+    } else {
+      setSueldoCalculado(parseFloat(sueldoBasico) || 0);
+    }
+  }, [selectedOption, cantidadHoras, sueldoBasico]);
 
   // Convertir sueldo básico a número seguro
   const sueldoNumerico = sueldoBasico ? parseFloat(sueldoBasico) : 0;
 
   // Calcular adicional por antigüedad
-  const antiguedadAPagar = sueldoNumerico * (parseFloat(adicAntiguedad) / 100);
+  const antiguedadAPagar = sueldoCalculado * (parseFloat(adicAntiguedad) / 100);
 
   // Calcular descuento OSEP
   const descuentoOSEP = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    (sueldoCalculado + antiguedadAPagar + parseFloat(zonaPagar)) *
     0.045
   ).toFixed(2);
 
   // Calcular descuento SiDCa. (Sindicato) - 2% de descuento sobre el sueldo básico
-  const descuentoSindical = (sueldoNumerico * 0.02) // Aplica el 2% solo sobre el sueldo básico
+  const descuentoSindical = (sueldoCalculado * 0.02) // Aplica el 2% solo sobre el sueldo básico
     .toFixed(2);
 
   // Calcular el Sueldo a Cobrar
@@ -67,67 +82,76 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     parseFloat(descuentoSindical)
   ).toFixed(2);
   // Calcular el adicional por zona frontera
-  useEffect(() => {
-    if (sueldoBasico && zonaFrontera) {
-      const sueldo = parseFloat(sueldoBasico);
-      const zona = parseFloat(zonaFrontera) / 100;
-      const adicionalZona = (sueldo * zona).toFixed(2);
-      setZonaPagar(adicionalZona);
-    } else {
-      setZonaPagar("0.00");
-    }
-  }, [sueldoBasico, zonaFrontera]);
+useEffect(() => {
+  if (sueldoCalculado && zonaFrontera) {
+    const sueldo = parseFloat(sueldoCalculado);  // Usar sueldoCalculado en lugar de sueldoBasico
+    const zona = parseFloat(zonaFrontera) / 100;
+    const adicionalZona = (sueldo * zona).toFixed(2);  // Calcular el adicional por zona
+    setZonaPagar(adicionalZona);  // Establecer el adicional de zona
+  } else {
+    setZonaPagar("0.00");  // Si no hay sueldo calculado o zona, establecer 0.00
+  }
+}, [sueldoCalculado, zonaFrontera]);  // Dependencias: sueldoCalculado y zonaFrontera
 
   // calcular jubilación
   const jubilacion = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    (sueldoCalculado + antiguedadAPagar + parseFloat(zonaPagar)) *
     0.11
   ).toFixed(2);
 
   //  cálculo para el fondo especial de trasplantes y tratamiento oncológico (2%):
 
   const fondoEspecial = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    (sueldoCalculado + antiguedadAPagar + parseFloat(zonaPagar)) *
     0.005
   ).toFixed(2);
 
   // cálculo descuento para "Reg.Prev.Esp. Docente" (2%) :
   const regPrevEspDocente = (
-    (sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar)) *
+    (sueldoCalculado + antiguedadAPagar + parseFloat(zonaPagar)) *
     0.02
   ).toFixed(2);
 
   const seguroVidaObligatorio = 1000; // Monto fijo de Seguro de Vida Obligatorio
 
   const subsidioSepelio = 1500; // Monto fijo de Subsidio por Sepelio
-  
-// Función que maneja el cálculo del sueldo
-const handleSimulateSalary = () => {
-  // Total haberes
-  const totalHaberes = sueldoNumerico + antiguedadAPagar + parseFloat(zonaPagar);
 
-  // Sumar todos los descuentos
-  const totalDescuentos =
-    parseFloat(jubilacion) +
-    parseFloat(fondoEspecial) +
-    parseFloat(descuentoOSEP) +
-    parseFloat(descuentoSindical) +
-    parseFloat(regPrevEspDocente) +
-    seguroVidaObligatorio +
-    subsidioSepelio;
+  // Función que maneja el cálculo del sueldo
+  const handleSimulateSalary = () => {
+    // Total haberes
+    const totalHaberes =
+      sueldoCalculado + antiguedadAPagar + parseFloat(zonaPagar);
 
-  // Calcular sueldo final a cobrar
-  const finalSueldo = totalHaberes - totalDescuentos;
-  setSueldoACobrar(finalSueldo.toFixed(2)); // Actualizamos el sueldo a cobrar
-};
+    // Sumar todos los descuentos
+    const totalDescuentos =
+      parseFloat(jubilacion) +
+      parseFloat(fondoEspecial) +
+      parseFloat(descuentoOSEP) +
+      parseFloat(descuentoSindical) +
+      parseFloat(regPrevEspDocente) +
+      seguroVidaObligatorio +
+      subsidioSepelio;
 
+    // Calcular sueldo final a cobrar
+    const finalSueldo = totalHaberes - totalDescuentos;
+    setFinalSueldo(finalSueldo.toFixed(2)); // Actualizamos el sueldo a cobrar
+  };
   // Función para limpiar los valores cuando el modal se cierre
   const handleCloseModal = () => {
     setSueldoBasico("");
-    setAdicAntiguedad("");
-    setZonaFrontera("");
-    setZonaPagar("0.00");
-    setModalVisible(false);
+    setCantidadHoras(""); // Limpiar cantidad de horas
+    setSelectedOption("cargo"); // Resetear opción seleccionada
+    setSueldoCalculado(0); // Resetear sueldo calculado
+    setModalVisible(false); // Cerrar modal
+  };
+  // Función para manejar el cambio de opción y limpiar los valores
+  const handleOptionChange = (itemValue) => {
+    setSelectedOption(itemValue);
+
+    // Limpiar los valores cuando se cambia de opción
+    setSueldoBasico("");
+    setCantidadHoras("");
+    setSueldoCalculado(0);
   };
 
   return (
@@ -166,17 +190,63 @@ const handleSimulateSalary = () => {
                   borderRadius: 8,
                   padding: 15,
                   marginBottom: 10,
+                  flexDirection: "column",
                 },
               ]}
             >
-              <Text style={styles.titulodeopciones}>Sueldo Básico:</Text>
+              {/* Lista Desplegable con el texto como opciones */}
+              <Text style={styles.titulodeopciones}>
+                Seleccione el tipo de cargo/hs cátedra:
+              </Text>
+              <Picker
+                selectedValue={selectedOption}
+                onValueChange={handleOptionChange}
+                style={styles.picker}
+              >
+                <Picker.Item label="Cargo/Maestro" value="cargo" />
+                <Picker.Item label="Hs Cátedra" value="catedra" />
+                <Picker.Item label="Hs Superior" value="superior" />
+              </Picker>
+
+              {/* Ingreso de Monto */}
               <TextInput
-                style={[styles.input, { paddingLeft: 10 }]} // Agregando un poco de padding al input
+                style={[styles.input, { paddingLeft: 10 }]}
                 keyboardType="numeric"
                 placeholder="Ingrese monto"
                 value={sueldoBasico}
                 onChangeText={setSueldoBasico}
               />
+
+              {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Cátedra") */}
+              {selectedOption === "catedra" && (
+                <TextInput
+                  style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
+                  keyboardType="numeric"
+                  placeholder="Ingrese cantidad de horas"
+                  value={cantidadHoras}
+                  onChangeText={setCantidadHoras}
+                />
+              )}
+              {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Superior") */}
+              {selectedOption === "superior" && (
+                <TextInput
+                  style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
+                  keyboardType="numeric"
+                  placeholder="Ingrese cantidad de horas"
+                  value={cantidadHoras}
+                  onChangeText={setCantidadHoras}
+                />
+              )}
+              {/* Separador */}
+              <View style={styles.separator} />
+
+              {/* Sueldo Base Calculado */}
+              <View style={styles.rowContainer}>
+                <Text style={styles.titulodeopciones}>Sueldo Base:</Text>
+                <Text style={styles.sueldo}>
+                  $ {sueldoCalculado.toFixed(2)}
+                </Text>
+              </View>
             </View>
 
             <View style={styles.separator} />
@@ -426,7 +496,7 @@ const handleSimulateSalary = () => {
               ]}
             >
               <Text style={styles.titulodeopciones}>Sueldo a Cobrar:</Text>
-              <Text style={styles.sueldo}>$ {sueldoACobrar}</Text>
+              <Text style={styles.sueldo}>$ {finalSueldo}</Text>
             </View>
 
             {/* Botón "Simular Sueldo" */}
@@ -457,6 +527,8 @@ export default function ReferenceLinks() {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [hsSecundariaModalVisible, setHsSecundariaModalVisible] =
+    useState(false);
   const db = getFirestore(firebaseconn);
   const enlacesCollection = collection(db, "enlaces");
 
@@ -522,7 +594,6 @@ export default function ReferenceLinks() {
               <Text style={styles.buttonText}>Mi Catamarca</Text>
             </View>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.button}
             onPress={() => setSelectedOption("Link Docente")}
@@ -531,12 +602,11 @@ export default function ReferenceLinks() {
               Directorio de Contactos Docentes
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.button}
             onPress={() => setModalVisible(true)}
           >
-            <Text style={styles.buttonText}>Simulador de Recibo de Sueldo</Text>
+            <Text style={styles.buttonText}>Simulador de Sueldo Sueldo</Text>
           </TouchableOpacity>
         </View>
 
