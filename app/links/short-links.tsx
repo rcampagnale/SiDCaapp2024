@@ -200,10 +200,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
           <Text style={styles.modalTitle}>Simulador de Recibo de Sueldo</Text>
           <View style={styles.separator} />
           <Text style={styles.modalDescription}>
-            Este simulador está diseñado para calcular de manera eficiente tu
-            sueldo, teniendo en cuenta las horas trabajadas, el tipo de
-            cargo/Maestro/a/ de grado/ Inicial y las horas cátedra
-            correspondientes, ya sea para Nivel Secundario o Superior.
+            Este simulador proporciona una estimación aproximada del sueldo
+            docente, considerando las horas trabajadas, el tipo de cargo
+            (Maestro/a de grado, Nivel Inicial, Asesor, Preceptor, etc.) y las
+            horas cátedra correspondientes para Nivel Secundario o Superior.
           </Text>
           <View style={styles.separator} />
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
@@ -238,7 +238,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
             >
               {/* Lista Desplegable con el texto como opciones */}
               <Text style={styles.titulodeopciones}>
-                Seleccione el tipo de cargo/hs cátedra:
+                Seleccione tipo de Cargo/Hs Cátedra:
               </Text>
               <Picker
                 selectedValue={selectedOption}
@@ -246,15 +246,15 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 style={styles.picker}
               >
                 <Picker.Item label="Cargo/Maestro/Inicial" value="cargo" />
-                <Picker.Item label="Hs Cátedra Secundaria" value="catedra" />
-                <Picker.Item label="Hs Superior" value="superior" />
+                <Picker.Item label="Hs. Cátedra Secundaria" value="catedra" />
+                <Picker.Item label="Hs. Cátedra Superior" value="superior" />
               </Picker>
 
               {/* Ingreso de Monto */}
               <TextInput
                 style={[styles.input, { paddingLeft: 10 }]}
                 keyboardType="numeric"
-                placeholder="Ingrese monto"
+                placeholder="Ingrese Sueldo Base"
                 value={sueldoBasico}
                 onChangeText={setSueldoBasico}
               />
@@ -264,7 +264,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <TextInput
                   style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
                   keyboardType="numeric"
-                  placeholder="Ingrese cantidad de Hs"
+                  placeholder="Cantidad de Hs."
                   value={cantidadHoras}
                   onChangeText={setCantidadHoras}
                 />
@@ -274,7 +274,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <TextInput
                   style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
                   keyboardType="numeric"
-                  placeholder="Ingrese cantidad de Hs"
+                  placeholder="Cantidad de Hs."
                   value={cantidadHoras}
                   onChangeText={setCantidadHoras}
                 />
@@ -560,7 +560,6 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                   marginBottom: 10,
                   flexDirection: "column", // Asegura que los elementos se apilen verticalmente
                   justifyContent: "flex-start", // Alinea los elementos desde el inicio
-                 
                 },
               ]}
             >
@@ -585,12 +584,13 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 </Text>
               </TouchableOpacity>
               <Text style={styles.simuladorTexto}>
-               Advertencia: Este simulador proporciona una estimación aproximada del sueldo
-                docente, y puede no reflejar el sueldo real en su totalidad.
-                Factores como la Bonificación Incentivo a la Asistencia Docente
-                (BIAD) u otros descuentos aplicables no están considerados en
-                este cálculo. El sindicato no se responsabiliza por errores en
-                los cálculos ni por el uso de los resultados obtenidos.
+                Advertencia: Este simulador proporciona una estimación
+                aproximada del sueldo docente, y puede no reflejar el sueldo
+                real en su totalidad. Factores como la Bonificación Incentivo a
+                la Asistencia Docente (BIAD) u otros descuentos aplicables no
+                están considerados en este cálculo. El sindicato no se
+                responsabiliza por errores en los cálculos ni por el uso de los
+                resultados obtenidos.
               </Text>
             </View>
 
@@ -693,7 +693,9 @@ export default function ReferenceLinks() {
             style={styles.button}
             onPress={() => setModalVisible(true)}
           >
-            <Text style={styles.buttonText}>Simulador de Sueldo Sueldo Provincial</Text>
+            <Text style={styles.buttonText}>
+              Simulador de Sueldo Provincial
+            </Text>
           </TouchableOpacity>
         </View>
 
