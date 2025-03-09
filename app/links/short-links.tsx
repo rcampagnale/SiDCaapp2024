@@ -38,7 +38,7 @@ const BackButton = ({ onPress }: { onPress: () => void }) => {
 
 const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [sueldoBasico, setSueldoBasico] = useState("");
-  const [selectedOption, setSelectedOption] = useState("cargo");
+  const [selectedOption, setSelectedOption] = useState("");
   const [adicAntiguedad, setAdicAntiguedad] = useState("");
   const [zonaPagar, setZonaPagar] = useState("0.00"); // Nuevo estado
   const [zonaFrontera, setZonaFrontera] = useState("");
@@ -46,13 +46,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [sueldoCalculado, setSueldoCalculado] = useState(0);
   const [finalSueldo, setFinalSueldo] = useState("0.00"); // Definir la variable de estado para el sueldo final
   
-  // Actualizar el sueldo base cuando cambian los valores
   useEffect(() => {
-    if (selectedOption === "catedra" && cantidadHoras && sueldoBasico) {
+    // Si la opción seleccionada es "catedra" o "superior", calcular el sueldo base
+    if ((selectedOption === "catedra" || selectedOption === "superior") && cantidadHoras && sueldoBasico) {
       const sueldoBaseCalculado =
         parseFloat(cantidadHoras) * parseFloat(sueldoBasico);
       setSueldoCalculado(sueldoBaseCalculado);
     } else {
+      // Si no hay cantidad de horas o sueldo básico, solo se muestra el sueldo básico
       setSueldoCalculado(parseFloat(sueldoBasico) || 0);
     }
   }, [selectedOption, cantidadHoras, sueldoBasico]);
@@ -142,6 +143,9 @@ useEffect(() => {
     setCantidadHoras(""); // Limpiar cantidad de horas
     setSelectedOption("cargo"); // Resetear opción seleccionada
     setSueldoCalculado(0); // Resetear sueldo calculado
+    setFinalSueldo("0.00");  // Limpiar el valor de finalSueldo
+    setAdicAntiguedad("0.00"); // Limpiar el valor de adicAntiguedad
+    setZonaFrontera("0.00"); // Limpiar el valor de zonaFrontera
     setModalVisible(false); // Cerrar modal
   };
   // Función para manejar el cambio de opción y limpiar los valores
@@ -153,6 +157,7 @@ useEffect(() => {
     setCantidadHoras("");
     setSueldoCalculado(0);
   };
+  
 
   return (
     <Modal visible={modalVisible} animationType="slide" transparent={true}>
