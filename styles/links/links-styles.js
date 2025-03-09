@@ -38,9 +38,9 @@ export default linkStyles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 30,
+    marginBottom: 10,
     textAlign: "center",
-    top: 50,
+    top: 70,
   },
 
   // Estilos para los botones
@@ -73,10 +73,10 @@ export default linkStyles = StyleSheet.create({
   // Estilos del rectángulo naranja
   orangeRectangle: {
     width: "200%",
-    minHeight: 450, // Altura mínima para el rectángulo
+    minHeight: 310, // Altura mínima para el rectángulo
     backgroundColor: "#fea200",
     position: "absolute",
-    top: 150,
+    top: 200,
     left: "-50%", // Centrado
     zIndex: 0,
   },
@@ -86,7 +86,7 @@ export default linkStyles = StyleSheet.create({
     width: screenWidth, // Ajusta la imagen al ancho de la pantalla
     height: 140,
     resizeMode: "cover", // Ajuste automático de la imagen para cubrir el área sin distorsión
-    top: -140, // Alineamos el rectángulo en la parte superior
+    top: -245, // Alineamos el rectángulo en la parte superior
   },
 
   // Estilos del botón "Volver"

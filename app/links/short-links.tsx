@@ -693,7 +693,7 @@ export default function ReferenceLinks() {
             style={styles.button}
             onPress={() => setModalVisible(true)}
           >
-            <Text style={styles.buttonText}>Simulador de Sueldo Sueldo</Text>
+            <Text style={styles.buttonText}>Simulador de Sueldo Sueldo Provincial</Text>
           </TouchableOpacity>
         </View>
 
