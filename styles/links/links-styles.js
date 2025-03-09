@@ -150,14 +150,14 @@ export default linkStyles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: -1,
+    marginBottom: -8,
     textAlign: "center", // Centramos el texto
   },
 
   modalDescription: {
     fontSize: 16,
-    textAlign: "left", // Cambié para que se alineara mejor
-    marginBottom: 10, // Ajustado para más espacio
+    textAlign: "justify", // Cambié para que se alineara mejor
+    marginBottom: -8, // Ajustado para más espacio
     fontWeight: "bold",
   },
 
@@ -236,8 +236,6 @@ export default linkStyles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 16,
     textAlign: "center",
-    
-    
   },
   simularButton: {
     backgroundColor: "#007bff", // Azul fuerte
@@ -248,21 +246,39 @@ export default linkStyles = StyleSheet.create({
     justifyContent: "center",
     marginVertical: 10,
   },
-  
+
   simularButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
   },
-  
+
   picker: {
-    width: '100%',
+    width: "100%",
     height: 50,
     borderWidth: 1,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderRadius: 5,
     marginBottom: 10,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
-  
+  buttonText2: {
+    fontSize: 15,
+    color: "#0034ab", // Cambiar el c#0df2c9olor del texto
+    fontWeight: "bold",
+  },
+  titulodeopciones1: {
+    fontSize: 17,
+    fontWeight: "bold",
+    textAlign: "justify",
+    marginRight: 1, // Espacio entre el texto y el sueldo
+    flex: 1,
+  },
+  simuladorTexto: {
+    fontSize: 14,
+    color: "black", // Para que sea más suave y diferenciable del contenido principal
+    fontWeight: "bold",
+    marginTop: 15,
+    textAlign: "justify",
+  },
 });

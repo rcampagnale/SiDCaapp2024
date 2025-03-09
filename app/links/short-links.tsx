@@ -45,10 +45,45 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [cantidadHoras, setCantidadHoras] = useState("");
   const [sueldoCalculado, setSueldoCalculado] = useState(0);
   const [finalSueldo, setFinalSueldo] = useState("0.00"); // Definir la variable de estado para el sueldo final
-  
+  const [nomencladorUrl, setNomencladorUrl] = useState(null);
+  const analytics = getFirestore(firebaseconn);
+  const data = collection(analytics, "asesoramiento");
+
+  // Función para buscar el documento en Firebase
+  const fetchNomenclador = async () => {
+    try {
+      const db = getFirestore();
+      const snapshot = await getDocs(
+        query(
+          collection(db, "asesoramiento"),
+          where("categoria", "==", "escala_salarial")
+        )
+      );
+
+      const results = snapshot.docs
+        .map((doc) => doc.data())
+        .filter(
+          (doc) =>
+            doc.titulo === "NOMENCLADOR DE CARGO DOCENTE - ACUERDO SALARIAL"
+        );
+
+      if (results.length > 0) {
+        setNomencladorUrl(results[0].link);
+      }
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    fetchNomenclador(); // Se ejecuta al montar el componente
+  }, []);
+
   useEffect(() => {
     // Si la opción seleccionada es "catedra" o "superior", calcular el sueldo base
-    if ((selectedOption === "catedra" || selectedOption === "superior") && cantidadHoras && sueldoBasico) {
+    if (
+      (selectedOption === "catedra" || selectedOption === "superior") &&
+      cantidadHoras &&
+      sueldoBasico
+    ) {
       const sueldoBaseCalculado =
         parseFloat(cantidadHoras) * parseFloat(sueldoBasico);
       setSueldoCalculado(sueldoBaseCalculado);
@@ -83,16 +118,16 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     parseFloat(descuentoSindical)
   ).toFixed(2);
   // Calcular el adicional por zona frontera
-useEffect(() => {
-  if (sueldoCalculado && zonaFrontera) {
-    const sueldo = parseFloat(sueldoCalculado);  // Usar sueldoCalculado en lugar de sueldoBasico
-    const zona = parseFloat(zonaFrontera) / 100;
-    const adicionalZona = (sueldo * zona).toFixed(2);  // Calcular el adicional por zona
-    setZonaPagar(adicionalZona);  // Establecer el adicional de zona
-  } else {
-    setZonaPagar("0.00");  // Si no hay sueldo calculado o zona, establecer 0.00
-  }
-}, [sueldoCalculado, zonaFrontera]);  // Dependencias: sueldoCalculado y zonaFrontera
+  useEffect(() => {
+    if (sueldoCalculado && zonaFrontera) {
+      const sueldo = parseFloat(sueldoCalculado); // Usar sueldoCalculado en lugar de sueldoBasico
+      const zona = parseFloat(zonaFrontera) / 100;
+      const adicionalZona = (sueldo * zona).toFixed(2); // Calcular el adicional por zona
+      setZonaPagar(adicionalZona); // Establecer el adicional de zona
+    } else {
+      setZonaPagar("0.00"); // Si no hay sueldo calculado o zona, establecer 0.00
+    }
+  }, [sueldoCalculado, zonaFrontera]); // Dependencias: sueldoCalculado y zonaFrontera
 
   // calcular jubilación
   const jubilacion = (
@@ -143,7 +178,7 @@ useEffect(() => {
     setCantidadHoras(""); // Limpiar cantidad de horas
     setSelectedOption("cargo"); // Resetear opción seleccionada
     setSueldoCalculado(0); // Resetear sueldo calculado
-    setFinalSueldo("0.00");  // Limpiar el valor de finalSueldo
+    setFinalSueldo("0.00"); // Limpiar el valor de finalSueldo
     setAdicAntiguedad("0.00"); // Limpiar el valor de adicAntiguedad
     setZonaFrontera("0.00"); // Limpiar el valor de zonaFrontera
     setModalVisible(false); // Cerrar modal
@@ -157,7 +192,6 @@ useEffect(() => {
     setCantidadHoras("");
     setSueldoCalculado(0);
   };
-  
 
   return (
     <Modal visible={modalVisible} animationType="slide" transparent={true}>
@@ -166,7 +200,10 @@ useEffect(() => {
           <Text style={styles.modalTitle}>Simulador de Recibo de Sueldo</Text>
           <View style={styles.separator} />
           <Text style={styles.modalDescription}>
-            Selecciona los valores para calcular el sueldo.
+            Este simulador está diseñado para calcular de manera eficiente tu
+            sueldo, teniendo en cuenta las horas trabajadas, el tipo de
+            cargo/Maestro/a/ de grado/ Inicial y las horas cátedra
+            correspondientes, ya sea para Nivel Secundario o Superior.
           </Text>
           <View style={styles.separator} />
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
@@ -208,8 +245,8 @@ useEffect(() => {
                 onValueChange={handleOptionChange}
                 style={styles.picker}
               >
-                <Picker.Item label="Cargo/Maestro" value="cargo" />
-                <Picker.Item label="Hs Cátedra" value="catedra" />
+                <Picker.Item label="Cargo/Maestro/Inicial" value="cargo" />
+                <Picker.Item label="Hs Cátedra Secundaria" value="catedra" />
                 <Picker.Item label="Hs Superior" value="superior" />
               </Picker>
 
@@ -227,7 +264,7 @@ useEffect(() => {
                 <TextInput
                   style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
                   keyboardType="numeric"
-                  placeholder="Ingrese cantidad de horas"
+                  placeholder="Ingrese cantidad de Hs"
                   value={cantidadHoras}
                   onChangeText={setCantidadHoras}
                 />
@@ -237,7 +274,7 @@ useEffect(() => {
                 <TextInput
                   style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
                   keyboardType="numeric"
-                  placeholder="Ingrese cantidad de horas"
+                  placeholder="Ingrese cantidad de Hs"
                   value={cantidadHoras}
                   onChangeText={setCantidadHoras}
                 />
@@ -316,7 +353,7 @@ useEffect(() => {
                   style={styles.pickerContainer}
                 >
                   <Picker.Item label="Seleccione una zona" value="" />
-                  <Picker.Item label="Urgano 0 %" value="0" />
+                  <Picker.Item label="Urbano 0 %" value="0" />
                   <Picker.Item
                     label="Alejado Radio Urbano (ARU) 40 %"
                     value="40"
@@ -511,6 +548,51 @@ useEffect(() => {
             >
               <Text style={styles.simularButtonText}>Simular Sueldo</Text>
             </TouchableOpacity>
+            <View style={styles.separator} />
+            <View
+              style={[
+                styles.rowContainer,
+                {
+                  borderColor: "black",
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  padding: 15,
+                  marginBottom: 10,
+                  flexDirection: "column", // Asegura que los elementos se apilen verticalmente
+                  justifyContent: "flex-start", // Alinea los elementos desde el inicio
+                 
+                },
+              ]}
+            >
+              {/* Texto arriba del nomenclador */}
+              <Text style={styles.titulodeopciones1}>
+                Si tienes duda sobre el valor de tu básico, puedes consultar
+                aquí.
+              </Text>
+
+              {/* Botón con icono de PDF, alineado abajo */}
+              <TouchableOpacity
+                style={styles.buttonText2}
+                onPress={() => {
+                  if (nomencladorUrl) {
+                    Linking.openURL(nomencladorUrl); // Abre el PDF usando la URL
+                  }
+                }}
+              >
+                <Text style={styles.buttonText2}>
+                  Nomenclador de Cargo Docente{" "}
+                  <AntDesign name="pdffile1" size={35} color="#0034ab" />
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.simuladorTexto}>
+               Advertencia: Este simulador proporciona una estimación aproximada del sueldo
+                docente, y puede no reflejar el sueldo real en su totalidad.
+                Factores como la Bonificación Incentivo a la Asistencia Docente
+                (BIAD) u otros descuentos aplicables no están considerados en
+                este cálculo. El sindicato no se responsabiliza por errores en
+                los cálculos ni por el uso de los resultados obtenidos.
+              </Text>
+            </View>
 
             <View style={styles.separator} />
             <TouchableOpacity
