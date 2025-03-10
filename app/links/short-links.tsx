@@ -224,6 +224,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               Haberes
             </Text>
             <View
+  style={{
+    borderColor: "black",
+    borderWidth: 2,
+    borderRadius: 8,
+    padding: 10,
+  }}
+>
+            <View
               style={[
                 styles.rowContainer,
                 {
@@ -370,6 +378,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <Text style={styles.sueldo}>$ {zonaPagar}</Text>
               </View>
             </View>
+            </View>
 
             <View style={styles.separator} />
             <Text
@@ -388,6 +397,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
             >
               Descuentos
             </Text>
+            <View
+  style={{
+    borderColor: "black",
+    borderWidth: 2,
+    borderRadius: 8,
+    padding: 10,
+  }}
+>
             <View
               style={[
                 styles.rowContainer,
@@ -507,6 +524,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               <Text style={styles.titulodeopciones}>Subsidio por Sepelio:</Text>
               <Text style={styles.sueldo}>$ {subsidioSepelio}</Text>
             </View>
+            </View>
 
             <View style={styles.separator} />
             <Text
@@ -525,6 +543,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
             >
               Haberes a Cobrar
             </Text>
+            <View
+  style={{
+    borderColor: "black",
+    borderWidth: 2,
+    borderRadius: 8,
+    padding: 10,
+  }}
+>
             <View
               style={[
                 styles.rowContainer,
@@ -548,6 +574,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
             >
               <Text style={styles.simularButtonText}>Simular Sueldo</Text>
             </TouchableOpacity>
+            </View>
             <View style={styles.separator} />
             <View
               style={[
