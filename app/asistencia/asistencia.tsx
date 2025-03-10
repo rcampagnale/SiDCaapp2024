@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  FlatList,
+  ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import styles from "../../styles/asistencia/asistencia";
@@ -20,6 +22,7 @@ import {
   addDoc,
   doc,
   getDoc,
+  where,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 
@@ -37,6 +40,7 @@ export default function HandleCampusTeachers() {
   const [selectedLevel, setSelectedLevel] = useState(""); // Nivel educativo seleccionado
   const [currentDate, setCurrentDate] = useState<string>(""); // Fecha actual
   const [isButtonEnabled, setIsButtonEnabled] = useState(false); // Estado del botón
+  const [attendances, setAttendances] = useState([]); // Esto crea un estado vacío para las asistencias.
 
   const analytics = getFirestore(firebaseconn);
   const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
@@ -120,6 +124,37 @@ export default function HandleCampusTeachers() {
     setCurrentDate(formattedDate);
   }, []);
 
+  // Obtener las asistencias del usuario por DNI
+  useEffect(() => {
+    const fetchAttendancesByDni = async () => {
+      try {
+        const q = query(
+          asistenciaCollection,
+          where("dni", "==", userData?.dni)
+        );
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          console.log("No se encontraron asistencias para este DNI.");
+          setAttendances([]); // Limpia la lista si no hay asistencias
+        } else {
+          const asistenciaDocs = querySnapshot.docs.map((doc) => ({
+            curso: doc.data().curso,
+            fecha: doc.data().fecha,
+          }));
+          setAttendances(asistenciaDocs); // Almacena las asistencias en el estado
+          console.log("Asistencias encontradas:", asistenciaDocs); // Verificar los datos
+        }
+      } catch (error) {
+        console.error("Error al obtener las asistencias:", error);
+      }
+    };
+
+    if (userData?.dni) {
+      fetchAttendancesByDni(); // Solo hace la consulta si el DNI está disponible
+    }
+  }, [userData?.dni]); // Dependiendo de los cambios en el DNI
+
   const registerAttendance = async () => {
     try {
       if (!selectedCourse || !selectedLevel) {
@@ -148,6 +183,28 @@ export default function HandleCampusTeachers() {
       alert("Error al registrar la asistencia. Intente nuevamente.");
     }
   };
+
+  const renderAssistanceItem = ({ item }) => (
+    <View
+      style={{
+        marginBottom: 15,
+        padding: 15,
+        backgroundColor: "#f5f5f5",
+        borderRadius: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      }}
+    >
+      <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+        <strong>Curso:</strong> {item.curso}
+      </Text>
+      <Text style={{ fontSize: 14, color: "#555" }}>
+        <strong>Fecha:</strong> {item.fecha}
+      </Text>
+    </View>
+  );
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
@@ -202,7 +259,7 @@ export default function HandleCampusTeachers() {
               {loading ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
-                <View style={styles.modalContent}>
+                <ScrollView contentContainerStyle={styles.scrollViewContent}>
                   <View style={styles.mainInformationContainer}>
                     <Text style={{ fontSize: 18, fontWeight: "bold" }}>
                       Afiliado:{" "}
@@ -259,7 +316,7 @@ export default function HandleCampusTeachers() {
                     {dataTravel.length === 0 ? (
                       <Picker.Item label="No se encontraron cursos" value="" />
                     ) : (
-                      dataTravel.map((course: any) => (
+                      dataTravel.map((course) => (
                         <Picker.Item
                           key={course.id}
                           label={course.titulo}
@@ -292,7 +349,34 @@ export default function HandleCampusTeachers() {
                       Registrar Asistencia
                     </Text>
                   </TouchableOpacity>
-                </View>
+
+                  {/* Mostrar las asistencias cargadas */}
+                  <Text
+                    style={{ fontSize: 18, fontWeight: "bold", marginTop: 20 }}
+                  >
+                    Asistencias Cargadas:
+                  </Text>
+                  <View>
+                    {attendances.map((item, index) => (
+                      <View
+                        key={index}
+                        style={{
+                          marginTop: 10,
+                          padding: 10,
+                          backgroundColor: "#f5f5f5",
+                          borderRadius: 8,
+                        }}
+                      >
+                        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                          Curso: {item.curso}
+                        </Text>
+                        <Text style={{ fontSize: 14, color: "#555" }}>
+                          Fecha: {item.fecha}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </ScrollView>
               )}
               <TouchableOpacity style={styles.btnCommon} onPress={toggleModal}>
                 <Text style={styles.commonBtnText}>Cerrar</Text>

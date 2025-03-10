@@ -45,26 +45,26 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start", // Modal en la parte superior
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo oscuro translúcido
   },
   modalContainer: {
     width: "98%",
-    height: "60%",
+    height: "90%", // Aumentamos la altura del modal
     padding: 20,
     backgroundColor: "#fea200",
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start", // Alineación hacia la parte superior
     alignSelf: "center",
-    paddingBottom: 0, // Asegurarse de que no haya padding extra que cause desalineación
+    paddingBottom: 20, // Aumentamos el padding en la parte inferior
   },
   modalContent: {
     backgroundColor: "#fea200",
     width: "100%",
     height: "auto",
-    maxHeight: "80%", // Limitar la altura máxima
+    maxHeight: "auto", // Limitar la altura máxima
     borderRadius: 10,
     padding: 10,
   },
@@ -163,6 +163,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 16,
     backgroundColor: "#fff",
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 20, // Adds extra space at the bottom to prevent cutoff
   },
 });
 
