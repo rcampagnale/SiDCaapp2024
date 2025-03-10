@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "98%",
-    height: "90%", // Aumentamos la altura del modal
+    height: "75%", // Aumentamos la altura del modal
     padding: 20,
     backgroundColor: "#fea200",
     borderRadius: 10,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
-    marginTop: 10,
+    marginTop: 15,
     alignSelf: "center",
   },
   commonBtnText: {
@@ -167,6 +167,18 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flexGrow: 1,
     paddingBottom: 20, // Adds extra space at the bottom to prevent cutoff
+  },
+  separator: {
+    height: 2, // Alto de la línea
+    backgroundColor: "black", // Color de la línea
+    width: "100%", // Ocupa todo el ancho disponible
+    marginVertical: 10, // Ajustado para un espaciado adecuado
+  },
+  modalDescription: {
+    fontSize: 16,
+    textAlign: "justify", // Cambié para que se alineara mejor
+    marginBottom: -8, // Ajustado para más espacio
+    fontWeight: "bold",
   },
 });
 

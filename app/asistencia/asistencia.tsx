@@ -135,18 +135,16 @@ export default function HandleCampusTeachers() {
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-          console.log("No se encontraron asistencias para este DNI.");
-          setAttendances([]); // Limpia la lista si no hay asistencias
+           setAttendances([]); // Limpia la lista si no hay asistencias
         } else {
           const asistenciaDocs = querySnapshot.docs.map((doc) => ({
             curso: doc.data().curso,
             fecha: doc.data().fecha,
           }));
           setAttendances(asistenciaDocs); // Almacena las asistencias en el estado
-          console.log("Asistencias encontradas:", asistenciaDocs); // Verificar los datos
-        }
+          }
       } catch (error) {
-        console.error("Error al obtener las asistencias:", error);
+        
       }
     };
 
@@ -159,6 +157,26 @@ export default function HandleCampusTeachers() {
     try {
       if (!selectedCourse || !selectedLevel) {
         alert("Por favor, seleccione un curso y un nivel educativo.");
+        return;
+      }
+
+      if (!userData?.dni) {
+        alert("No se encontró el DNI del usuario.");
+        return;
+      }
+
+      // Consultar si ya existe una asistencia para el mismo DNI, curso y fecha
+      const querySnapshot = await getDocs(
+        query(
+          asistenciaCollection,
+          where("dni", "==", userData.dni),
+          where("curso", "==", selectedCourse),
+          where("fecha", "==", currentDate)
+        )
+      );
+
+      if (!querySnapshot.empty) {
+        alert("Ya has registrado asistencia para este curso el día de hoy.");
         return;
       }
 
@@ -260,104 +278,163 @@ export default function HandleCampusTeachers() {
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
                 <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                  <View style={styles.mainInformationContainer}>
-                    <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                      Afiliado:{" "}
-                      {userData?.apellido !== undefined
-                        ? `${userData.apellido},`
-                        : null}{" "}
-                      {userData?.nombre}
-                    </Text>
-                    <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                      D.N.I.: {userData?.dni}
-                    </Text>
-                    <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                      Departamento:{" "}
-                      {userData?.departamento === undefined
-                        ? "Sin asignar"
-                        : userData?.departamento}
-                    </Text>
+                  <View
+                    style={{
+                      borderColor: "black",
+                      borderWidth: 2,
+                      borderRadius: 8,
+                      padding: 10,
+                    }}
+                  >
+                    <View style={styles.mainInformationContainer}>
+                      <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                        Afiliado:{" "}
+                        {userData?.apellido !== undefined
+                          ? `${userData.apellido},`
+                          : null}{" "}
+                        {userData?.nombre}
+                      </Text>
+                      <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                        D.N.I.: {userData?.dni}
+                      </Text>
+                      <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+                        Departamento:{" "}
+                        {userData?.departamento === undefined
+                          ? "Sin asignar"
+                          : userData?.departamento}
+                      </Text>
+                    </View>
                   </View>
-
-                  {/* Selección de nivel educativo */}
-                  <Text style={styles.modalText}>Nivel Educativo:</Text>
-                  <Picker
-                    selectedValue={selectedLevel}
-                    style={styles.input}
-                    onValueChange={(itemValue) => setSelectedLevel(itemValue)}
+                  <View style={styles.separator} />
+                  <View
+                    style={{
+                      borderColor: "black",
+                      borderWidth: 2,
+                      borderRadius: 8,
+                      padding: 20,
+                    }}
                   >
-                    <Picker.Item
-                      label="Seleccione un nivel educativo"
-                      value=""
-                    />
-                    <Picker.Item label="Nivel Inicial" value="Nivel Inicial" />
-                    <Picker.Item
-                      label="Nivel Primario"
-                      value="Nivel Primario"
-                    />
-                    <Picker.Item
-                      label="Nivel Secundario"
-                      value="Nivel Secundario"
-                    />
-                    <Picker.Item
-                      label="Nivel Superior"
-                      value="Nivel Superior"
-                    />
-                  </Picker>
+                    {/* Selección de nivel educativo */}
+                    <Text style={styles.modalText}>Nivel Educativo:</Text>
+                    <Picker
+                      selectedValue={selectedLevel}
+                      style={styles.input}
+                      onValueChange={(itemValue) => setSelectedLevel(itemValue)}
+                    >
+                      <Picker.Item
+                        label="Seleccione un nivel educativo"
+                        value=""
+                      />
+                      <Picker.Item
+                        label="Nivel Inicial"
+                        value="Nivel Inicial"
+                      />
+                      <Picker.Item
+                        label="Nivel Primario"
+                        value="Nivel Primario"
+                      />
+                      <Picker.Item
+                        label="Nivel Secundario"
+                        value="Nivel Secundario"
+                      />
+                      <Picker.Item
+                        label="Nivel Superior"
+                        value="Nivel Superior"
+                      />
+                    </Picker>
 
-                  {/* Selección del curso */}
-                  <Text style={styles.modalText}>Seleccionar Curso:</Text>
-                  <Picker
-                    selectedValue={selectedCourse}
-                    style={styles.input}
-                    onValueChange={(itemValue) => setSelectedCourse(itemValue)}
-                  >
-                    <Picker.Item label="Seleccione un curso" value="" />
-                    {dataTravel.length === 0 ? (
-                      <Picker.Item label="No se encontraron cursos" value="" />
-                    ) : (
-                      dataTravel.map((course) => (
+                    {/* Selección del curso */}
+                    <Text style={styles.modalText}>Seleccionar Curso:</Text>
+                    <Picker
+                      selectedValue={selectedCourse}
+                      style={styles.input}
+                      onValueChange={(itemValue) =>
+                        setSelectedCourse(itemValue)
+                      }
+                    >
+                      <Picker.Item label="Seleccione un curso" value="" />
+                      {dataTravel.length === 0 ? (
                         <Picker.Item
-                          key={course.id}
-                          label={course.titulo}
-                          value={course.titulo}
+                          label="No se encontraron cursos"
+                          value=""
                         />
-                      ))
-                    )}
-                  </Picker>
+                      ) : (
+                        dataTravel.map((course) => (
+                          <Picker.Item
+                            key={course.id}
+                            label={course.titulo}
+                            value={course.titulo}
+                          />
+                        ))
+                      )}
+                    </Picker>
 
-                  {/* Mostrar la fecha debajo de la lista de cursos */}
-                  <Text
-                    style={{ fontSize: 16, fontWeight: "bold", marginTop: -8 }}
-                  >
-                    Fecha: {currentDate}
-                  </Text>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.btnCommon,
-                      {
-                        backgroundColor: isButtonEnabled
-                          ? "#005CFE"
-                          : "#A9A9A9",
-                      },
-                    ]}
-                    onPress={isButtonEnabled ? registerAttendance : null}
-                    activeOpacity={isButtonEnabled ? 0.7 : 1}
-                  >
-                    <Text style={styles.commonBtnText}>
-                      Registrar Asistencia
+                    {/* Mostrar la fecha debajo de la lista de cursos */}
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginTop: -8,
+                      }}
+                    >
+                      Fecha: {currentDate}
                     </Text>
-                  </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.btnCommon,
+                        {
+                          backgroundColor: isButtonEnabled
+                            ? "#005CFE"
+                            : "#A9A9A9",
+                        },
+                      ]}
+                      onPress={isButtonEnabled ? registerAttendance : null}
+                      activeOpacity={isButtonEnabled ? 0.7 : 1}
+                    >
+                      <Text style={styles.commonBtnText}>
+                        Registrar Asistencia
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.separator} />
 
                   {/* Mostrar las asistencias cargadas */}
                   <Text
-                    style={{ fontSize: 18, fontWeight: "bold", marginTop: 20 }}
+                    style={[
+                      styles.modalDescription,
+                      {
+                        alignSelf: "flex-start",
+                        borderColor: "black",
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        padding: 5,
+                        marginBottom: 5,
+                        backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
+                      },
+                    ]}
                   >
-                    Asistencias Cargadas:
+                    Asistencias cargadas:
                   </Text>
-                  <View>
-                    {attendances.map((item, index) => (
+                  <View
+                    style={{
+                      borderColor: "black",
+                      borderWidth: 2,
+                      borderRadius: 8,
+                      padding: 10,
+                    }}
+                  >
+                    {Object.entries(
+                      attendances
+                        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)) // Ordenar por fecha descendente
+                        .reduce((acc, item) => {
+                          if (!acc[item.curso]) {
+                            acc[item.curso] = [];
+                          }
+                          acc[item.curso].push(item);
+                          return acc;
+                        }, {})
+                    ).map(([curso, asistencias], index) => (
                       <View
                         key={index}
                         style={{
@@ -368,11 +445,13 @@ export default function HandleCampusTeachers() {
                         }}
                       >
                         <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                          Curso: {item.curso}
+                          Curso: {curso}
                         </Text>
-                        <Text style={{ fontSize: 14, color: "#555" }}>
-                          Fecha: {item.fecha}
-                        </Text>
+                        {asistencias.map((item, i) => (
+                          <Text key={i} style={{ fontSize: 14, color: "#555" }}>
+                            Fecha: {item.fecha}
+                          </Text>
+                        ))}
                       </View>
                     ))}
                   </View>
