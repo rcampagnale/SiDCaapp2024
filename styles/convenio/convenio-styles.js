@@ -32,6 +32,7 @@ const convenioStyles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
     width: "97%",
+    
   },
   carruselContainer: {
     width: "100%",
@@ -137,6 +138,7 @@ const convenioStyles = StyleSheet.create({
     width: "95%",
     height: "auto",
     textAlign: "justify",
+    fontSize: 16,
   },
   btnsBox: {
     width: "100%",
