@@ -173,6 +173,7 @@ export default linkStyles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 5,
     alignItems: "center",
+    marginTop: 15, // 🔹 Agregado para bajar el botón
   },
 
   closeButtonText: {
@@ -242,6 +243,7 @@ export default linkStyles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 16,
     textAlign: "center",
+    alignSelf: "flex-start"
   },
   simularButton: {
     backgroundColor: "#007bff", // Azul fuerte

@@ -121,7 +121,6 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     }
   }, [sueldoCalculado, zonaFrontera]); // Dependencias: sueldoCalculado y zonaFrontera
 
-  
   const seguroVidaObligatorio = 1000; // Monto fijo de Seguro de Vida Obligatorio
 
   const subsidioSepelio = 1500; // Monto fijo de Subsidio por Sepelio
@@ -129,26 +128,24 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   // Función que maneja el cálculo del sueldo
   const handleSimulateSalary = () => {
     // Total haberes
-    const haberes =
-      sueldoCalculado + antiguedadAPagar + parseFloat(zonaPagar);
+    const haberes = sueldoCalculado + antiguedadAPagar + parseFloat(zonaPagar);
     setTotalHaberes(haberes); // Ahora totalHaberes se guarda en el estado
 
-  // Calcular jubilación basado en haberes y actualizar el estado
-  const nuevaJubilacion = (haberes * 0.11).toFixed(2);
-  setJubilacion(nuevaJubilacion); // Ahora la jubilación se almacena en el estado
-  // Calcular fondo especial y actualizar el estado
-  const nuevoFondoEspecial = (haberes * 0.005).toFixed(2);
-  setFondoEspecial(nuevoFondoEspecial);
+    // Calcular jubilación basado en haberes y actualizar el estado
+    const nuevaJubilacion = (haberes * 0.11).toFixed(2);
+    setJubilacion(nuevaJubilacion); // Ahora la jubilación se almacena en el estado
+    // Calcular fondo especial y actualizar el estado
+    const nuevoFondoEspecial = (haberes * 0.005).toFixed(2);
+    setFondoEspecial(nuevoFondoEspecial);
 
-  // Calcular descuento OSEP basado en haberes y actualizar el estado
-  const nuevoDescuentoOSEP = (haberes * 0.045).toFixed(2);
-  setDescuentoOSEP(nuevoDescuentoOSEP); // Ahora el descuento OSEP se almacena en el estado
+    // Calcular descuento OSEP basado en haberes y actualizar el estado
+    const nuevoDescuentoOSEP = (haberes * 0.045).toFixed(2);
+    setDescuentoOSEP(nuevoDescuentoOSEP); // Ahora el descuento OSEP se almacena en el estado
 
     // Calcular "Reg.Prev.Esp. Docente" basado en haberes y actualizar el estado
     const nuevoRegPrevEspDocente = (haberes * 0.02).toFixed(2);
     setRegPrevEspDocente(nuevoRegPrevEspDocente);
 
-  
     // Sumar todos los descuentos
     const descuentos =
       parseFloat(nuevaJubilacion) +
@@ -159,12 +156,12 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
       seguroVidaObligatorio +
       subsidioSepelio;
     setTotalDescuentos(descuentos); // Ahora totalDescuentos se guarda en el estado
-  
+
     // Calcular sueldo final a cobrar
     const sueldoFinal = haberes - descuentos;
     setFinalSueldo(sueldoFinal.toFixed(2)); // Ahora el sueldo final se actualiza correctamente
   };
-  
+
   // Función para limpiar los valores cuando el modal se cierre
   const handleCloseModal = () => {
     setSueldoBasico("");
@@ -262,14 +259,40 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
 
                 {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Cátedra") */}
                 {selectedOption === "catedra" && (
-                  <TextInput
-                    style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
-                    keyboardType="numeric"
-                    placeholder="Cantidad de Hs."
-                    value={cantidadHoras}
-                    onChangeText={setCantidadHoras}
-                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 10,
+                    }}
+                  >
+                    <TextInput
+                      style={[styles.input, { paddingLeft: 10, flex: 1 }]}
+                      keyboardType="numeric"
+                      placeholder="Cantidad de Hs."
+                      value={cantidadHoras}
+                      onChangeText={setCantidadHoras}
+                    />
+
+                    {/* Cuadro con borde negro y texto adentro */}
+                    <View
+                      style={{
+                        borderColor: "black",
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        padding: 10,
+                        marginLeft: 20, // Espacio entre el TextInput y el cuadro
+                        minWidth: 50, // Ancho mínimo del cuadro
+                        alignItems: "center",
+                        justifyContent: "center",
+                        
+                      }}
+                    >
+                      <Text>Texto aquí</Text>
+                    </View>
+                  </View>
                 )}
+
                 {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Superior") */}
                 {selectedOption === "superior" && (
                   <TextInput
@@ -388,7 +411,8 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                   },
                 ]}
               >
-                Remunerativos:<Text style={styles.sueldo}>$ {totalHaberes}</Text>
+                Remunerativos:
+                <Text style={styles.sueldo}>$ {totalHaberes}</Text>
               </Text>
             </View>
 
@@ -555,7 +579,8 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                   },
                 ]}
               >
-                Descuentos: <Text style={styles.sueldo}>$ {totalDescuentos}</Text>
+                Descuentos:{" "}
+                <Text style={styles.sueldo}>$ {totalDescuentos}</Text>
               </Text>
             </View>
 
@@ -653,15 +678,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 resultados obtenidos.
               </Text>
             </View>
-
-            <View style={styles.separator} />
-            <TouchableOpacity
+          </ScrollView>
+          <View style={styles.separator} />
+          <TouchableOpacity
               style={styles.closeButton}
               onPress={handleCloseModal} // Llama a la función de cierre y limpieza
             >
               <Text style={styles.closeButtonText}>Cerrar</Text>
             </TouchableOpacity>
-          </ScrollView>
         </View>
       </View>
     </Modal>
