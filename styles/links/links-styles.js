@@ -160,6 +160,12 @@ export default linkStyles = StyleSheet.create({
     marginBottom: -8, // Ajustado para más espacio
     fontWeight: "bold",
   },
+  modalDescription1: {
+    fontSize: 16,
+    textAlign: "justify", // Cambié para que se alineara mejor
+    marginBottom: -8, // Ajustado para más espacio
+    fontWeight: "bold",
+  },
 
   closeButton: {
     backgroundColor: "#007BFF",
