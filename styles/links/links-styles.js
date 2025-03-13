@@ -38,20 +38,19 @@ export default linkStyles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 10,
     textAlign: "center",
-    top: 70,
+    width:'90%',
+    height:'auto'
   },
 
   // Estilos para los botones
   buttonWrapper: {
     width: "100%", // Ajusta al 100% del contenedor
+    display:'flex',
     flexDirection: "column", // Los botones se dispondrán en columna
-    justifyContent: "space-evenly", // Espacio entre los botones
-    alignItems: "center", // Centra los botones horizontalmente
-    gap: 28, // Espaciado entre los botones
-    zIndex: 1, // Controla la superposición, si es necesario
-    marginTop: -150, // Ajusta este valor para mover los botones hacia abajo
+    justifyContent: "space-around", // Espacio entre los botones
+    alignItems: "center", // Centra los botones horizontalmente,
+    height:300,
   },
 
   // Estilos comunes de los botones
@@ -86,7 +85,6 @@ export default linkStyles = StyleSheet.create({
     width: screenWidth, // Ajusta la imagen al ancho de la pantalla
     height: 140,
     resizeMode: "cover", // Ajuste automático de la imagen para cubrir el área sin distorsión
-    top: -245, // Alineamos el rectángulo en la parte superior
   },
 
   // Estilos del botón "Volver"

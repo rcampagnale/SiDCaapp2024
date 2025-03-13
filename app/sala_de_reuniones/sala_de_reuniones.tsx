@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import styles from "../../styles/sala_de_reuniones/sala_de_reuniones";
 import { useState, useEffect } from "react";
@@ -16,9 +17,9 @@ export default function HandleCampusTeachers() {
   const statusBarHeight = StatusBar.currentHeight;
 
   // Estado para controlar la carga de datos
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [dataTravel, setDataTravel] = useState<any>(null); // Cambié el tipo de estado para un solo objeto
-
+  const [checkRoomLink,setCheckRoomLink]=useState<boolean>(false)
   const analytics = getFirestore(firebaseconn);
   const docRef = doc(analytics, "cuotas", "sala"); // Accede al documento "sala" dentro de la colección "cuotas"
 
@@ -31,7 +32,11 @@ export default function HandleCampusTeachers() {
 
         if (docSnap.exists()) {
           setDataTravel(docSnap.data()); // Si existe, guarda los datos del documento
+          //el booleano del boton sea true
+          setCheckRoomLink(true)
         } else {
+          //el booleano del boton sea falso
+          setCheckRoomLink(false)
           alert("El documento 'sala' no existe en la colección 'cuotas'.");
         }
       } catch (error) {
@@ -69,15 +74,19 @@ export default function HandleCampusTeachers() {
             colectivo más sólido.
           </Text>
         </View>
-
-        {/* Carrusel de imágenes (se mantienen las imágenes estáticas) */}
-        <View style={styles.carruselContainer}>
-          <ScrollView
-            style={styles.carrusel}
+        <View style={{width:'100%',height:'45%',borderWidth:1,display:'flex',flexDirection:'column',justifyContent:'space-between',alignItems:'center'}}>
+          <View style={{width:'100%',height:180}}>
+          <ScrollView            
             contentContainerStyle={{
+              display:'flex',
+              flexDirection:'row',
               justifyContent: "space-between",
               alignItems: "center",
               columnGap: 15,
+              width:'100%',
+              height:180,
+              borderWidth:1,
+              borderColor:'#ff0000',
             }}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
@@ -118,34 +127,29 @@ export default function HandleCampusTeachers() {
               resizeMode="cover"
             />
           </ScrollView>
-        </View>
-
-        {/* Mostrar descripción si existe */}
-        {dataTravel && dataTravel.descripcion && (
-          <View style={styles.viewInformation}>
-            <Text style={styles.descripcionText}>{dataTravel.descripcion}</Text>
+          </View>   
+        
+          <View style={[styles.viewInformation,{height:60}]}>
+            <Text style={styles.descripcionText}>desripcion</Text>
           </View>
-        )}
+        
 
-        {/* Botón para ingresar a la reunión */}
-        {loading ? (
-          <Text>Cargando...</Text>
-        ) : (
+        
           <TouchableOpacity
-            style={[
-              styles.btnNews,
-              {
-                backgroundColor: isButtonEnabled ? "#005CFE" : "#A9A9A9",
+            style={[styles.btnNews, {
+                backgroundColor: checkRoomLink ? "#005CFE" : "#A9A9A9",marginBottom:10
               },
             ]}
-            onPress={
-              isButtonEnabled ? () => Linking.openURL(dataTravel.link) : null
-            }
-            activeOpacity={isButtonEnabled ? 0.7 : 1}
+            onPress={() => Linking.openURL(dataTravel.link)}
+            disabled={checkRoomLink}
+            activeOpacity={1}
           >
-            <Text style={styles.btnText}>Unirse a la Reunión</Text>
+            <Text style={styles.btnText}>Unirse</Text>
           </TouchableOpacity>
-        )}
+        
+       
+
+      </View>
       </View>
     </View>
   );

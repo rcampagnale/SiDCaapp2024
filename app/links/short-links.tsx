@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
   StyleSheet,
+  ImageStyle,
 } from "react-native";
 import styles from "../../styles/links/links-styles"; // Importando estilos
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -734,7 +735,7 @@ export default function ReferenceLinks() {
 
   if (!selectedOption) {
     return (
-      <View style={[styles.container, { paddingTop: statusBarHeight }]}>
+      <View style={[styles.container, { paddingTop: statusBarHeight,display:'flex',flexDirection:'column',justifyContent:'space-around',alignItems:'center' }]}>
         <StatusBar
           barStyle="dark-content"
           backgroundColor="#ffffff"
@@ -784,7 +785,7 @@ export default function ReferenceLinks() {
         </View>
 
         <Image
-          style={styles.image}
+          style={styles.image as ImageStyle}
           source={require("../../assets/somos/link.jpg")}
           resizeMode="contain"
         />
