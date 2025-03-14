@@ -148,7 +148,7 @@ export default function SignInApp() {
               <Text style={{ fontSize: 20, fontWeight: "500" }}>AFILIARSE</Text>
             </TouchableOpacity>
           </ImageBackground>
-          <View style={{ width: "80%", height: 40, marginTop: 20 }}>
+          {isKeyboardVisible === false ? <View style={{ width: "80%", height: 40, marginTop: 20 }}>
             <TouchableOpacity
               style={styles.btnWhatsApp}
               activeOpacity={1}
@@ -161,6 +161,9 @@ export default function SignInApp() {
               />
             </TouchableOpacity>
           </View>
+          
+        : null}
+          
         </View>
         {isKeyboardVisible === false ? (
           <>

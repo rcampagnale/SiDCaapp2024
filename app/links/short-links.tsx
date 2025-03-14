@@ -746,7 +746,7 @@ export default function ReferenceLinks() {
           Red de Contactos e Información para el Docente
         </Text>
 
-        <View style={styles.orangeRectangle}></View>
+        
 
         <View style={styles.buttonWrapper}>
           <TouchableOpacity

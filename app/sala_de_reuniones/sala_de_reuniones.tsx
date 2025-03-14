@@ -74,7 +74,7 @@ export default function HandleCampusTeachers() {
             colectivo más sólido.
           </Text>
         </View>
-        <View style={{width:'100%',height:'45%',borderWidth:1,display:'flex',flexDirection:'column',justifyContent:'space-between',alignItems:'center'}}>
+        <View style={{width:'100%',height:'45%',display:'flex',flexDirection:'column',justifyContent:'space-between',alignItems:'center'}}>
           <View style={{width:'100%',height:180}}>
           <ScrollView            
             contentContainerStyle={{
@@ -85,8 +85,7 @@ export default function HandleCampusTeachers() {
               columnGap: 15,
               width:'100%',
               height:180,
-              borderWidth:1,
-              borderColor:'#ff0000',
+            
             }}
             horizontal={true}
             showsHorizontalScrollIndicator={false}

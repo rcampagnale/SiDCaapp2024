@@ -51,6 +51,7 @@ export default linkStyles = StyleSheet.create({
     justifyContent: "space-around", // Espacio entre los botones
     alignItems: "center", // Centra los botones horizontalmente,
     height:300,
+    backgroundColor:"#fea200"
   },
 
   // Estilos comunes de los botones
