@@ -39,19 +39,19 @@ export default linkStyles = StyleSheet.create({
     fontWeight: "bold",
     color: "#ffffff",
     textAlign: "center",
-    width:'90%',
-    height:'auto'
+    width: "90%",
+    height: "auto",
   },
 
   // Estilos para los botones
   buttonWrapper: {
     width: "100%", // Ajusta al 100% del contenedor
-    display:'flex',
+    display: "flex",
     flexDirection: "column", // Los botones se dispondrán en columna
     justifyContent: "space-around", // Espacio entre los botones
     alignItems: "center", // Centra los botones horizontalmente,
-    height:300,
-    backgroundColor:"#fea200"
+    height: 300,
+    backgroundColor: "#fea200",
   },
 
   // Estilos comunes de los botones
@@ -159,6 +159,7 @@ export default linkStyles = StyleSheet.create({
     marginBottom: -8, // Ajustado para más espacio
     fontWeight: "bold",
   },
+
   modalDescription1: {
     fontSize: 16,
     textAlign: "justify", // Cambié para que se alineara mejor
@@ -191,6 +192,7 @@ export default linkStyles = StyleSheet.create({
     marginBottom: -1, // Espacio inferior
     paddingHorizontal: -1, // Espaciado horizontal interno
   },
+
   rowContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -217,12 +219,14 @@ export default linkStyles = StyleSheet.create({
     width: "60%",
     alignSelf: "center", // Centra el sueldo en su contenedor
   },
+
   separator: {
     height: 2, // Alto de la línea
     backgroundColor: "black", // Color de la línea
     width: "100%", // Ocupa todo el ancho disponible
     marginVertical: 10, // Ajustado para un espaciado adecuado
   },
+
   buttonText1: {
     fontSize: 16,
     color: "#fff", // Cambiar el color del texto
@@ -232,6 +236,7 @@ export default linkStyles = StyleSheet.create({
     textAlign: "center",
     marginRight: 52, // Espacio entre el texto y el sueldo
   },
+
   input: {
     width: "60%",
     height: 50,
@@ -242,8 +247,9 @@ export default linkStyles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 16,
     textAlign: "center",
-    alignSelf: "flex-start"
+    alignSelf: "flex-start",
   },
+
   simularButton: {
     backgroundColor: "#007bff", // Azul fuerte
     paddingVertical: 12,
@@ -269,11 +275,13 @@ export default linkStyles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: "white",
   },
+
   buttonText2: {
     fontSize: 15,
-    color: "#0034ab", // Cambiar el c#0df2c9olor del texto
+    color: "#0034ab", // Cambiar el color del texto
     fontWeight: "bold",
   },
+
   titulodeopciones1: {
     fontSize: 17,
     fontWeight: "bold",
@@ -281,6 +289,7 @@ export default linkStyles = StyleSheet.create({
     marginRight: 1, // Espacio entre el texto y el sueldo
     flex: 1,
   },
+
   simuladorTexto: {
     fontSize: 14,
     color: "black", // Para que sea más suave y diferenciable del contenido principal
@@ -289,3 +298,4 @@ export default linkStyles = StyleSheet.create({
     textAlign: "justify",
   },
 });
+
