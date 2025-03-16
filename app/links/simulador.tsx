@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Linking,
-  StyleSheet,
 } from "react-native";
 import styles from "../../styles/links/links-styles"; // Asegúrate de tener los estilos correctamente importados
 import { Picker } from "@react-native-picker/picker";
@@ -17,8 +16,8 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 
 const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [sueldoBasico, setSueldoBasico] = useState("");
-  const [selectedOption, setSelectedOption] = useState("");
-  const [adicAntiguedad, setAdicAntiguedad] = useState("0"); // Cambié a string para mantener la consistencia
+  const [selectedOption, setSelectedOption] = useState("cargo");
+  const [adicAntiguedad, setAdicAntiguedad] = useState("0");
   const [zonaPagar, setZonaPagar] = useState("0.00");
   const [zonaFrontera, setZonaFrontera] = useState("");
   const [cantidadHoras, setCantidadHoras] = useState("");
@@ -31,7 +30,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [descuentoOSEP, setDescuentoOSEP] = useState(0);
   const [regPrevEspDocente, setRegPrevEspDocente] = useState(0);
   const [nomencladorUrl, setNomencladorUrl] = useState(null);
-  const analytics = getFirestore(firebaseconn);
+  const [cargos, setCargos] = useState([]); // Para almacenar los cargos agregados
 
   const fetchNomenclador = async () => {
     try {
@@ -63,7 +62,6 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     }
   }, [selectedOption, cantidadHoras, sueldoBasico]);
 
-  // Calcular adicional por antigüedad con base en el porcentaje seleccionado
   const antiguedadAPagar = sueldoCalculado * (parseFloat(adicAntiguedad) / 100);
   const descuentoSindical = (sueldoCalculado * 0.02).toFixed(2);
 
@@ -80,28 +78,33 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const seguroVidaObligatorio = 1000;
   const subsidioSepelio = 1500;
 
-  const handleSimulateSalary = () => {
-    const haberes = sueldoCalculado + antiguedadAPagar + parseFloat(zonaPagar);
-    setTotalHaberes(haberes);
-    const nuevaJubilacion = (haberes * 0.11).toFixed(2);
-    setJubilacion(nuevaJubilacion);
-    const nuevoFondoEspecial = (haberes * 0.005).toFixed(2);
-    setFondoEspecial(nuevoFondoEspecial);
-    const nuevoDescuentoOSEP = (haberes * 0.045).toFixed(2);
-    setDescuentoOSEP(nuevoDescuentoOSEP);
-    const nuevoRegPrevEspDocente = (haberes * 0.02).toFixed(2);
-    setRegPrevEspDocente(nuevoRegPrevEspDocente);
-    const descuentos =
-      parseFloat(nuevaJubilacion) +
-      parseFloat(nuevoFondoEspecial) +
-      parseFloat(nuevoDescuentoOSEP) +
-      parseFloat(descuentoSindical) +
-      parseFloat(nuevoRegPrevEspDocente) +
-      seguroVidaObligatorio +
-      subsidioSepelio;
-    setTotalDescuentos(descuentos);
-    const sueldoFinal = haberes - descuentos;
-    setFinalSueldo(sueldoFinal.toFixed(2));
+  // Función para agregar un nuevo cargo
+  const handleAddCargo = () => {
+    const nuevoCargo = {
+      selectedOption,
+      sueldoBasico,
+      cantidadHoras,
+      adicAntiguedad,
+      zonaFrontera,
+      sueldoCalculado,
+      antiguedadAPagar,
+      zonaPagar,
+    };
+    setCargos((prevCargos) => [...prevCargos, nuevoCargo]);
+
+    // Resetear los campos para agregar más cargos si es necesario
+    setSueldoBasico("");
+    setCantidadHoras("");
+    setSelectedOption("cargo");
+    setSueldoCalculado(0);
+    setFinalSueldo("0.00");
+    setAdicAntiguedad("0");
+    setZonaFrontera("0.00");
+  };
+
+  // Función para eliminar un cargo
+  const handleDeleteCargo = (index) => {
+    setCargos((prevCargos) => prevCargos.filter((_, i) => i !== index));
   };
 
   const handleCloseModal = () => {
@@ -110,7 +113,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     setSelectedOption("cargo");
     setSueldoCalculado(0);
     setFinalSueldo("0.00");
-    setAdicAntiguedad("0"); // Resetear antigüedad
+    setAdicAntiguedad("0");
     setZonaFrontera("0.00");
     setModalVisible(false);
   };
@@ -121,6 +124,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     setCantidadHoras("");
     setSueldoCalculado(0);
   };
+
+  function handleSimulateSalary(event: GestureResponderEvent): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <Modal visible={modalVisible} animationType="slide" transparent={true}>
@@ -134,23 +141,35 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
           </Text>
           <View style={styles.separator} />
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-          <Text
-              style={[
-                styles.modalDescription,
-                {
-                  alignSelf: "flex-start",
-                  borderColor: "black",
-                  borderWidth: 2,
-                  borderRadius: 5,
-                  padding: 5,
-                  marginBottom: 5,
-                  backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
-                },
-              ]}
+            <TouchableOpacity
+              style={styles.simularButton}
+              onPress={handleAddCargo} // Llama a la función handleAddCargo cuando se presiona el botón
             >
-              Haberes
-            </Text>
-            <View
+              <Text style={styles.simularButtonText}>Agregar Cargo</Text>
+            </TouchableOpacity>
+
+            {/* Mostrar los cargos agregados */}
+            {cargos.map((cargo, index) => (
+              <View key={index}>
+                {/* Haberes */}
+                <Text
+                  style={[
+                    styles.modalDescription,
+                    {
+                      alignSelf: "flex-start",
+                      borderColor: "black",
+                      borderWidth: 2,
+                      borderRadius: 5,
+                      padding: 5,
+                      marginBottom: 5,
+                      backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
+                    },
+                  ]}
+                >
+                  Haberes
+                </Text>
+
+                <View
               style={{
                 borderColor: "black",
                 borderWidth: 2,
@@ -337,8 +356,20 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               </Text>
             </View>
 
-            <View style={styles.separator} />
-            <Text
+                {/* Eliminar Cargo */}
+                <TouchableOpacity
+                  style={styles.simularButton}
+                  onPress={() => handleDeleteCargo(index)} // Llama a la función de eliminación del cargo
+                >
+                  <Text style={styles.simularButtonText}>Eliminar Cargo</Text>
+                </TouchableOpacity>
+
+                <View style={styles.separator} />
+                
+              </View>
+            ))}
+
+<Text
               style={[
                 styles.modalDescription,
                 {
@@ -600,13 +631,11 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               </Text>
             </View>
           </ScrollView>
+
           <View style={styles.separator} />
-          <TouchableOpacity
-              style={styles.closeButton}
-              onPress={handleCloseModal} // Llama a la función de cierre y limpieza
-            >
-              <Text style={styles.closeButtonText}>Cerrar</Text>
-            </TouchableOpacity>
+          <TouchableOpacity style={styles.closeButton} onPress={handleCloseModal}>
+            <Text style={styles.closeButtonText}>Cerrar</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
