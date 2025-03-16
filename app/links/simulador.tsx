@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   Linking,
+  StyleSheet,
 } from "react-native";
 import styles from "../../styles/links/links-styles"; // Asegúrate de tener los estilos correctamente importados
 import { Picker } from "@react-native-picker/picker";
@@ -17,7 +18,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [sueldoBasico, setSueldoBasico] = useState("");
   const [selectedOption, setSelectedOption] = useState("");
-  const [adicAntiguedad, setAdicAntiguedad] = useState("0");
+  const [adicAntiguedad, setAdicAntiguedad] = useState("0"); // Cambié a string para mantener la consistencia
   const [zonaPagar, setZonaPagar] = useState("0.00");
   const [zonaFrontera, setZonaFrontera] = useState("");
   const [cantidadHoras, setCantidadHoras] = useState("");
@@ -30,10 +31,6 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [descuentoOSEP, setDescuentoOSEP] = useState(0);
   const [regPrevEspDocente, setRegPrevEspDocente] = useState(0);
   const [nomencladorUrl, setNomencladorUrl] = useState(null);
-
-  // Estado para manejar los cargos agregados
-  const [cargos, setCargos] = useState<any[]>([]);
-
   const analytics = getFirestore(firebaseconn);
 
   const fetchNomenclador = async () => {
@@ -113,7 +110,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     setSelectedOption("cargo");
     setSueldoCalculado(0);
     setFinalSueldo("0.00");
-    setAdicAntiguedad("0");
+    setAdicAntiguedad("0"); // Resetear antigüedad
     setZonaFrontera("0.00");
     setModalVisible(false);
   };
@@ -123,31 +120,6 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     setSueldoBasico("");
     setCantidadHoras("");
     setSueldoCalculado(0);
-  };
-
-  // Función para agregar un nuevo cargo al estado
-  const handleAddCargo = () => {
-    const nuevoCargo = {
-      sueldoBasico,
-      cantidadHoras,
-      selectedOption,
-      adicAntiguedad,
-      zonaFrontera,
-      sueldoCalculado,
-      finalSueldo,
-    };
-
-    // Agregar el nuevo cargo al array de cargos
-    setCargos((prevState) => [...prevState, nuevoCargo]);
-
-    // Limpiar los campos del formulario
-    setSueldoBasico("");
-    setCantidadHoras("");
-    setSelectedOption("");
-    setAdicAntiguedad("0");
-    setZonaFrontera("");
-    setSueldoCalculado(0);
-    setFinalSueldo("0.00");
   };
 
   return (
@@ -162,7 +134,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
           </Text>
           <View style={styles.separator} />
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-            <Text
+          <Text
               style={[
                 styles.modalDescription,
                 {
@@ -199,6 +171,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                   },
                 ]}
               >
+                {/* Lista Desplegable con el texto como opciones */}
                 <Text style={styles.titulodeopciones}>
                   Seleccione tipo de Cargo/Hs Cátedra:
                 </Text>
@@ -212,6 +185,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                   <Picker.Item label="Hs. Cátedra Superior" value="superior" />
                 </Picker>
 
+                {/* Ingreso de Monto */}
                 <TextInput
                   style={[styles.input, { paddingLeft: 10 }]}
                   keyboardType="numeric"
@@ -220,16 +194,27 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                   onChangeText={setSueldoBasico}
                 />
 
+                {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Cátedra") */}
                 {selectedOption === "catedra" && (
-                  <TextInput
-                    style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
-                    keyboardType="numeric"
-                    placeholder="Cantidad de Hs."
-                    value={cantidadHoras}
-                    onChangeText={setCantidadHoras}
-                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 10,
+                    }}
+                  >
+                    <TextInput
+                      style={[styles.input, { paddingLeft: 10}]}
+                      keyboardType="numeric"
+                      placeholder="Cantidad de Hs."
+                      value={cantidadHoras}
+                      onChangeText={setCantidadHoras}
+                    />
+                                    
+                  </View>
                 )}
 
+                {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Superior") */}
                 {selectedOption === "superior" && (
                   <TextInput
                     style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
@@ -239,9 +224,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                     onChangeText={setCantidadHoras}
                   />
                 )}
-
+                {/* Separador */}
                 <View style={styles.separator} />
 
+                {/* Sueldo Base Calculado */}
                 <View style={styles.rowContainer}>
                   <Text style={styles.titulodeopciones}>Sueldo Base:</Text>
                   <Text style={styles.sueldo}>
@@ -298,8 +284,40 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               </View>
 
               <View style={styles.separator} />
-              
-              {/* Sección de Remunerativos */}
+              <View
+                style={{
+                  borderColor: "black",
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  padding: 10,
+                }}
+              >
+                <View style={styles.rowContainer}>
+                  <Text style={styles.titulodeopciones}>Zona Frontera:</Text>
+                  <Picker
+                    selectedValue={zonaFrontera}
+                    onValueChange={setZonaFrontera}
+                    style={styles.pickerContainer}
+                  >
+                    <Picker.Item label="Seleccione una zona" value="" />
+                    <Picker.Item label="Urbano 0 %" value="0" />
+                    <Picker.Item
+                      label="Alejado Radio Urbano (ARU) 40 %"
+                      value="40"
+                    />
+                    <Picker.Item label="Desfavorable 75 %" value="75" />
+                    <Picker.Item label="Muy Desfavorable 100 %" value="100" />
+                    <Picker.Item label="Inhóspito 150 %" value="150" />
+                  </Picker>
+                </View>
+
+                <View style={styles.separator} />
+                <View style={styles.rowContainer}>
+                  <Text style={styles.titulodeopciones}>Zona a Pagar:</Text>
+                  <Text style={styles.sueldo}>$ {zonaPagar}</Text>
+                </View>
+              </View>
+              <View style={styles.separator} />
               <Text
                 style={[
                   styles.modalDescription1,
@@ -317,142 +335,278 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 Remunerativos:
                 <Text style={styles.sueldo}>$ {totalHaberes}</Text>
               </Text>
+            </View>
+
+            <View style={styles.separator} />
+            <Text
+              style={[
+                styles.modalDescription,
+                {
+                  alignSelf: "flex-start",
+                  borderColor: "black",
+                  borderWidth: 2,
+                  borderRadius: 5,
+                  padding: 5,
+                  marginBottom: 5,
+                  backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
+                },
+              ]}
+            >
+              Descuentos
+            </Text>
+            <View
+              style={{
+                borderColor: "black",
+                borderWidth: 2,
+                borderRadius: 8,
+                padding: 10,
+              }}
+            >
+              <View
+                style={[
+                  styles.rowContainer,
+                  {
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    padding: 15,
+                    marginBottom: 10,
+                  },
+                ]}
+              >
+                <Text style={styles.titulodeopciones}>
+                  Aportes Jubilatorios:
+                </Text>
+                <Text style={styles.sueldo}>$ {jubilacion}</Text>
+              </View>
+
+              <View
+                style={[
+                  styles.rowContainer,
+                  {
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    padding: 15,
+                    marginBottom: 10,
+                  },
+                ]}
+              >
+                <Text style={styles.titulodeopciones}>
+                  Fondo Esp. Trasplantes y Trat. Oncol. (O.S.E.P.):
+                </Text>
+                <Text style={styles.sueldo}>$ {fondoEspecial}</Text>
+              </View>
+
+              <View
+                style={[
+                  styles.rowContainer,
+                  {
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    padding: 15,
+                    marginBottom: 10,
+                  },
+                ]}
+              >
+                <Text style={styles.titulodeopciones}>Descuento OSEP:</Text>
+                <Text style={styles.sueldo}>$ {descuentoOSEP}</Text>
+              </View>
+
+              <View
+                style={[
+                  styles.rowContainer,
+                  {
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    padding: 15,
+                    marginBottom: 10,
+                  },
+                ]}
+              >
+                <Text style={styles.titulodeopciones}>
+                  Descuento SiDCa. (Sindicato):
+                </Text>
+                <Text style={styles.sueldo}>$ {descuentoSindical}</Text>
+              </View>
+
+              <View
+                style={[
+                  styles.rowContainer,
+                  {
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    padding: 15,
+                    marginBottom: 10,
+                  },
+                ]}
+              >
+                <Text style={styles.titulodeopciones}>
+                  Reg.Prev.Esp. Docente:
+                </Text>
+                <Text style={styles.sueldo}>$ {regPrevEspDocente}</Text>
+              </View>
+
+              <View
+                style={[
+                  styles.rowContainer,
+                  {
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    padding: 15,
+                    marginBottom: 10,
+                  },
+                ]}
+              >
+                <Text style={styles.titulodeopciones}>
+                  Seguro de Vida Obligatorio:
+                </Text>
+                <Text style={styles.sueldo}>$ {seguroVidaObligatorio}</Text>
+              </View>
+
+              <View
+                style={[
+                  styles.rowContainer,
+                  {
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    padding: 15,
+                    marginBottom: 10,
+                  },
+                ]}
+              >
+                <Text style={styles.titulodeopciones}>
+                  Subsidio por Sepelio:
+                </Text>
+                <Text style={styles.sueldo}>$ {subsidioSepelio}</Text>
+              </View>
               <View style={styles.separator} />
+              <Text
+                style={[
+                  styles.modalDescription1,
+                  {
+                    alignSelf: "flex-end",
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 5,
+                    padding: 5,
+                    marginBottom: 5,
+                    backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
+                  },
+                ]}
+              >
+                Descuentos:{" "}
+                <Text style={styles.sueldo}>$ {totalDescuentos}</Text>
+              </Text>
+            </View>
+
+            <View style={styles.separator} />
+            <Text
+              style={[
+                styles.modalDescription,
+                {
+                  alignSelf: "flex-start",
+                  borderColor: "black",
+                  borderWidth: 2,
+                  borderRadius: 5,
+                  padding: 5,
+                  marginBottom: 5,
+                  backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
+                },
+              ]}
+            >
+              Haberes a Cobrar
+            </Text>
+            <View
+              style={{
+                borderColor: "black",
+                borderWidth: 2,
+                borderRadius: 8,
+                padding: 10,
+              }}
+            >
+              <View
+                style={[
+                  styles.rowContainer,
+                  {
+                    borderColor: "black",
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    padding: 15,
+                    marginBottom: 10,
+                  },
+                ]}
+              >
+                <Text style={styles.titulodeopciones}>Sueldo a Cobrar:</Text>
+                <Text style={styles.sueldo}>$ {finalSueldo}</Text>
+              </View>
+
+              {/* Botón "Simular Sueldo" */}
               <TouchableOpacity
                 style={styles.simularButton}
-                onPress={handleAddCargo} // Llama a la función para agregar un cargo
+                onPress={handleSimulateSalary} // Llama a la función handleSimulateSalary
               >
-                <Text style={styles.simularButtonText}>Agregar Cargo</Text>
-              </TouchableOpacity>
-              
-              {/* Sección de descuentos */}
-              <View style={styles.separator} />
-              <Text
-                style={[
-                  styles.modalDescription,
-                  {
-                    alignSelf: "flex-start",
-                    borderColor: "black",
-                    borderWidth: 2,
-                    borderRadius: 5,
-                    padding: 5,
-                    marginBottom: 5,
-                    backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
-                  },
-                ]}
-              >
-                Descuentos
-              </Text>
-              <View
-                style={{
-                  borderColor: "black",
-                  borderWidth: 2,
-                  borderRadius: 8,
-                  padding: 10,
-                }}
-              >
-                <View style={[styles.rowContainer, { padding: 15 }]}>
-                  <Text style={styles.titulodeopciones}>
-                    Aportes Jubilatorios:
-                  </Text>
-                  <Text style={styles.sueldo}>$ {jubilacion}</Text>
-                </View>
-                <View style={[styles.rowContainer, { padding: 15 }]}>
-                  <Text style={styles.titulodeopciones}>
-                    Fondo Esp. Trasplantes y Trat. Oncol. (O.S.E.P.):
-                  </Text>
-                  <Text style={styles.sueldo}>$ {fondoEspecial}</Text>
-                </View>
-                <View style={[styles.rowContainer, { padding: 15 }]}>
-                  <Text style={styles.titulodeopciones}>Descuento OSEP:</Text>
-                  <Text style={styles.sueldo}>$ {descuentoOSEP}</Text>
-                </View>
-                <View style={[styles.rowContainer, { padding: 15 }]}>
-                  <Text style={styles.titulodeopciones}>
-                    Descuento SiDCa. (Sindicato):
-                  </Text>
-                  <Text style={styles.sueldo}>$ {descuentoSindical}</Text>
-                </View>
-                <View style={[styles.rowContainer, { padding: 15 }]}>
-                  <Text style={styles.titulodeopciones}>
-                    Reg.Prev.Esp. Docente:
-                  </Text>
-                  <Text style={styles.sueldo}>$ {regPrevEspDocente}</Text>
-                </View>
-                <View style={[styles.rowContainer, { padding: 15 }]}>
-                  <Text style={styles.titulodeopciones}>
-                    Seguro de Vida Obligatorio:
-                  </Text>
-                  <Text style={styles.sueldo}>$ {seguroVidaObligatorio}</Text>
-                </View>
-                <View style={[styles.rowContainer, { padding: 15 }]}>
-                  <Text style={styles.titulodeopciones}>
-                    Subsidio por Sepelio:
-                  </Text>
-                  <Text style={styles.sueldo}>$ {subsidioSepelio}</Text>
-                </View>
-                <View style={styles.separator} />
-                <Text
-                  style={[
-                    styles.modalDescription1,
-                    {
-                      alignSelf: "flex-end",
-                      borderColor: "black",
-                      borderWidth: 2,
-                      borderRadius: 5,
-                      padding: 5,
-                      marginBottom: 5,
-                      backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
-                    },
-                  ]}
-                >
-                  Descuentos:{" "}
-                  <Text style={styles.sueldo}>$ {totalDescuentos}</Text>
-                </Text>
-              </View>
-
-              <View style={styles.separator} />
-
-              {/* Sueldo a cobrar */}
-              <Text
-                style={[
-                  styles.modalDescription,
-                  {
-                    alignSelf: "flex-start",
-                    borderColor: "black",
-                    borderWidth: 2,
-                    borderRadius: 5,
-                    padding: 5,
-                    marginBottom: 5,
-                    backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
-                  },
-                ]}
-              >
-                Haberes a Cobrar
-              </Text>
-              <View
-                style={{
-                  borderColor: "black",
-                  borderWidth: 2,
-                  borderRadius: 8,
-                  padding: 10,
-                }}
-              >
-                <View style={[styles.rowContainer, { padding: 15 }]}>
-                  <Text style={styles.titulodeopciones}>Sueldo a Cobrar:</Text>
-                  <Text style={styles.sueldo}>$ {finalSueldo}</Text>
-                </View>
-              </View>
-
-              <View style={styles.separator} />
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={handleCloseModal} // Cierra el modal
-              >
-                <Text style={styles.closeButtonText}>Cerrar</Text>
+                <Text style={styles.simularButtonText}>Simular Sueldo</Text>
               </TouchableOpacity>
             </View>
+            <View style={styles.separator} />
+            <View
+              style={[
+                styles.rowContainer,
+                {
+                  borderColor: "black",
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  padding: 15,
+                  marginBottom: 10,
+                  flexDirection: "column", // Asegura que los elementos se apilen verticalmente
+                  justifyContent: "flex-start", // Alinea los elementos desde el inicio
+                },
+              ]}
+            >
+              {/* Texto arriba del nomenclador */}
+              <Text style={styles.titulodeopciones1}>
+                Si tienes duda sobre el valor de tu básico, puedes consultar
+                aquí.
+              </Text>
+
+              {/* Botón con icono de PDF, alineado abajo */}
+              <TouchableOpacity
+                style={styles.buttonText2}
+                onPress={() => {
+                  if (nomencladorUrl) {
+                    Linking.openURL(nomencladorUrl); // Abre el PDF usando la URL
+                  }
+                }}
+              >
+                <Text style={styles.buttonText2}>
+                  Nomenclador de Cargo Docente{" "}
+                  <AntDesign name="pdffile1" size={35} color="#0034ab" />
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.simuladorTexto}>
+                Advertencia: Este simulador proporciona una estimación
+                aproximada del sueldo docente, y puede no reflejar el sueldo
+                real en su totalidad. Factores como la Bonificación Incentivo a
+                la Asistencia Docente (BIAD) u otros descuentos aplicables no
+                están considerados en este cálculo. El sindicato no se
+                responsabiliza por errores en los cálculos ni por el uso de los
+                resultados obtenidos.
+              </Text>
+            </View>
           </ScrollView>
+          <View style={styles.separator} />
+          <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleCloseModal} // Llama a la función de cierre y limpieza
+            >
+              <Text style={styles.closeButtonText}>Cerrar</Text>
+            </TouchableOpacity>
         </View>
       </View>
     </Modal>
