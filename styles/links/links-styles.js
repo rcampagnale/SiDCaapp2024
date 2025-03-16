@@ -193,7 +193,7 @@ export default linkStyles = StyleSheet.create({
   },
   rowContainer: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 1, // Aumenté el espaciado entre las filas
     width: "100%",
     justifyContent: "space-between", // Asegura que los elementos se distribuyan correctamente

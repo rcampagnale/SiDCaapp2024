@@ -268,29 +268,13 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                     }}
                   >
                     <TextInput
-                      style={[styles.input, { paddingLeft: 10, flex: 1 }]}
+                      style={[styles.input, { paddingLeft: 10}]}
                       keyboardType="numeric"
                       placeholder="Cantidad de Hs."
                       value={cantidadHoras}
                       onChangeText={setCantidadHoras}
                     />
-
-                    {/* Cuadro con borde negro y texto adentro */}
-                    <View
-                      style={{
-                        borderColor: "black",
-                        borderWidth: 2,
-                        borderRadius: 5,
-                        padding: 10,
-                        marginLeft: 20, // Espacio entre el TextInput y el cuadro
-                        minWidth: 50, // Ancho mínimo del cuadro
-                        alignItems: "center",
-                        justifyContent: "center",
-                        
-                      }}
-                    >
-                      <Text>Texto aquí</Text>
-                    </View>
+                                    
                   </View>
                 )}
 
