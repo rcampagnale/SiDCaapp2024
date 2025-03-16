@@ -11,7 +11,13 @@ import {
 import styles from "../../styles/links/links-styles"; // Asegúrate de tener los estilos correctamente importados
 import { Picker } from "@react-native-picker/picker";
 import { firebaseconn } from "@/constants/FirebaseConn";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import AntDesign from "@expo/vector-icons/AntDesign";
 
 const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
@@ -31,16 +37,23 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [regPrevEspDocente, setRegPrevEspDocente] = useState(0);
   const [nomencladorUrl, setNomencladorUrl] = useState(null);
   const [cargos, setCargos] = useState([]); // Para almacenar los cargos agregados
+  const [cargoCount, setCargoCount] = useState(1); // Para contar el número de cargos agregados
 
   const fetchNomenclador = async () => {
     try {
       const db = getFirestore();
       const snapshot = await getDocs(
-        query(collection(db, "asesoramiento"), where("categoria", "==", "escala_salarial"))
+        query(
+          collection(db, "asesoramiento"),
+          where("categoria", "==", "escala_salarial")
+        )
       );
       const results = snapshot.docs
         .map((doc) => doc.data())
-        .filter((doc) => doc.titulo === "NOMENCLADOR DE CARGO DOCENTE - ACUERDO SALARIAL");
+        .filter(
+          (doc) =>
+            doc.titulo === "NOMENCLADOR DE CARGO DOCENTE - ACUERDO SALARIAL"
+        );
       if (results.length > 0) {
         setNomencladorUrl(results[0].link);
       }
@@ -54,8 +67,13 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   }, []);
 
   useEffect(() => {
-    if ((selectedOption === "catedra" || selectedOption === "superior") && cantidadHoras && sueldoBasico) {
-      const sueldoBaseCalculado = parseFloat(cantidadHoras) * parseFloat(sueldoBasico);
+    if (
+      (selectedOption === "catedra" || selectedOption === "superior") &&
+      cantidadHoras &&
+      sueldoBasico
+    ) {
+      const sueldoBaseCalculado =
+        parseFloat(cantidadHoras) * parseFloat(sueldoBasico);
       setSueldoCalculado(sueldoBaseCalculado);
     } else {
       setSueldoCalculado(parseFloat(sueldoBasico) || 0);
@@ -91,6 +109,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
       zonaPagar,
     };
     setCargos((prevCargos) => [...prevCargos, nuevoCargo]);
+    setCargoCount(cargoCount + 1); // Incrementa el contador para el siguiente cargo
 
     // Resetear los campos para agregar más cargos si es necesario
     setSueldoBasico("");
@@ -105,6 +124,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   // Función para eliminar un cargo
   const handleDeleteCargo = (index) => {
     setCargos((prevCargos) => prevCargos.filter((_, i) => i !== index));
+    setCargoCount(cargoCount - 1); // Decrementa el contador cuando se elimina un cargo
   };
 
   const handleCloseModal = () => {
@@ -136,8 +156,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
           <Text style={styles.modalTitle}>Simulador de Recibo de Sueldo</Text>
           <View style={styles.separator} />
           <Text style={styles.modalDescription}>
-            Este simulador proporciona una estimación aproximada del sueldo docente, considerando las horas trabajadas, el tipo de cargo
-            (Maestro/a de grado, Nivel Inicial, Asesor, Preceptor, etc.) y las horas cátedra correspondientes para Nivel Secundario o Superior.
+            Este simulador proporciona una estimación aproximada del sueldo
+            docente, considerando las horas trabajadas, el tipo de cargo
+            (Maestro/a de grado, Nivel Inicial, Asesor, Preceptor, etc.) y las
+            horas cátedra correspondientes para Nivel Secundario o Superior.
           </Text>
           <View style={styles.separator} />
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
@@ -151,7 +173,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
             {/* Mostrar los cargos agregados */}
             {cargos.map((cargo, index) => (
               <View key={index}>
-                {/* Haberes */}
+                {/* Haberes con número */}
                 <Text
                   style={[
                     styles.modalDescription,
@@ -166,195 +188,214 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                     },
                   ]}
                 >
-                  Haberes
+                  {`Haberes ${index + 1}`}
                 </Text>
 
                 <View
-              style={{
-                borderColor: "black",
-                borderWidth: 2,
-                borderRadius: 8,
-                padding: 10,
-              }}
-            >
-              <View
-                style={[
-                  styles.rowContainer,
-                  {
+                  style={{
                     borderColor: "black",
                     borderWidth: 2,
                     borderRadius: 8,
-                    padding: 15,
-                    marginBottom: 10,
-                    flexDirection: "column",
-                  },
-                ]}
-              >
-                {/* Lista Desplegable con el texto como opciones */}
-                <Text style={styles.titulodeopciones}>
-                  Seleccione tipo de Cargo/Hs Cátedra:
-                </Text>
-                <Picker
-                  selectedValue={selectedOption}
-                  onValueChange={handleOptionChange}
-                  style={styles.picker}
+                    padding: 10,
+                  }}
                 >
-                  <Picker.Item label="Cargo/Maestro/Inicial" value="cargo" />
-                  <Picker.Item label="Hs. Cátedra Secundaria" value="catedra" />
-                  <Picker.Item label="Hs. Cátedra Superior" value="superior" />
-                </Picker>
+                  <View
+                    style={[
+                      styles.rowContainer,
+                      {
+                        borderColor: "black",
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        padding: 15,
+                        marginBottom: 10,
+                        flexDirection: "column",
+                      },
+                    ]}
+                  >
+                    {/* Lista Desplegable con el texto como opciones */}
+                    <Text style={styles.titulodeopciones}>
+                      Seleccione tipo de Cargo/Hs Cátedra:
+                    </Text>
+                    <Picker
+                      selectedValue={selectedOption}
+                      onValueChange={handleOptionChange}
+                      style={styles.picker}
+                    >
+                      <Picker.Item
+                        label="Cargo/Maestro/Inicial"
+                        value="cargo"
+                      />
+                      <Picker.Item
+                        label="Hs. Cátedra Secundaria"
+                        value="catedra"
+                      />
+                      <Picker.Item
+                        label="Hs. Cátedra Superior"
+                        value="superior"
+                      />
+                    </Picker>
 
-                {/* Ingreso de Monto */}
-                <TextInput
-                  style={[styles.input, { paddingLeft: 10 }]}
-                  keyboardType="numeric"
-                  placeholder="Ingrese Sueldo Base"
-                  value={sueldoBasico}
-                  onChangeText={setSueldoBasico}
-                />
+                    {/* Ingreso de Monto */}
+                    <TextInput
+                      style={[styles.input, { paddingLeft: 10 }]}
+                      keyboardType="numeric"
+                      placeholder="Ingrese Sueldo Base"
+                      value={sueldoBasico}
+                      onChangeText={setSueldoBasico}
+                    />
 
-                {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Cátedra") */}
-                {selectedOption === "catedra" && (
+                    {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Cátedra") */}
+                    {selectedOption === "catedra" && (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginTop: 10,
+                        }}
+                      >
+                        <TextInput
+                          style={[styles.input, { paddingLeft: 10 }]}
+                          keyboardType="numeric"
+                          placeholder="Cantidad de Hs."
+                          value={cantidadHoras}
+                          onChangeText={setCantidadHoras}
+                        />
+                      </View>
+                    )}
+
+                    {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Superior") */}
+                    {selectedOption === "superior" && (
+                      <TextInput
+                        style={[
+                          styles.input,
+                          { paddingLeft: 10, marginTop: 10 },
+                        ]}
+                        keyboardType="numeric"
+                        placeholder="Cantidad de Hs."
+                        value={cantidadHoras}
+                        onChangeText={setCantidadHoras}
+                      />
+                    )}
+                    {/* Separador */}
+                    <View style={styles.separator} />
+
+                    {/* Sueldo Base Calculado */}
+                    <View style={styles.rowContainer}>
+                      <Text style={styles.titulodeopciones}>Sueldo Base:</Text>
+                      <Text style={styles.sueldo}>
+                        $ {sueldoCalculado.toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.separator} />
                   <View
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginTop: 10,
+                      borderColor: "black",
+                      borderWidth: 2,
+                      borderRadius: 8,
+                      padding: 10,
                     }}
                   >
-                    <TextInput
-                      style={[styles.input, { paddingLeft: 10}]}
-                      keyboardType="numeric"
-                      placeholder="Cantidad de Hs."
-                      value={cantidadHoras}
-                      onChangeText={setCantidadHoras}
-                    />
-                                    
+                    <View style={styles.rowContainer}>
+                      <Text style={styles.titulodeopciones}>
+                        Adicional por Antigüedad Docente:
+                      </Text>
+                      <Picker
+                        selectedValue={adicAntiguedad}
+                        onValueChange={setAdicAntiguedad}
+                        style={styles.pickerContainer}
+                      >
+                        <Picker.Item
+                          label="Seleccione una antigüedad"
+                          value=""
+                        />
+                        <Picker.Item label="0 año - 0%" value="0" />
+                        <Picker.Item label="1 año - 10%" value="10" />
+                        <Picker.Item label="2 a 4 años - 15%" value="15" />
+                        <Picker.Item label="5 a 6 años - 30%" value="30" />
+                        <Picker.Item label="7 a 9 años - 40%" value="40" />
+                        <Picker.Item label="10 a 11 años - 50%" value="50" />
+                        <Picker.Item label="12 a 14 años - 60%" value="60" />
+                        <Picker.Item label="15 a 16 años - 70%" value="70" />
+                        <Picker.Item label="17 a 19 años - 80%" value="80" />
+                        <Picker.Item label="20 a 21 años - 100%" value="100" />
+                        <Picker.Item label="22 a 23 años - 110%" value="110" />
+                        <Picker.Item label="24 años - 120%" value="120" />
+                        <Picker.Item label="25 a 27 años - 125%" value="125" />
+                        <Picker.Item label="28 años o más - 130%" value="130" />
+                      </Picker>
+                    </View>
+
+                    <View style={styles.separator} />
+                    <View style={styles.rowContainer}>
+                      <Text style={styles.titulodeopciones}>
+                        Antigüedad a pagar:
+                      </Text>
+                      <Text style={styles.sueldo}>
+                        $ {antiguedadAPagar.toFixed(2)}
+                      </Text>
+                    </View>
                   </View>
-                )}
 
-                {/* Campo de cantidad de horas (se muestra solo si se elige "Hs Superior") */}
-                {selectedOption === "superior" && (
-                  <TextInput
-                    style={[styles.input, { paddingLeft: 10, marginTop: 10 }]}
-                    keyboardType="numeric"
-                    placeholder="Cantidad de Hs."
-                    value={cantidadHoras}
-                    onChangeText={setCantidadHoras}
-                  />
-                )}
-                {/* Separador */}
-                <View style={styles.separator} />
-
-                {/* Sueldo Base Calculado */}
-                <View style={styles.rowContainer}>
-                  <Text style={styles.titulodeopciones}>Sueldo Base:</Text>
-                  <Text style={styles.sueldo}>
-                    $ {sueldoCalculado.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.separator} />
-              <View
-                style={{
-                  borderColor: "black",
-                  borderWidth: 2,
-                  borderRadius: 8,
-                  padding: 10,
-                }}
-              >
-                <View style={styles.rowContainer}>
-                  <Text style={styles.titulodeopciones}>
-                    Adicional por Antigüedad Docente:
-                  </Text>
-                  <Picker
-                    selectedValue={adicAntiguedad}
-                    onValueChange={setAdicAntiguedad}
-                    style={styles.pickerContainer}
+                  <View style={styles.separator} />
+                  <View
+                    style={{
+                      borderColor: "black",
+                      borderWidth: 2,
+                      borderRadius: 8,
+                      padding: 10,
+                    }}
                   >
-                    <Picker.Item label="Seleccione una antigüedad" value="" />
-                    <Picker.Item label="0 año - 0%" value="0" />
-                    <Picker.Item label="1 año - 10%" value="10" />
-                    <Picker.Item label="2 a 4 años - 15%" value="15" />
-                    <Picker.Item label="5 a 6 años - 30%" value="30" />
-                    <Picker.Item label="7 a 9 años - 40%" value="40" />
-                    <Picker.Item label="10 a 11 años - 50%" value="50" />
-                    <Picker.Item label="12 a 14 años - 60%" value="60" />
-                    <Picker.Item label="15 a 16 años - 70%" value="70" />
-                    <Picker.Item label="17 a 19 años - 80%" value="80" />
-                    <Picker.Item label="20 a 21 años - 100%" value="100" />
-                    <Picker.Item label="22 a 23 años - 110%" value="110" />
-                    <Picker.Item label="24 años - 120%" value="120" />
-                    <Picker.Item label="25 a 27 años - 125%" value="125" />
-                    <Picker.Item label="28 años o más - 130%" value="130" />
-                  </Picker>
-                </View>
+                    <View style={styles.rowContainer}>
+                      <Text style={styles.titulodeopciones}>
+                        Zona Frontera:
+                      </Text>
+                      <Picker
+                        selectedValue={zonaFrontera}
+                        onValueChange={setZonaFrontera}
+                        style={styles.pickerContainer}
+                      >
+                        <Picker.Item label="Seleccione una zona" value="" />
+                        <Picker.Item label="Urbano 0 %" value="0" />
+                        <Picker.Item
+                          label="Alejado Radio Urbano (ARU) 40 %"
+                          value="40"
+                        />
+                        <Picker.Item label="Desfavorable 75 %" value="75" />
+                        <Picker.Item
+                          label="Muy Desfavorable 100 %"
+                          value="100"
+                        />
+                        <Picker.Item label="Inhóspito 150 %" value="150" />
+                      </Picker>
+                    </View>
 
-                <View style={styles.separator} />
-                <View style={styles.rowContainer}>
-                  <Text style={styles.titulodeopciones}>
-                    Antigüedad a pagar:
-                  </Text>
-                  <Text style={styles.sueldo}>
-                    $ {antiguedadAPagar.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.separator} />
-              <View
-                style={{
-                  borderColor: "black",
-                  borderWidth: 2,
-                  borderRadius: 8,
-                  padding: 10,
-                }}
-              >
-                <View style={styles.rowContainer}>
-                  <Text style={styles.titulodeopciones}>Zona Frontera:</Text>
-                  <Picker
-                    selectedValue={zonaFrontera}
-                    onValueChange={setZonaFrontera}
-                    style={styles.pickerContainer}
+                    <View style={styles.separator} />
+                    <View style={styles.rowContainer}>
+                      <Text style={styles.titulodeopciones}>Zona a Pagar:</Text>
+                      <Text style={styles.sueldo}>$ {zonaPagar}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.separator} />
+                  <Text
+                    style={[
+                      styles.modalDescription1,
+                      {
+                        alignSelf: "flex-end",
+                        borderColor: "black",
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        padding: 5,
+                        marginBottom: 5,
+                        backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
+                      },
+                    ]}
                   >
-                    <Picker.Item label="Seleccione una zona" value="" />
-                    <Picker.Item label="Urbano 0 %" value="0" />
-                    <Picker.Item
-                      label="Alejado Radio Urbano (ARU) 40 %"
-                      value="40"
-                    />
-                    <Picker.Item label="Desfavorable 75 %" value="75" />
-                    <Picker.Item label="Muy Desfavorable 100 %" value="100" />
-                    <Picker.Item label="Inhóspito 150 %" value="150" />
-                  </Picker>
+                    Remunerativos:
+                    <Text style={styles.sueldo}>$ {totalHaberes}</Text>
+                  </Text>
                 </View>
-
-                <View style={styles.separator} />
-                <View style={styles.rowContainer}>
-                  <Text style={styles.titulodeopciones}>Zona a Pagar:</Text>
-                  <Text style={styles.sueldo}>$ {zonaPagar}</Text>
-                </View>
-              </View>
-              <View style={styles.separator} />
-              <Text
-                style={[
-                  styles.modalDescription1,
-                  {
-                    alignSelf: "flex-end",
-                    borderColor: "black",
-                    borderWidth: 2,
-                    borderRadius: 5,
-                    padding: 5,
-                    marginBottom: 5,
-                    backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
-                  },
-                ]}
-              >
-                Remunerativos:
-                <Text style={styles.sueldo}>$ {totalHaberes}</Text>
-              </Text>
-            </View>
 
                 {/* Eliminar Cargo */}
                 <TouchableOpacity
@@ -365,11 +406,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 </TouchableOpacity>
 
                 <View style={styles.separator} />
-                
               </View>
             ))}
 
-<Text
+            <Text
               style={[
                 styles.modalDescription,
                 {
@@ -633,7 +673,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
           </ScrollView>
 
           <View style={styles.separator} />
-          <TouchableOpacity style={styles.closeButton} onPress={handleCloseModal}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={handleCloseModal}
+          >
             <Text style={styles.closeButtonText}>Cerrar</Text>
           </TouchableOpacity>
         </View>
