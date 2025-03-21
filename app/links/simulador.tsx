@@ -43,7 +43,6 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [descuentoOSEP, setDescuentoOSEP] = useState(0); // Define descuentoOSEP with an initial value
   const [fondoEspecial, setFondoEspecial] = useState(0); // Define fondoEspecial with an initial value
   const [jubilacion, setJubilacion] = useState(0); // Define jubilacion with an initial value
-  
 
   // Fetch nomenclador URL from Firestore
   const fetchNomenclador = async () => {
@@ -75,8 +74,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
 
   // Function to delete a cargo
   const handleDeleteCargo = (index: number) => {
-    const updatedCargos = cargos.filter((_, i) => i !== index);
-    setCargos(updatedCargos);
+    // Recalcular los nombres de los cargos para que sean secuenciales
+    const updatedCargos = cargos.filter((_, idx) => idx !== index); // Remove the cargo at the specified index
+    const updatedCargosWithNames = updatedCargos.map((cargo, idx) => ({
+      ...cargo,
+      name: `Cargo ${idx + 1}`, // Adjust the name of the cargo based on the index
+    }));
+
+    setCargos(updatedCargosWithNames);
   };
 
   function handleCloseModal(event: GestureResponderEvent): void {
@@ -131,22 +136,25 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
 
   // Cálculo de los aportes jubilatorios (11% de los remunerativos)
   const aportesJubilatorios = totalRemunerativos * 0.11;
-  
+
   // Cálculo del fondo especial (0.5% de los remunerativos)
   const fondoEspecialCalculado = totalRemunerativos * 0.005;
 
   // Cálculo del descuento OSEP (4.5% de los remunerativos)
   const descuentoOSEPCalculado = totalRemunerativos * 0.045;
 
-   // Cálculo del descuento SiDCa (2% del sueldo base de cada cargo)
-   const descuentoSiDCaCalculado = cargos.reduce((total, cargo) => {
-    const sueldoBase = parseFloat(cargo.sueldoBasico) || 0;
-    return total + (sueldoBase * 0.02); // 2% del sueldo base
+  // Sumar todos los sueldos base calculados (sueldo base * cantidad de horas si aplica)
+  const totalSueldoBase = cargos.reduce((total, cargo) => {
+    const sueldoBaseCalculado = cargo.sueldoBaseCalculado || 0; // Usamos sueldoBaseCalculado
+    return total + sueldoBaseCalculado;
   }, 0);
+
+  // Calcular el descuento SiDCa (2% de la suma de todos los sueldos base calculados)
+  const descuentoSiDCaCalculado = totalSueldoBase * 0.02;
 
   // Cálculo del Reg.Prev.Esp. Docente (2% de los remunerativos)
   const regPrevEspDocenteCalculado = totalRemunerativos * 0.02;
-  
+
   function handleAddCargo(event: GestureResponderEvent): void {
     const newCargo = {
       name: `Cargo ${cargos.length + 1}`,
@@ -162,17 +170,16 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     setCargos([...cargos, newCargo]);
   }
 
-
   const totalDescuentos =
-  (aportesJubilatorios || 0) +
-  (fondoEspecialCalculado || 0) +
-  (descuentoOSEPCalculado || 0) +
-  (descuentoSiDCaCalculado || 0) +
-  (regPrevEspDocenteCalculado || 0) +
-  (seguroVidaObligatorio || 0) +
-  (subsidioSepelio || 0);
+    (aportesJubilatorios || 0) +
+    (fondoEspecialCalculado || 0) +
+    (descuentoOSEPCalculado || 0) +
+    (descuentoSiDCaCalculado || 0) +
+    (regPrevEspDocenteCalculado || 0) +
+    (seguroVidaObligatorio || 0) +
+    (subsidioSepelio || 0);
 
-   // Calcular el sueldo final (remunerativos - descuentos)
+  // Calcular el sueldo final (remunerativos - descuentos)
   const finalSueldo = totalRemunerativos - totalDescuentos;
 
   // Función para formatear números como moneda con toLocaleString
@@ -186,8 +193,8 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
       })
       .replace(" ", ""); // Elimina el espacio adicional en el símbolo de la moneda
   };
-   // Funciones para limpiar todos los valores y resetear el estado
-   const resetAllStates = () => {
+  // Funciones para limpiar todos los valores y resetear el estado
+  const resetAllStates = () => {
     setCargos([]);
     setZonaFrontera("");
     setRegPrevEspDocente(0);
@@ -197,7 +204,6 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     setJubilacion(0);
   };
 
-
   return (
     <Modal visible={modalVisible} animationType="slide" transparent={true}>
       <View style={styles.modalOverlay}>
@@ -205,10 +211,11 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
           <Text style={styles.modalTitle}>Simulador de Recibo de Sueldo</Text>
           <View style={styles.separator} />
           <Text style={styles.modalDescription}>
-            Este simulador proporciona una estimación aproximada del sueldo
-            docente, considerando las horas trabajadas, el tipo de cargo
-            (Maestro/a de grado, Nivel Inicial, Asesor, Preceptor, etc.) y las
-            horas cátedra correspondientes para Nivel Secundario o Superior.
+            Para usar el simulador, agregue una carga, seleccione el tipo y
+            complete los datos requeridos. El simulador calculará
+            automáticamente el sueldo base, los descuentos y el sueldo final. Si
+            necesita consultar el sueldo base, puede revisar el nomenclador
+            disponible al final del simulador.
           </Text>
           <View style={styles.separator} />
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
@@ -479,7 +486,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <Text style={styles.titulodeopciones}>
                   Aportes Jubilatorios:
                 </Text>
-                <Text style={styles.sueldo}>$ {aportesJubilatorios.toFixed(2)}</Text>
+                <Text style={styles.sueldo}>
+                  $ {aportesJubilatorios.toFixed(2)}
+                </Text>
               </View>
 
               <View
@@ -497,7 +506,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <Text style={styles.titulodeopciones}>
                   Fondo Esp. Trasplantes y Trat. Oncol. (O.S.E.P.):
                 </Text>
-                <Text style={styles.sueldo}>$ {fondoEspecialCalculado.toFixed(2)}</Text>
+                <Text style={styles.sueldo}>
+                  $ {fondoEspecialCalculado.toFixed(2)}
+                </Text>
               </View>
 
               <View
@@ -513,7 +524,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 ]}
               >
                 <Text style={styles.titulodeopciones}>Descuento OSEP:</Text>
-                <Text style={styles.sueldo}>$ {descuentoOSEPCalculado.toFixed(2)}</Text>
+                <Text style={styles.sueldo}>
+                  $ {descuentoOSEPCalculado.toFixed(2)}
+                </Text>
               </View>
 
               <View
@@ -531,7 +544,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <Text style={styles.titulodeopciones}>
                   Descuento SiDCa. (Sindicato):
                 </Text>
-                <Text style={styles.sueldo}>$ {descuentoSiDCaCalculado.toFixed(2)}</Text>
+                <Text style={styles.sueldo}>
+                  $ {descuentoSiDCaCalculado.toFixed(2)}
+                </Text>
               </View>
 
               <View
@@ -549,7 +564,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <Text style={styles.titulodeopciones}>
                   Reg.Prev.Esp. Docente:
                 </Text>
-                <Text style={styles.sueldo}>$ {regPrevEspDocenteCalculado.toFixed(2)}</Text>
+                <Text style={styles.sueldo}>
+                  $ {regPrevEspDocenteCalculado.toFixed(2)}
+                </Text>
               </View>
 
               <View
@@ -603,7 +620,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 ]}
               >
                 Descuentos:{" "}
-                <Text style={styles.sueldo}>$ {totalDescuentos.toFixed(2)}</Text>
+                <Text style={styles.sueldo}>
+                  $ {totalDescuentos.toFixed(2)}
+                </Text>
               </Text>
             </View>
             <View style={styles.separator} />

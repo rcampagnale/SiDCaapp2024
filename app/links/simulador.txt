@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   GestureResponderEvent,
+  Linking,
 } from "react-native";
 import styles from "../../styles/links/links-styles"; // Asegúrate de tener los estilos correctamente importados
 import {
@@ -17,6 +18,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { Picker } from "@react-native-picker/picker";
+import { AntDesign } from "@expo/vector-icons";
 
 const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [nomencladorUrl, setNomencladorUrl] = useState(null);
@@ -73,8 +75,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
 
   // Function to delete a cargo
   const handleDeleteCargo = (index: number) => {
-    const updatedCargos = cargos.filter((_, i) => i !== index);
-    setCargos(updatedCargos);
+   // Recalcular los nombres de los cargos para que sean secuenciales
+   const updatedCargos = cargos.filter((_, idx) => idx !== index); // Remove the cargo at the specified index
+   const updatedCargosWithNames = updatedCargos.map((cargo, idx) => ({
+     ...cargo,
+     name: `Cargo ${idx + 1}`, // Adjust the name of the cargo based on the index
+   }));
+
+   setCargos(updatedCargosWithNames);
   };
 
   function handleCloseModal(event: GestureResponderEvent): void {
@@ -136,11 +144,16 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   // Cálculo del descuento OSEP (4.5% de los remunerativos)
   const descuentoOSEPCalculado = totalRemunerativos * 0.045;
 
-   // Cálculo del descuento SiDCa (2% del sueldo base de cada cargo)
-   const descuentoSiDCaCalculado = cargos.reduce((total, cargo) => {
-    const sueldoBase = parseFloat(cargo.sueldoBasico) || 0;
-    return total + (sueldoBase * 0.02); // 2% del sueldo base
-  }, 0);
+   // Sumar todos los sueldos base calculados (sueldo base * cantidad de horas si aplica)
+const totalSueldoBase = cargos.reduce((total, cargo) => {
+  const sueldoBaseCalculado = cargo.sueldoBaseCalculado || 0; // Usamos sueldoBaseCalculado
+  return total + sueldoBaseCalculado;
+}, 0);
+
+// Calcular el descuento SiDCa (2% de la suma de todos los sueldos base calculados)
+const descuentoSiDCaCalculado = totalSueldoBase * 0.02;
+
+
 
   // Cálculo del Reg.Prev.Esp. Docente (2% de los remunerativos)
   const regPrevEspDocenteCalculado = totalRemunerativos * 0.02;
@@ -172,6 +185,28 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
 
    // Calcular el sueldo final (remunerativos - descuentos)
   const finalSueldo = totalRemunerativos - totalDescuentos;
+
+  // Función para formatear números como moneda con toLocaleString
+  const formatCurrency = (amount) => {
+    return amount
+      .toLocaleString("es-AR", {
+        style: "currency",
+        currency: "ARS",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+      .replace(" ", ""); // Elimina el espacio adicional en el símbolo de la moneda
+  };
+   // Funciones para limpiar todos los valores y resetear el estado
+   const resetAllStates = () => {
+    setCargos([]);
+    setZonaFrontera("");
+    setRegPrevEspDocente(0);
+    setDescuentoSindical(0);
+    setDescuentoOSEP(0);
+    setFondoEspecial(0);
+    setJubilacion(0);
+  };
 
 
   return (
@@ -455,7 +490,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <Text style={styles.titulodeopciones}>
                   Aportes Jubilatorios:
                 </Text>
-                <Text style={styles.sueldo}>$ {aportesJubilatorios}</Text>
+                <Text style={styles.sueldo}>$ {aportesJubilatorios.toFixed(2)}</Text>
               </View>
 
               <View
@@ -599,14 +634,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
             >
               Haberes a Cobrar
             </Text>
-            <View
-              style={{
-                borderColor: "black",
-                borderWidth: 2,
-                borderRadius: 8,
-                padding: 10,
-              }}
-            >
+            <View>
               <View
                 style={[
                   styles.rowContainer,
@@ -622,6 +650,51 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                 <Text style={styles.titulodeopciones}>Sueldo a Cobrar:</Text>
                 <Text style={styles.sueldo}>$ {finalSueldo.toFixed(2)}</Text>
               </View>
+            </View>
+            <View style={styles.separator} />
+            <View
+              style={[
+                styles.rowContainer,
+                {
+                  borderColor: "black",
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  padding: 15,
+                  marginBottom: 10,
+                  flexDirection: "column", // Asegura que los elementos se apilen verticalmente
+                  justifyContent: "flex-start", // Alinea los elementos desde el inicio
+                },
+              ]}
+            >
+              {/* Texto arriba del nomenclador */}
+              <Text style={styles.titulodeopciones1}>
+                Si tienes duda sobre el valor de tu básico, puedes consultar
+                aquí.
+              </Text>
+
+              {/* Botón con icono de PDF, alineado abajo */}
+              <TouchableOpacity
+                style={styles.buttonText2}
+                onPress={() => {
+                  if (nomencladorUrl) {
+                    Linking.openURL(nomencladorUrl); // Abre el PDF usando la URL
+                  }
+                }}
+              >
+                <Text style={styles.buttonText2}>
+                  Nomenclador de Cargo Docente{" "}
+                  <AntDesign name="pdffile1" size={35} color="#0034ab" />
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.simuladorTexto}>
+                Advertencia: Este simulador proporciona una estimación
+                aproximada del sueldo docente, y puede no reflejar el sueldo
+                real en su totalidad. Factores como la Bonificación Incentivo a
+                la Asistencia Docente (BIAD) u otros descuentos aplicables no
+                están considerados en este cálculo. El sindicato no se
+                responsabiliza por errores en los cálculos ni por el uso de los
+                resultados obtenidos.
+              </Text>
             </View>
           </ScrollView>
 
