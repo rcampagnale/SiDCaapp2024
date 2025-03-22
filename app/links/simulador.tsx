@@ -16,6 +16,8 @@ import {
   query,
   where,
   getDocs,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import { Picker } from "@react-native-picker/picker";
 import { AntDesign } from "@expo/vector-icons";
@@ -36,6 +38,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     }>
   >([]); // Estado para manejar cargos individuales
   const [zonaFrontera, setZonaFrontera] = useState("");
+  const [cuatrimestral, setCuatrimestral] = useState(""); // Define cuatrimestral state
+  const [anual, setAnual] = useState(""); // Define anual state
+  const [valor, setValor] = useState(""); // Define valor state
   const subsidioSepelio = 1500; // Define subsidioSepelio with an initial value
   const seguroVidaObligatorio = 1000; // Monto fijo de $1,000
   const [regPrevEspDocente, setRegPrevEspDocente] = useState(0); // Define regPrevEspDocente with an initial value
@@ -71,6 +76,93 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   useEffect(() => {
     fetchNomenclador();
   }, []);
+
+  // valor Hs cátedra secundario
+  const fetchValor = async () => {
+    try {
+      const db = getFirestore();
+      const docRef = doc(db, "cod", "secundaria"); // Obtén el documento "secundaria" de la colección "cod"
+      const docSnap = await getDoc(docRef); // Obtén el documento
+
+      if (docSnap.exists()) {
+        // Verifica si el documento existe y luego accede al campo 'valor'
+        const valorRecibido = docSnap.data().valor;
+        setValor(valorRecibido); // Establece el valor en el estado
+      } else {
+        console.log("El documento no existe");
+      }
+    } catch (error) {
+      console.error("Error al obtener el valor: ", error);
+    }
+  };
+
+  // Fetch valores from Firestore SUPERIOR
+   const fetchValoresSubsidio = async () => {
+    try {
+      const db = getFirestore();
+      const docRef = doc(db, "cod", "superior"); // Obtener el documento "superior"
+      const docSnap = await getDoc(docRef); // Obtener el documento
+
+      if (docSnap.exists()) {
+        // Verifica si el documento existe y luego accede a los campos 'anual' y 'cuatrimestral'
+        const datos = docSnap.data();
+        const anualRecibido = datos.anual;
+        const cuatrimestralRecibido = datos.cuatrimestral;
+        setAnual(anualRecibido);  // Establece el valor del campo 'anual' en el estado
+        setCuatrimestral(cuatrimestralRecibido);  // Establece el valor del campo 'cuatrimestral' en el estado
+      } else {
+        console.log("El documento no existe");
+      }
+    } catch (error) {
+      console.error("Error al obtener los valores: ", error);
+    }
+  };
+
+ // Fetch subsidioSepelio y seguroVidaObligatorio from Firestore
+ const fetchValores = async () => {
+  try {
+    const db = getFirestore();
+
+    // Obtener el documento 'subsidioSepelio'
+    const docRefSubsidioSepelio = doc(db, "cod", "subsidioSepelio");
+    const docSnapSubsidioSepelio = await getDoc(docRefSubsidioSepelio);
+    
+    if (docSnapSubsidioSepelio.exists()) {
+      const valorSubsidioSepelio = docSnapSubsidioSepelio.data().valor;
+      console.log('Valor obtenido (Subsidio por Sepelio):', valorSubsidioSepelio); // Imprime el valor recuperado
+      setSubsidioSepelio(valorSubsidioSepelio);  // Establece el valor de 'subsidioSepelio'
+    } else {
+      console.log("El documento 'subsidioSepelio' no existe");
+    }
+
+    // Obtener el documento 'seguroVidaObligatorio'
+    const docRefSeguroVidaObligatorio = doc(db, "cod", "seguroVidaObligatorio");
+    const docSnapSeguroVidaObligatorio = await getDoc(docRefSeguroVidaObligatorio);
+    
+    if (docSnapSeguroVidaObligatorio.exists()) {
+      const valorSeguroVidaObligatorio = docSnapSeguroVidaObligatorio.data().valor;
+      console.log('Valor obtenido (Seguro Vida Obligatorio):', valorSeguroVidaObligatorio); // Imprime el valor recuperado
+      valorSeguroVidaObligatorio(valorSeguroVidaObligatorio);  // Establece el valor de 'seguroVidaObligatorio'
+    } else {
+      console.log("El documento 'seguroVidaObligatorio' no existe");
+    }
+
+  } catch (error) {
+    console.error("Error al obtener los valores: ", error);
+  }
+};
+  
+  useEffect(() => {
+    fetchValoresSubsidio();  // Llamada a la función para obtener los valores
+  }, []);  // Solo se ejecuta una vez cuando el componente se mon
+
+  useEffect(() => {
+    fetchValor(); // Llamada a la función para obtener el valor
+  }, []); // Solo se ejecuta una vez cuando el componente se monta
+
+  useEffect(() => {
+    fetchValor(); // Llamada a la función para obtener el valor
+  }, []); // Solo se ejecuta una vez cuando el componente se monta
 
   // Function to delete a cargo
   const handleDeleteCargo = (index: number) => {
@@ -211,10 +303,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
           <Text style={styles.modalTitle}>Simulador de Recibo de Sueldo</Text>
           <View style={styles.separator} />
           <Text style={styles.modalDescription}>
-            Para usar el simulador, agregue una carga, seleccione el tipo y
+            Para usar el simulador, agregue una cargo, seleccione el tipo y
             complete los datos requeridos. El simulador calculará
             automáticamente el sueldo base, los descuentos y el sueldo final. Si
-            necesita consultar el sueldo base, puede revisar el nomenclador
+            necesita consultar el sueldo base, puede revisar el Nomenclador de cargo Docente
             disponible al final del simulador.
           </Text>
           <View style={styles.separator} />
@@ -288,6 +380,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                     }
                  />
                  
+                 
                   {/* Field for hours (only if "Hs Cátedra" is selected) */}
                   {cargo.selectedOption === "catedra" && (
                     <TextInput
@@ -333,8 +426,8 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                       />
 
                       <Text style={styles.helpMessage}>
-                        Valor de las Horas Cátedra para el Nivel
-                        Secundaria es:
+                        Valor Hs Cátedra Nivel Secundario:{"\n"} {valor || "Cargando..."}
+                        
                       </Text>
                     </View>
                   )}
@@ -355,9 +448,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                       />
 
                       <Text style={styles.helpMessage}>
-                        Valor de las Horas cátedra para el Nivel
-                        Superior es:
-                        {"\n"}* Hs Cátedra Cuatrimestral: {"\n"}* Hs Cátedra Anual:
+                        Valor de Horas Cátedr Nivel
+                        Superior:
+                        {"\n"}*Hs Cátedra Cuatrimestral: {"\n"} {cuatrimestral || "Cargando..."} {"\n"}*Hs Cátedra Anual:{"\n"}{anual || "Cargando..."}
                       </Text>
                     </View>
                   )}
