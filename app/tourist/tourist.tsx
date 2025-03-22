@@ -157,30 +157,51 @@ export default function HandleTourist() {
                   {dataTravel.length > 0 ? (
                     dataTravel.map((item, index) => (
                       <View key={index} style={styles.modalItem}>
-                        {item.imagen && (
-                          <Image
-                            source={{ uri: item.imagen }}
-                            style={{ width: "100%", height: 200 }}
-                            resizeMode="contain"
-                          />
-                        )}
-                        {item.descripcion && (
-                          <Text style={styles.textAbout}>
-                            {item.descripcion}
-                          </Text>
-                        )}
-                        {item.link && (
-                          <TouchableOpacity
-                            style={styles.btnGetLink}
-                            onPress={() => openOtherData(item.link)}
-                          >
-                            <Text
-                              style={{ color: "#ffffff", fontWeight: "bold" }}
-                            >
-                              Reservar
+                        <View
+                          style={{
+                            borderColor: "black",
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            padding: 10,
+                          }}
+                        >
+                          {/* Mostrar el título */}
+                          {item.titulo && (
+                            <Text style={styles.modalTitle}>{item.titulo}</Text>
+                          )}
+                          <View style={styles.separator} />
+
+                          {/* Mostrar la imagen */}
+                          {item.imagen && (
+                            <Image
+                              source={{ uri: item.imagen }}
+                              style={{ width: "100%", height: 200 }}
+                              resizeMode="contain"
+                            />
+                          )}
+
+                          {/* Mostrar la descripción */}
+                          {item.descripcion && (
+                            <Text style={styles.textAbout}>
+                              {item.descripcion}
                             </Text>
-                          </TouchableOpacity>
-                        )}
+                          )}
+                          <View style={styles.separator} />
+
+                          {/* Enlace para realizar la reserva */}
+                          {item.link && (
+                            <TouchableOpacity
+                              style={styles.btnGetLink}
+                              onPress={() => openOtherData(item.link)}
+                            >
+                              <Text
+                                style={{ color: "#ffffff", fontWeight: "bold" }}
+                              >
+                                Reservar
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
                       </View>
                     ))
                   ) : (
@@ -197,6 +218,7 @@ export default function HandleTourist() {
                   )}
                 </ScrollView>
               )}
+
               <TouchableOpacity style={styles.btnGetLink} onPress={toggleModal}>
                 <Text
                   style={{ fontSize: 18, fontWeight: "bold", color: "#ffffff" }}

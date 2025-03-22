@@ -105,7 +105,7 @@ export default touristStyles = StyleSheet.create({
     marginTop: 10,
   },
   btnGetLink: {
-    width: 350,
+    width: "100%",
     height: 40,
     borderRadius: 5,
     backgroundColor: "#005CFE",
@@ -133,5 +133,18 @@ export default touristStyles = StyleSheet.create({
     color: "#ffffff", // Color blanco
     fontSize: 16,
     fontWeight: "bold",
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 10, // Espacio entre el título y el contenido
+  },
+  separator: {
+    height: 2, // Alto de la línea
+    backgroundColor: "black", // Color de la línea
+    width: "100%", // Ocupa todo el ancho disponible
+    marginVertical: 10, // Ajustado para un espaciado adecuado
   },
 });
