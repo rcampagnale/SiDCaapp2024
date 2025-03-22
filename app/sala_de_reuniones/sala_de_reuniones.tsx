@@ -129,7 +129,7 @@ export default function HandleCampusTeachers() {
           </View>   
         
           <View style={[styles.viewInformation,{height:60}]}>
-            <Text style={styles.descripcionText}>desripcion</Text>
+            <Text style={styles.descripcionText}>Descripción:</Text>
           </View>
         
 

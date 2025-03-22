@@ -297,5 +297,17 @@ export default linkStyles = StyleSheet.create({
     marginTop: 15,
     textAlign: "justify",
   },
+  
+  helpMessage: {
+    color: 'black', // Color del texto
+    fontSize: 14, // Tamaño de la fuente
+    fontFamily: 'Roboto', // Fuente legible
+    marginLeft: 8, // Separa el texto del ícono
+    lineHeight: 18, // Control de altura de línea
+    fontWeight: "bold", // Negrita
+    flex: 1, // Hace que el texto ocupe el espacio disponible
+    textAlign: 'justify', // Justifica el texto
+  },
+  
 });
 

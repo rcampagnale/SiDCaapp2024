@@ -284,10 +284,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                     placeholder="Ingrese Sueldo Base"
                     value={cargo.sueldoBasico}
                     onChangeText={(value) =>
-                      handleCargoChange(index, "sueldoBasico", value)
+                      handleCargoChange(index, "sueldoBasico", value)                      
                     }
-                  />
-
+                 />
+                 
                   {/* Field for hours (only if "Hs Cátedra" is selected) */}
                   {cargo.selectedOption === "catedra" && (
                     <TextInput
@@ -298,8 +298,10 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                       onChangeText={(value) =>
                         handleCargoChange(index, "cantidadHoras", value)
                       }
+                      
                     />
                   )}
+                  
 
                   {/* Field for hours (only if "Hs Superior" is selected) */}
                   {cargo.selectedOption === "superior" && (
@@ -312,6 +314,52 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                         handleCargoChange(index, "cantidadHoras", value)
                       }
                     />
+                  )}
+                  
+
+                  {/* Help Icon and Message for "Hs Cátedra Secundaria" */}
+                  {cargo.selectedOption === "catedra" && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 10,
+                      }}
+                    >
+                      <AntDesign
+                        name="questioncircleo"
+                        size={25}
+                        color="black"
+                      />
+
+                      <Text style={styles.helpMessage}>
+                        Valor de las Horas Cátedra para el Nivel
+                        Secundaria es:
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Help Icon and Message for "Hs Cátedra Superior" */}
+                  {cargo.selectedOption === "superior" && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 10,
+                      }}
+                    >
+                      <AntDesign
+                        name="questioncircleo"
+                        size={25}
+                        color="black"
+                      />
+
+                      <Text style={styles.helpMessage}>
+                        Valor de las Horas cátedra para el Nivel
+                        Superior es:
+                        {"\n"}* Hs Cátedra Cuatrimestral: {"\n"}* Hs Cátedra Anual:
+                      </Text>
+                    </View>
                   )}
 
                   <View style={styles.separator} />
