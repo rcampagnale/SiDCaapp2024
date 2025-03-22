@@ -9,6 +9,7 @@ const convenioStyles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#091d24",
+    paddingHorizontal: 10, // Asegura que los elementos no estén pegados al borde
   },
   viewTitle: {
     width: "100%",
@@ -16,27 +17,26 @@ const convenioStyles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    marginVertical: 20,  // Añadido espacio vertical
   },
   viewInformation: {
-    width: "100%",
-    height: "auto",
+    width: "107%",
     backgroundColor: "#fea200",
-    display: "flex",
+    paddingVertical: 15,
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: 1,
-    paddingTop: 1,
   },
   text: {
     textAlign: "justify",
     fontSize: 16,
     color: "#000",
-    width: "97%",
-    
+    width: "95%",
+    marginBottom: 15,  // Espacio debajo del texto
   },
   carruselContainer: {
     width: "100%",
     height: 180,
+    marginBottom: 15, // Añadir espacio abajo
   },
   carrusel: {
     width: "100%",
@@ -44,30 +44,31 @@ const convenioStyles = StyleSheet.create({
   },
   viewGetInformation: {
     width: "100%",
-    height: "15%",
     backgroundColor: "#fea200",
     display: "flex",
     justifyContent: "space-around",
     alignItems: "center",
     flexDirection: "column",
+    paddingVertical: 20,
   },
 
   btnNews: {
     width: "80%",
-    height: 40,
+    height: 45, // Aumento la altura para mejorar la interacción
     backgroundColor: "#005CFE",
     borderRadius: 5,
-    display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 1,
+    marginBottom: 15,  // Espacio entre los botones
   },
+
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo oscuro translúcido
   },
+
   modalContainer: {
     width: "95%",
     height: "90%",
@@ -75,24 +76,28 @@ const convenioStyles = StyleSheet.create({
     backgroundColor: "#fea200",
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "space-between", // Ajustar para que haya espacio entre el contenido y el botón
+    justifyContent: "space-between",
     alignSelf: "center",
-    paddingBottom: 0, // Asegurarse de que no haya padding extra que cause desalineación
+    paddingBottom: 22, // Reducido para un mejor ajuste
   },
+
   modalContent: {
-    backgroundColor: "#fea200",
     width: "100%",
-    height: "auto",
-    maxHeight: "80%", // Limitar la altura máxima
-    borderRadius: 10,
-    padding: 10,
+    backgroundColor: "#fea200",
+    maxHeight: "auto", // Limitar la altura máxima
+    borderRadius: 1,
+    padding: 1,
+    
   },
+
   modalTitle: {
-    fontSize: 24,
+    fontSize: 20, // Título más grande
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 20,
+    marginBottom: 2,
+    textAlign: "center",
   },
+
   modalItem: {
     marginBottom: 15,
     paddingVertical: 10,
@@ -100,91 +105,88 @@ const convenioStyles = StyleSheet.create({
     borderBottomColor: "#000000",
     width: "100%",
   },
+
   modalItemText: {
     fontSize: 16,
     color: "#555",
   },
 
-  // Estilo unificado para botones
   btnCommon: {
-    width: 350,
-    height: 40,
+    width: "80%",
+    height: 45, // Botones más altos para una mejor interacción
     borderRadius: 5,
-    backgroundColor: "#005CFE", // El mismo color de fondo
-    display: "flex",
+    backgroundColor: "#005CFE", 
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20, // Añadir algo de padding para hacerlo más visible
     marginTop: 10, // Espacio entre el contenido y el botón
-    alignSelf: "center", // Asegura que el botón esté centrado
+    alignSelf: "center", 
   },
+
   commonBtnText: {
-    color: "#fff", // Color blanco para el texto
-    fontWeight: "bold", // Negrita
-    fontSize: 16, // Tamaño de fuente igual para ambos botones
-    textAlign: "center", // Asegura que el texto esté centrado
+    color: "#fff", 
+    fontWeight: "bold", 
+    fontSize: 16,
+    textAlign: "center", 
   },
 
-  // Nuevo estilo para aumentar el tamaño de las imágenes
   modalItemImage: {
-    width: "200%", // Ajuste para que la imagen ocupe el 100% del ancho
-    height: 400, // Aumento del tamaño de la imagen
-    marginBottom: 10,
-    alignSelf: "center", // Centrado de la imagen
+    width: "100%", // Ajusta para que ocupe el 100% del contenedor
+    height: 300,  // Tamaño ajustado de la imagen
+    marginBottom: 15,
+    alignSelf: "center",
   },
 
-  // Estilos adicionales para el contenido
   textAbout: {
-    width: "95%",
+    width: "100%",
     height: "auto",
     textAlign: "justify",
     fontSize: 16,
+    marginBottom: 10, // Espacio debajo del texto
   },
+
   btnsBox: {
     width: "100%",
-    marginTop: 10,
-    alignItems: "center", // Asegurar que el botón esté centrado
-    paddingBottom: 25, // Espacio en la parte inferior
-  },
-  btnGetLink: {
-    width: "auto", // Deja el ancho automático para ajustarse al contenido
-    height: 40,
-    borderRadius: 5,
-    backgroundColor: "#005CFE",
-    display: "flex",
-    justifyContent: "center",
+    marginTop: "auto",
     alignItems: "center",
-    paddingHorizontal: 20, // Añadir algo de padding para hacerlo más visible
-    marginTop: 10, // Espacio entre el contenido y el botón
-    alignSelf: "center", // Asegura que el botón esté centrado
+    paddingBottom: 2,
+    
   },
+
+  separator: {
+    height: 1,
+    width: "100%",
+    backgroundColor: "black",
+    marginVertical: 5,
+  },
+
   btnText1: {
-    color: "#ffffff", // Color blanco
+    color: "#ffffff", 
     fontSize: 16,
     fontWeight: "bold",
   },
+
   btnText2: {
-    color: "#ffffff", // Color blanco
+    color: "#ffffff", 
     fontSize: 16,
     fontWeight: "bold",
   },
 
   Textmodal: {
     fontSize: 22,
-    color: "#000000", // Cambia el color según el fondo de tu modal
+    color: "#000000",
     textAlign: "center",
     fontWeight: "bold",
     marginVertical: 20,
   },
+
   btnHotelConv: {
-    width: "80%", // Mantén el mismo ancho que el botón anterior
-    height: 40, // Ajusta la altura del botón
+    width: "80%", 
+    height: 45, // Ajuste en altura
     backgroundColor: "#005CFE",
     borderRadius: 5,
-    display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 170,
+    marginBottom: "auto",  // Espacio entre botones
   },
 });
 

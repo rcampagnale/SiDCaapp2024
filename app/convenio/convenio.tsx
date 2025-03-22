@@ -6,19 +6,18 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  Modal,
-  ActivityIndicator,
   Linking,
 } from "react-native";
+import { firebaseconn } from "@/constants/FirebaseConn";
 import {
+  getFirestore,
   collection,
   getDocs,
-  getFirestore,
   query,
   where,
 } from "firebase/firestore";
 import styles from "../../styles/convenio/convenio-styles";
-import { firebaseconn } from "@/constants/FirebaseConn";
+import ModalComponent from "./ModalComponent"; // Importar el nuevo componente del modal
 
 export default function HandleCampusTeachers() {
   const statusBarHeight = StatusBar.currentHeight;
@@ -37,12 +36,10 @@ export default function HandleCampusTeachers() {
   const analytics = getFirestore(firebaseconn);
   const data = collection(analytics, "novedades");
 
-  // Función para abrir enlaces externos
   const openOtherData = (urlMedia: string) => {
     Linking.openURL(urlMedia);
   };
 
-  // Función para abrir o cerrar los modales
   const toggleModal1 = () => {
     setIsModalVisible1(!isModalVisible1);
   };
@@ -51,7 +48,6 @@ export default function HandleCampusTeachers() {
     setIsModalVisible2(!isModalVisible2);
   };
 
-  // Cargar datos de la categoría "predio"
   useEffect(() => {
     const getDataPredio = async () => {
       try {
@@ -70,7 +66,6 @@ export default function HandleCampusTeachers() {
     getDataPredio();
   }, []);
 
-  // Cargar datos de la categoría "casa"
   useEffect(() => {
     const getDataCasa = async () => {
       try {
@@ -112,7 +107,6 @@ export default function HandleCampusTeachers() {
           </Text>
         </View>
 
-        {/* Carrusel de imágenes */}
         <View style={styles.carruselContainer}>
           <ScrollView
             style={styles.carrusel}
@@ -147,7 +141,6 @@ export default function HandleCampusTeachers() {
           </ScrollView>
         </View>
 
-        {/* Botón 1 para ver la lista de comercios adheridos */}
         <TouchableOpacity
           style={styles.btnNews}
           activeOpacity={1}
@@ -156,68 +149,15 @@ export default function HandleCampusTeachers() {
           <Text style={styles.btnText1}>Lista de Comercios Adheridos</Text>
         </TouchableOpacity>
 
-        {/* Modal 1 */}
-        <Modal
-          visible={isModalVisible1}
-          animationType="fade" // Cambiado de "slide" a "fade" para mejorar el rendimiento
-          transparent={true}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              {loading1 ? (
-                <ActivityIndicator size="large" color="#ffffff" />
-              ) : (
-                <ScrollView
-                  style={styles.modalContent}
-                  contentContainerStyle={{ paddingBottom: 20 }}
-                  keyboardShouldPersistTaps="handled"
-                  removeClippedSubviews={true}
-                >
-                  {dataPredio.length > 0 ? (
-                    dataPredio.map((item, index) => (
-                      <View key={index} style={styles.modalItem}>
-                        {item.imagen && (
-                          <Image
-                            source={{ uri: item.imagen }}
-                            style={styles.modalItemImage}
-                            resizeMode="contain"
-                          />
-                        )}
-                        {item.descripcion && (
-                          <Text style={styles.textAbout}>
-                            {item.descripcion}
-                          </Text>
-                        )}
-                        {item.link && (
-                          <TouchableOpacity
-                            style={styles.btnCommon}
-                            onPress={() => openOtherData(item.link)}
-                          >
-                            <Text style={styles.commonBtnText}>Contacto</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={styles.Textmodal}>
-                      Actualmente no disponemos de convenios activos.
-                    </Text>
-                  )}
-                </ScrollView>
-              )}
-              <View style={styles.btnsBox}>
-                <TouchableOpacity
-                  style={styles.btnCommon}
-                  onPress={toggleModal1}
-                >
-                  <Text style={styles.commonBtnText}>Cerrar</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <ModalComponent
+          isModalVisible={isModalVisible1}
+          toggleModal={toggleModal1}
+          category="predio"
+          loading={loading1}
+          data={dataPredio}
+          title="Lista de Comercios Adheridos"
+        />
 
-        {/* Botón 2 para ver la lista de convenios de casas */}
         <TouchableOpacity
           style={styles.btnHotelConv}
           activeOpacity={1}
@@ -228,66 +168,14 @@ export default function HandleCampusTeachers() {
           </Text>
         </TouchableOpacity>
 
-        {/* Modal 2 */}
-        <Modal
-          visible={isModalVisible2}
-          animationType="fade"
-          transparent={true}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              {loading2 ? (
-                <ActivityIndicator size="large" color="#ffffff" />
-              ) : (
-                <ScrollView
-                  style={styles.modalContent}
-                  contentContainerStyle={{ paddingBottom: 20 }}
-                  keyboardShouldPersistTaps="handled"
-                  removeClippedSubviews={true}
-                >
-                  {dataCasa.length > 0 ? (
-                    dataCasa.map((item, index) => (
-                      <View key={index} style={styles.modalItem}>
-                        {item.imagen && (
-                          <Image
-                            source={{ uri: item.imagen }}
-                            style={styles.modalItemImage}
-                            resizeMode="contain"
-                          />
-                        )}
-                        {item.descripcion && (
-                          <Text style={styles.textAbout}>
-                            {item.descripcion}
-                          </Text>
-                        )}
-                        {item.link && (
-                          <TouchableOpacity
-                            style={styles.btnCommon}
-                            onPress={() => openOtherData(item.link)}
-                          >
-                            <Text style={styles.commonBtnText}>Reservar</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={styles.Textmodal}>
-                      Actualmente no disponemos de convenios activos.
-                    </Text>
-                  )}
-                </ScrollView>
-              )}
-              <View style={styles.btnsBox}>
-                <TouchableOpacity
-                  style={styles.btnCommon}
-                  onPress={toggleModal2}
-                >
-                  <Text style={styles.commonBtnText}>Cerrar</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <ModalComponent
+          isModalVisible={isModalVisible2}
+          toggleModal={toggleModal2}
+          category="casa"
+          loading={loading2}
+          data={dataCasa}
+          title="Convenio Interprovincial Hoteleros"
+        />
       </View>
     </View>
   );
