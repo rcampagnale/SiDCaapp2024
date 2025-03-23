@@ -17,7 +17,7 @@ const convenioStyles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginVertical: 20,  // Añadido espacio vertical
+    marginVertical: 20, // Añadido espacio vertical
   },
   viewInformation: {
     width: "107%",
@@ -31,7 +31,7 @@ const convenioStyles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
     width: "95%",
-    marginBottom: 15,  // Espacio debajo del texto
+    marginBottom: 15, // Espacio debajo del texto
   },
   carruselContainer: {
     width: "100%",
@@ -42,15 +42,6 @@ const convenioStyles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  viewGetInformation: {
-    width: "100%",
-    backgroundColor: "#fea200",
-    display: "flex",
-    justifyContent: "space-around",
-    alignItems: "center",
-    flexDirection: "column",
-    paddingVertical: 20,
-  },
 
   btnNews: {
     width: "80%",
@@ -59,7 +50,7 @@ const convenioStyles = StyleSheet.create({
     borderRadius: 5,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,  // Espacio entre los botones
+    marginBottom: "auto", // Espacio entre los botones
   },
 
   modalOverlay: {
@@ -72,7 +63,7 @@ const convenioStyles = StyleSheet.create({
   modalContainer: {
     width: "95%",
     height: "90%",
-    padding: 20,
+    padding: 10,
     backgroundColor: "#fea200",
     borderRadius: 10,
     alignItems: "center",
@@ -87,23 +78,19 @@ const convenioStyles = StyleSheet.create({
     maxHeight: "auto", // Limitar la altura máxima
     borderRadius: 1,
     padding: 1,
-    
   },
 
   modalTitle: {
     fontSize: 20, // Título más grande
     fontWeight: "bold",
-    color: "#333",
+    color: "black",
     marginBottom: 2,
     textAlign: "center",
   },
 
   modalItem: {
-    marginBottom: 15,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-    width: "100%",
+    width: "auto",
   },
 
   modalItemText: {
@@ -115,23 +102,23 @@ const convenioStyles = StyleSheet.create({
     width: "80%",
     height: 45, // Botones más altos para una mejor interacción
     borderRadius: 5,
-    backgroundColor: "#005CFE", 
+    backgroundColor: "#005CFE",
     justifyContent: "center",
     alignItems: "center",
     marginTop: 10, // Espacio entre el contenido y el botón
-    alignSelf: "center", 
+    alignSelf: "center",
   },
 
   commonBtnText: {
-    color: "#fff", 
-    fontWeight: "bold", 
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
-    textAlign: "center", 
+    textAlign: "center",
   },
 
   modalItemImage: {
     width: "100%", // Ajusta para que ocupe el 100% del contenedor
-    height: 300,  // Tamaño ajustado de la imagen
+    height: 300, // Tamaño ajustado de la imagen
     marginBottom: 15,
     alignSelf: "center",
   },
@@ -149,7 +136,6 @@ const convenioStyles = StyleSheet.create({
     marginTop: "auto",
     alignItems: "center",
     paddingBottom: 2,
-    
   },
 
   separator: {
@@ -160,13 +146,13 @@ const convenioStyles = StyleSheet.create({
   },
 
   btnText1: {
-    color: "#ffffff", 
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
   },
 
   btnText2: {
-    color: "#ffffff", 
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -180,13 +166,13 @@ const convenioStyles = StyleSheet.create({
   },
 
   btnHotelConv: {
-    width: "80%", 
+    width: "80%",
     height: 45, // Ajuste en altura
     backgroundColor: "#005CFE",
     borderRadius: 5,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: "auto",  // Espacio entre botones
+    marginBottom: "auto", // Espacio entre botones
   },
 });
 

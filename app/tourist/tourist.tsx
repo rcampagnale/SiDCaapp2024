@@ -187,7 +187,6 @@ export default function HandleTourist() {
                             </Text>
                           )}
                           <View style={styles.separator} />
-
                           {/* Enlace para realizar la reserva */}
                           {item.link && (
                             <TouchableOpacity
@@ -218,6 +217,7 @@ export default function HandleTourist() {
                   )}
                 </ScrollView>
               )}
+              <View style={styles.separator} />
 
               <TouchableOpacity style={styles.btnGetLink} onPress={toggleModal}>
                 <Text

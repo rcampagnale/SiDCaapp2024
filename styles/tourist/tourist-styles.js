@@ -90,9 +90,6 @@ export default touristStyles = StyleSheet.create({
   },
   modalItem: {
     marginBottom: 15,
-    paddingVertical: 10,
-    borderBottomWidth: 1, // Mantén el ancho de la línea
-    borderBottomColor: "#000000", // Línea separadora en color negro
     width: "100%",
   },
   btnsBox: {
