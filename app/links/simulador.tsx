@@ -9,7 +9,7 @@ import {
   GestureResponderEvent,
   Linking,
 } from "react-native";
-import styles from "../../styles/links/links-styles"; // Asegúrate de tener los estilos correctamente importados
+import styles from "../../styles/links/links-styles"; 
 import {
   getFirestore,
   collection,
@@ -21,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { Picker } from "@react-native-picker/picker";
 import { AntDesign } from "@expo/vector-icons";
+import { firebaseconn } from "@/constants/FirebaseConn";
 
 const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [nomencladorUrl, setNomencladorUrl] = useState(null);
@@ -41,13 +42,14 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   const [cuatrimestral, setCuatrimestral] = useState(""); // Define cuatrimestral state
   const [anual, setAnual] = useState(""); // Define anual state
   const [valor, setValor] = useState(""); // Define valor state
-  const subsidioSepelio = 1500; // Define subsidioSepelio with an initial value
-  const seguroVidaObligatorio = 1000; // Monto fijo de $1,000
   const [regPrevEspDocente, setRegPrevEspDocente] = useState(0); // Define regPrevEspDocente with an initial value
   const [descuentoSindical, setDescuentoSindical] = useState(0); // Define descuentoSindical with an initial value
   const [descuentoOSEP, setDescuentoOSEP] = useState(0); // Define descuentoOSEP with an initial value
   const [fondoEspecial, setFondoEspecial] = useState(0); // Define fondoEspecial with an initial value
   const [jubilacion, setJubilacion] = useState(0); // Define jubilacion with an initial value
+  const [subsidioSepelio, setSubsidioSepelio] = useState(0); // Define subsidioSepelio with an initial value
+  const [seguroVidaObligatorio, setSeguroVidaObligatorio] = useState(0); // Define seguroVidaObligatorio with an initial value
+  
 
   // Fetch nomenclador URL from Firestore
   const fetchNomenclador = async () => {
@@ -96,65 +98,73 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
     }
   };
 
-  // Fetch valores from Firestore SUPERIOR
-   const fetchValoresSubsidio = async () => {
-    try {
-      const db = getFirestore();
-      const docRef = doc(db, "cod", "superior"); // Obtener el documento "superior"
-      const docSnap = await getDoc(docRef); // Obtener el documento
+// Función para obtener valores de Firestore desde el documento "superior" en la colección "cod"
+const fetchValoresSuperior = async () => {
+  try {
+    const db = getFirestore(); // Obtener la instancia de Firestore
+    const docRef = doc(db, "cod", "superior"); // Obtener referencia al documento "superior"
+    const docSnap = await getDoc(docRef); // Obtener el documento de Firestore
 
-      if (docSnap.exists()) {
-        // Verifica si el documento existe y luego accede a los campos 'anual' y 'cuatrimestral'
-        const datos = docSnap.data();
-        const anualRecibido = datos.anual;
-        const cuatrimestralRecibido = datos.cuatrimestral;
-        setAnual(anualRecibido);  // Establece el valor del campo 'anual' en el estado
-        setCuatrimestral(cuatrimestralRecibido);  // Establece el valor del campo 'cuatrimestral' en el estado
-      } else {
-        console.log("El documento no existe");
-      }
-    } catch (error) {
-      console.error("Error al obtener los valores: ", error);
+    if (docSnap.exists()) {
+      // Verifica si el documento existe
+      const datos = docSnap.data(); // Obtener los datos del documento
+      const anualRecibido = datos.anual; // Obtener el campo 'anual'
+      const cuatrimestralRecibido = datos.cuatrimestral; // Obtener el campo 'cuatrimestral'
+
+      // Establecer los valores en el estado
+      setAnual(anualRecibido);
+      setCuatrimestral(cuatrimestralRecibido);
+
+      
+    } else {
+      console.log("El documento 'superior' no existe en Firestore.");
     }
-  };
+  } catch (error) {
+    // Si ocurre un error, lo mostramos en la consola
+    console.error("Error al obtener los valores desde Firestore: ", error);
+  }
+};
+
+  
 
  // Fetch subsidioSepelio y seguroVidaObligatorio from Firestore
  const fetchValores = async () => {
   try {
-    const db = getFirestore();
+    const db = getFirestore(firebaseconn); // Asegúrate de que firebaseconn esté bien configurado
 
     // Obtener el documento 'subsidioSepelio'
-    const docRefSubsidioSepelio = doc(db, "cod", "subsidioSepelio");
-    const docSnapSubsidioSepelio = await getDoc(docRefSubsidioSepelio);
-    
+    const docRefSubsidioSepelio = doc(db, "cod", "subsidioSepelio"); // Referencia al documento 'subsidioSepelio'
+    const docSnapSubsidioSepelio = await getDoc(docRefSubsidioSepelio); // Obtener el documento
+
     if (docSnapSubsidioSepelio.exists()) {
       const valorSubsidioSepelio = docSnapSubsidioSepelio.data().valor;
-      console.log('Valor obtenido (Subsidio por Sepelio):', valorSubsidioSepelio); // Imprime el valor recuperado
       setSubsidioSepelio(valorSubsidioSepelio);  // Establece el valor de 'subsidioSepelio'
     } else {
       console.log("El documento 'subsidioSepelio' no existe");
     }
 
     // Obtener el documento 'seguroVidaObligatorio'
-    const docRefSeguroVidaObligatorio = doc(db, "cod", "seguroVidaObligatorio");
-    const docSnapSeguroVidaObligatorio = await getDoc(docRefSeguroVidaObligatorio);
-    
+    const docRefSeguroVidaObligatorio = doc(db, "cod", "seguroVidaObligatorio"); // Referencia al documento 'seguroVidaObligatorio'
+    const docSnapSeguroVidaObligatorio = await getDoc(docRefSeguroVidaObligatorio); // Obtener el documento
+
     if (docSnapSeguroVidaObligatorio.exists()) {
       const valorSeguroVidaObligatorio = docSnapSeguroVidaObligatorio.data().valor;
-      console.log('Valor obtenido (Seguro Vida Obligatorio):', valorSeguroVidaObligatorio); // Imprime el valor recuperado
-      valorSeguroVidaObligatorio(valorSeguroVidaObligatorio);  // Establece el valor de 'seguroVidaObligatorio'
+      setSeguroVidaObligatorio(valorSeguroVidaObligatorio);  // Establece el valor de 'seguroVidaObligatorio'
     } else {
       console.log("El documento 'seguroVidaObligatorio' no existe");
     }
-
   } catch (error) {
     console.error("Error al obtener los valores: ", error);
   }
 };
-  
-  useEffect(() => {
-    fetchValoresSubsidio();  // Llamada a la función para obtener los valores
-  }, []);  // Solo se ejecuta una vez cuando el componente se mon
+
+useEffect(() => {
+  fetchValoresSuperior();  // Llamada a la función para obtener los valores
+}, []);  // Se ejecuta una sola vez al montar el componente
+
+useEffect(() => {
+  fetchValores();  // Llamada a la función para obtener los valores
+}, []);  // Se ejecuta una sola vez al montar el componente
 
   useEffect(() => {
     fetchValor(); // Llamada a la función para obtener el valor
@@ -263,13 +273,17 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
   }
 
   const totalDescuentos =
-    (aportesJubilatorios || 0) +
-    (fondoEspecialCalculado || 0) +
-    (descuentoOSEPCalculado || 0) +
-    (descuentoSiDCaCalculado || 0) +
-    (regPrevEspDocenteCalculado || 0) +
-    (seguroVidaObligatorio || 0) +
-    (subsidioSepelio || 0);
+  (Number(aportesJubilatorios) || 0) +
+  (Number(fondoEspecialCalculado) || 0) +
+  (Number(descuentoOSEPCalculado) || 0) +
+  (Number(descuentoSiDCaCalculado) || 0) +
+  (Number(regPrevEspDocenteCalculado) || 0) +
+  (Number(seguroVidaObligatorio) || 0) +
+  (Number(subsidioSepelio) || 0);
+
+
+
+    
 
   // Calcular el sueldo final (remunerativos - descuentos)
   const finalSueldo = totalRemunerativos - totalDescuentos;
