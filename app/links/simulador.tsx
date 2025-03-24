@@ -323,7 +323,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               style={{ color: "blue", textDecorationLine: "underline" ,}}
               onPress={() =>
                 Linking.openURL(
-                  "https://youtube.com/shorts/1pz_2GYejnU?feature=share"
+                  "https://youtube.com/shorts/aY5WMLpTqlQ?feature=share"
                 )
               }
             >
@@ -535,7 +535,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                   }}
                 >
                   <View style={styles.rowContainer}>
-                    <Text style={styles.titulodeopciones}>Zona Frontera:</Text>
+                    <Text style={styles.titulodeopciones}>Ubicación Geográfica(Zona):</Text>
                     <Picker
                       selectedValue={cargo.zonaFrontera}
                       onValueChange={(value) =>
