@@ -457,6 +457,7 @@ export default function HandleCampusTeachers() {
                   </View>
                 </ScrollView>
               )}
+              <View style={styles.separator} />
               <TouchableOpacity style={styles.btnCommon} onPress={toggleModal}>
                 <Text style={styles.commonBtnText}>Cerrar</Text>
               </TouchableOpacity>

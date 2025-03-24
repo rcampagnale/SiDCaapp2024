@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "98%",
-    height: "86%", // Aumentamos la altura del modal
+    height: "95%", // Aumentamos la altura del modal
     padding: 20,
     backgroundColor: "#fea200",
     borderRadius: 10,

@@ -309,5 +309,6 @@ export default linkStyles = StyleSheet.create({
     textAlign: 'justify', // Justifica el texto
   },
   
+  
 });
 
