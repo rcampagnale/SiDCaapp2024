@@ -139,9 +139,9 @@ export default touristStyles = StyleSheet.create({
     marginBottom: 10, // Espacio entre el título y el contenido
   },
   separator: {
-    height: 2, // Alto de la línea
-    backgroundColor: "black", // Color de la línea
-    width: "100%", // Ocupa todo el ancho disponible
-    marginVertical: 10, // Ajustado para un espaciado adecuado
+    height: 2,
+    backgroundColor: "black",
+    width: "100%",
+    marginVertical: 10, 
   },
 });

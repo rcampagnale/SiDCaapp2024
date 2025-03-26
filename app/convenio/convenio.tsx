@@ -159,8 +159,8 @@ export default function HandleCampusTeachers() {
         />
 
         <TouchableOpacity
-          style={styles.btnHotelConv}
-          activeOpacity={1}
+          style={styles.btnNews1}
+          activeOpacity={2}
           onPress={toggleModal2}
         >
           <Text style={styles.btnText2}>

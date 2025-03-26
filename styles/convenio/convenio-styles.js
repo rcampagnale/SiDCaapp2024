@@ -9,7 +9,7 @@ const convenioStyles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#091d24",
-    paddingHorizontal: 10, // Asegura que los elementos no estén pegados al borde
+    
   },
   viewTitle: {
     width: "100%",
@@ -17,26 +17,27 @@ const convenioStyles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginVertical: 20, // Añadido espacio vertical
   },
   viewInformation: {
-    width: "107%",
+    width: "100%",
+    height: "auto",
     backgroundColor: "#fea200",
-    paddingVertical: 15,
+    display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    paddingBottom: 10,
+    paddingTop: 10,   
   },
+
   text: {
-    textAlign: "justify",
+    textAlign: "justify", // Justifica el texto
     fontSize: 16,
     color: "#000",
-    width: "95%",
-    marginBottom: 15, // Espacio debajo del texto
+    width: "97%",
   },
   carruselContainer: {
     width: "100%",
-    height: 180,
-    marginBottom: 15, // Añadir espacio abajo
+    height: 150,
   },
   carrusel: {
     width: "100%",
@@ -44,14 +45,27 @@ const convenioStyles = StyleSheet.create({
   },
 
   btnNews: {
-    width: "80%",
-    height: 45, // Aumento la altura para mejorar la interacción
+    width: "75%",
+    height: 40,
     backgroundColor: "#005CFE",
     borderRadius: 5,
+    display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: "auto", // Espacio entre los botones
+    marginBottom: "5%", // Este sigue teniendo el mismo margen abajo
   },
+  
+  btnNews1: {
+    width: "75%",
+    height: 40,
+    backgroundColor: "#005CFE",
+    borderRadius: 5,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 160, // Ajusta el margen inferior para subir el botón (puedes reducirlo más)
+  },
+  
 
   modalOverlay: {
     flex: 1,
@@ -165,15 +179,7 @@ const convenioStyles = StyleSheet.create({
     marginVertical: 20,
   },
 
-  btnHotelConv: {
-    width: "80%",
-    height: 45, // Ajuste en altura
-    backgroundColor: "#005CFE",
-    borderRadius: 5,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: "auto", // Espacio entre botones
-  },
+  
 });
 
 export default convenioStyles;
