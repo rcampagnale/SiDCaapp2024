@@ -140,15 +140,24 @@ export default function HandleCampusTeachers() {
             />
           </ScrollView>
         </View>
-
-        <TouchableOpacity
-          style={styles.btnNews}
-          activeOpacity={1}
-          onPress={toggleModal1}
-        >
-          <Text style={styles.btnText1}>Lista de Comercios Adheridos</Text>
-        </TouchableOpacity>
-
+        <View style={{width:'100%',height:'20%',display:'flex',justifyContent:'space-around',alignItems:'center',flexDirection:'column',marginBottom:10}}>
+          <TouchableOpacity
+            style={styles.btnNews}
+            activeOpacity={1}
+            onPress={toggleModal1}
+          >
+            <Text style={styles.btnText1}>Lista de Comercios Adheridos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.btnNews1}
+            activeOpacity={2}
+            onPress={toggleModal2}
+          >
+            <Text style={styles.btnText2}>
+              Convenio Interprovincial Hoteleros
+            </Text>
+          </TouchableOpacity>
+        </View>
         <ModalComponent
           isModalVisible={isModalVisible1}
           toggleModal={toggleModal1}
@@ -158,15 +167,7 @@ export default function HandleCampusTeachers() {
           title="Lista de Comercios Adheridos"
         />
 
-        <TouchableOpacity
-          style={styles.btnNews1}
-          activeOpacity={2}
-          onPress={toggleModal2}
-        >
-          <Text style={styles.btnText2}>
-            Convenio Interprovincial Hoteleros
-          </Text>
-        </TouchableOpacity>
+        
 
         <ModalComponent
           isModalVisible={isModalVisible2}

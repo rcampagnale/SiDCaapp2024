@@ -63,7 +63,6 @@ const convenioStyles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 160, // Ajusta el margen inferior para subir el botón (puedes reducirlo más)
   },
   
 
