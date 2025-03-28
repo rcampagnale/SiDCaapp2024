@@ -102,7 +102,7 @@ export default function ContactInformation() {
             onPress={() => openWspNumber("https://wa.me/5493835406450")}
           >
             <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Hotelería Interprovincial SiDCa
+              Hotelería Interprovincial
             </Text>
             <Image
               style={{ width: 30, height: 30, marginRight: 10 }}

@@ -64,10 +64,7 @@ export default function HandleCampusTeachers() {
           <Text style={styles.text}>
             La Sala de Reuniones para los afiliados tiene como finalidad ofrecer
             un espacio de encuentro gremial donde los miembros del sindicato
-            puden discutir temas de interés, tomar decisiones colectivas que
-            puedan fortalecer la unidad. Equipada para facilitar reuniones y
-            capacitaciones, fomenta la participación activa en asuntos laborales
-            y educativos. Además, sirve como lugar para resolver inquietudes,
+            plantean temas de interés y fortalecen la unidad. Además, sirve como lugar para resolver inquietudes,
             compartir información relevante y organizar actividades que
             beneficien a los afiliados. Este espacio contribuye al
             fortalecimiento del movimiento sindical y a la construcción de un
