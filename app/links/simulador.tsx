@@ -315,19 +315,19 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
           <Text style={styles.modalTitle}>Simulador de Recibo de Sueldo</Text>
           <View style={styles.separator} />
           <Text style={styles.modalDescription}>
-            Tutorial de uso del simulador de sueldo para cargos docentes. Si
-            desea consultar el sueldo base, podrá acceder al Nomenclador de
+            Si desea consultar el sueldo base, podrá acceder al Nomenclador de
             Cargo Docente, que se encuentra disponible al final de la página del
             simulador.{"\n"}
             <Text
-              style={{ color: "blue", textDecorationLine: "underline" ,}}
+              style={{ color: "blue", textDecorationLine: "underline" }}
               onPress={() =>
                 Linking.openURL(
                   "https://youtube.com/shorts/aY5WMLpTqlQ?feature=share"
                 )
               }
             >
-              <AntDesign name="youtube" size={30} color="red" /> Ver Tutorial del Simulador
+              <AntDesign name="youtube" size={30} color="red" /> Ver Tutorial
+              del Simulador
             </Text>
           </Text>
           <View style={styles.separator} />
@@ -535,7 +535,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                   }}
                 >
                   <View style={styles.rowContainer}>
-                    <Text style={styles.titulodeopciones}>Ubicación Geográfica(Zona):</Text>
+                    <Text style={styles.titulodeopciones}>
+                      Ubicación Geográfica(Zona):
+                    </Text>
                     <Picker
                       selectedValue={cargo.zonaFrontera}
                       onValueChange={(value) =>
