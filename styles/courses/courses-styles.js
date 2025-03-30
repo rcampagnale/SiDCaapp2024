@@ -83,15 +83,11 @@ export default coursesStyles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
   },
-  downloadButton: {
-    backgroundColor: "#005CFE",
+  viewCertificateButton: {
+    backgroundColor: "#005CFE",  // Color de fondo similar al original
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
     marginTop: 10,
-  },
-  downloadButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
   },
 });
