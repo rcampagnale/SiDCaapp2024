@@ -12,6 +12,7 @@ const styles = StyleSheet.create({
     height: '100%', // Ajustado a 100% de la altura de la pantalla
     display: 'flex', // Usamos flexbox para el layout
     flexDirection: 'column', // Los elementos se distribuyen en una columna
+    paddingTop: 20,  // Espacio superior para asegurar que no se superponga al StatusBar
   },
 
   // Fondo de color antes de la imagen
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 50,
     left: '-8%',
-    top: 110,
+    top: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -83,19 +84,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'black',
     textAlign: 'center',
-    
   },
 
   // Estilos para el botón de volver
   btnBackToOptions: {
     width: '100%',
-    height: 75,
+    height: 60,
     backgroundColor: '#fea200',
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
     flexDirection: 'row',
+    marginTop: 20,  // Ajuste el margen superior para asegurar que no se sobreponga con la barra de estado
   },
+
   btnBack: {
     width: 'auto',
     height: '100%',
@@ -106,6 +108,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 
+  btnPrintContainer: {
+    width: "80%",
+    height: 40,
+    borderRadius: 5,
+    backgroundColor: "#005CFE",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10, // Separación desde el botón de volver
+  },
+  
+  btnPrint: {
+    width: "auto",
+    height: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+  },
 });
 
 export default styles;

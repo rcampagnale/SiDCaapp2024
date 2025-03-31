@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, StatusBar, Dimensions, TouchableOpacity } from "react-native";
+import { View, Text, Image, StatusBar, Dimensions, TouchableOpacity, Alert } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import {
   getDocs,
@@ -74,21 +74,37 @@ export default function Certificados() {
     fetchCertificadoData();
   }, [courseName]);
 
-  const statusBarHeight = StatusBar.currentHeight || 0; // Altura de la barra de estado con valor predeterminado
+  const statusBarHeight = StatusBar.currentHeight || 0; 
+
+  const handlePrint = () => {
+    // Aquí puedes agregar la funcionalidad para imprimir el certificado o realizar la acción deseada
+    Alert.alert("Imprimir Certificado", "La opción de imprimir aún no está disponible.");
+  };
+  
 
   return (
     <View style={styles.container}>
-      {/* Establecer el color de fondo del StatusBar */}
       <StatusBar barStyle="dark-content" backgroundColor="#f0f0f0" translucent={false} />
 
       {/* Botón Volver */}
       <View style={styles.btnBackToOptions}>
         <TouchableOpacity
-         style={[styles.btnBack, { marginTop: statusBarHeight + 5 }]}
+         style={[styles.btnBack, { marginTop: statusBarHeight -9 }]}  // Ajustamos el margen para que no se sobreponga al status bar
           onPress={() => navigation.goBack()}  // Aquí utilizamos navigation.goBack() para volver atrás
         >
           <AntDesign name="back" size={24} color="black" />
           <Text style={{ fontSize: 18, marginLeft: 5 }}>Volver</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Botón Imprimir Certificado */}
+      <View style={styles.btnPrintContainer}>
+        <TouchableOpacity
+          style={styles.btnPrint} 
+          onPress={handlePrint}  
+        >
+          <AntDesign name="printer" size={24} color="#ffffff" />
+          <Text style={{ color: "#ffffff", fontSize: 20, fontWeight: 600 }}> Imprimir Certificado</Text>
         </TouchableOpacity>
       </View>
 
@@ -111,7 +127,7 @@ export default function Certificados() {
       <View
         style={{
           position: "absolute",
-          top: 425,
+          top: 465,
           left: "46.5%",
           transform: [{ rotate: "90deg" }],
         }}
@@ -124,7 +140,7 @@ export default function Certificados() {
       <View
         style={{
           position: "absolute",
-          top: 648,
+          top: 690,
           left: "56.5%",
           transform: [{ rotate: "90deg" }],
         }}
@@ -136,7 +152,7 @@ export default function Certificados() {
 
       {/* Información adicional con rotación para los nuevos campos */}
       <View
-        style={{ position: "absolute", bottom: 50, left: "13.7%", top: 635 }}
+        style={{ position: "absolute", bottom: 50, left: "13.7%", top: 675 }}
       >
         <Text style={styles.fieldText}>
           {certificadoData.dias || "Días no especificados"}
@@ -144,7 +160,7 @@ export default function Certificados() {
       </View>
 
       <View
-        style={{ position: "absolute", bottom: 50, left: "13.7%", top: 430 }}
+        style={{ position: "absolute", bottom: 50, left: "13.7%", top: 465 }}
       >
         <Text style={styles.fieldText}>
           {certificadoData.modalidad || "Modalidad no especificada"}
@@ -152,7 +168,7 @@ export default function Certificados() {
       </View>
 
       <View
-        style={{ position: "absolute", bottom: 50, left: "10.5%", top: 625 }}
+        style={{ position: "absolute", bottom: 50, left: "10.5%", top: 675 }}
       >
         <Text style={styles.fieldText}>
           {certificadoData.cargaHoraria || "Carga horaria no especificada"}
@@ -160,7 +176,7 @@ export default function Certificados() {
       </View>
 
       <View
-        style={{ position: "absolute", bottom: 50, left: "-1.4%", top: 745 }}
+        style={{ position: "absolute", bottom: 50, left: "-1.4%", top: 780 }}
       >
         <Text style={styles.fieldText}>
           {certificadoData.resolucion || "Resolución no especificada"}
@@ -168,7 +184,7 @@ export default function Certificados() {
       </View>
 
       <View
-        style={{ position: "absolute", bottom: 50, left: "-5.6%", top: 725 }}
+        style={{ position: "absolute", bottom: 50, left: "-5.6%", top: 760 }}
       >
         <Text style={styles.fieldText}>
           {certificadoData.fecha || "Fecha no especificada"}
