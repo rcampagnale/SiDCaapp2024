@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Alert,
 } from "react-native";
 import styles from "../../styles/courses/courses-styles";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -177,24 +178,45 @@ export default function CoursesTakenByMe() {
               </Text>
               {/* Botón para redirigir a la página de certificados */}
               {e.aprobo && (
-                <TouchableOpacity
-                  style={styles.viewCertificateButton}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/courses/certificados",
-                      params: {
-                        courseName: e.titulo, // Nombre del curso
-                        userName: userData.nombre, // Nombre del usuario
-                        userDni: userData.dni, // DNI del usuario
-                        
-                      },
-                    }) 
-                  }
-                >
-                  <Text style={{ color: "#ffffff", fontSize: 18 }}>
-                    Ver Certificado
-                  </Text>
-                </TouchableOpacity>
+               <TouchableOpacity
+               style={styles.viewCertificateButton}
+               onPress={async () => {
+                 try {
+                   const certificadosQuery = query(
+                     collection(analytics, "certificados"),
+                     where("titulo", "==", e.titulo)
+                   );
+                   const snapshot = await getDocs(certificadosQuery);
+             
+                   if (!snapshot.empty) {
+                     router.push({
+                       pathname: "/courses/certificados",
+                       params: {
+                         courseName: e.titulo,
+                         userName: userData.nombre,
+                         userLastName: userData.apellido,
+                         userDni: userData.dni,
+                       },
+                     });
+                   } else {
+                     Alert.alert(
+                       "Certificado Digital no disponible",
+                       "Certificado disponible a partir del año 2025.",
+                       [{ text: "Aceptar" }],
+                       { cancelable: false }
+                     );
+                   }
+                 } catch (error) {
+                   console.error("Error al verificar certificado:", error);
+                   Alert.alert("Error", "Ocurrió un problema al buscar el certificado.");
+                 }
+               }}
+             >
+               <Text style={{ color: "#ffffff", fontSize: 18 }}>
+                 Ver Certificado
+               </Text>
+             </TouchableOpacity>
+             
               )}
             </View>
           ))
