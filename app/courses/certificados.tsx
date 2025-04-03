@@ -124,38 +124,31 @@ export default function Certificados() {
       </View>
 
       {/* Información del usuario con rotación */}
+
       <View
-        style={{
-          position: "absolute",
-          top: 465,
-          left: "46.5%",
-          transform: [{ rotate: "90deg" }],
-        }}
+        style={{ position: "absolute", left: "27.8%", top: 557 }}
       >
-        <Text style={{ fontSize: 11, fontWeight: "bold" }}>
-          {userLastName ? `${userLastName},` : null} {userName}
+        <Text style={styles.tituloUsuario}>
+        {userLastName ? `${userLastName},` : null} {userName}
         </Text>
       </View>
 
       <View
-        style={{
-          position: "absolute",
-          top: 690,
-          left: "56.5%",
-          transform: [{ rotate: "90deg" }],
-        }}
+        style={{ position: "absolute",  left: "27.5%", top: 806 }}
       >
-        <Text style={{ fontSize: 11, fontWeight: "bold" }}>
-          : {userDni || "Sin asignar"}
+        <Text style={styles.tituloUsuario}>
+       : {userDni}
         </Text>
       </View>
+
+     
 
       {/* Información adicional con rotación para los nuevos campos */}
       <View
         style={{ position: "absolute", bottom: 50, left: "13.7%", top: 675 }}
       >
         <Text style={styles.fieldText}>
-          {certificadoData.dias || "Días no especificados"}
+          {certificadoData.dias || "Sin especificar"}
         </Text>
       </View>
 
@@ -163,7 +156,7 @@ export default function Certificados() {
         style={{ position: "absolute", bottom: 50, left: "13.7%", top: 465 }}
       >
         <Text style={styles.fieldText}>
-          {certificadoData.modalidad || "Modalidad no especificada"}
+          {certificadoData.modalidad || "Sin especificar"}
         </Text>
       </View>
 
@@ -171,7 +164,7 @@ export default function Certificados() {
         style={{ position: "absolute", bottom: 50, left: "10.5%", top: 675 }}
       >
         <Text style={styles.fieldText}>
-          {certificadoData.cargaHoraria || "Carga horaria no especificada"}
+          {certificadoData.cargaHoraria || "Sin especificar"}
         </Text>
       </View>
 
@@ -179,7 +172,7 @@ export default function Certificados() {
         style={{ position: "absolute", bottom: 50, left: "-1.4%", top: 780 }}
       >
         <Text style={styles.fieldText}>
-          {certificadoData.resolucion || "Resolución no especificada"}
+          {certificadoData.resolucion || "Sin especificar"}
         </Text>
       </View>
 
@@ -187,7 +180,7 @@ export default function Certificados() {
         style={{ position: "absolute", bottom: 50, left: "-5.6%", top: 760 }}
       >
         <Text style={styles.fieldText}>
-          {certificadoData.fecha || "Fecha no especificada"}
+          {certificadoData.fecha || "Sin especificar"}
         </Text>
       </View>
 

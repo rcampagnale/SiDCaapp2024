@@ -70,9 +70,8 @@ const styles = StyleSheet.create({
   // Estilo del contenedor de la imagen con firma
   imageContainer: {
     position: 'absolute',
-    bottom: 50,
-    left: '4%',
-    top: 550,
+    left: '3.5%',
+    top: 590,
     transform: [{ rotateZ: '90deg' }], // Rotación de la imagen
     width: 120, // Ajusta el ancho de la imagen
     height: 120, // Ajusta la altura de la imagen
@@ -84,6 +83,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'black',
     textAlign: 'center',
+    position: "absolute", 
+    left: "56%", 
+    top: 50,
   },
 
   // Estilos para el botón de volver
@@ -126,6 +128,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
+  },
+
+  // Estilo general de los campos de texto
+  tituloUsuario: {
+    fontSize: 11,
+    fontWeight: '600',
+    transform: 'rotateZ(90deg)', // Rotación
+    width: 300,
+    color: 'black',
+    
   },
 });
 
