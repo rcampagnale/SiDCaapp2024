@@ -56,15 +56,20 @@ export default coursesStyles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
   },
+
+  // 🔄 Actualizado para que se ajuste al contenido dinámicamente
   linksBox: {
     width: "100%",
-    height: 460,
     backgroundColor: "#fea200",
     borderRadius: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
     display: "flex",
-    justifyContent: "space-around",
+    justifyContent: "center",
     alignItems: "center",
+    gap: 15,
   },
+
   btnGetLink: {
     width: "80%",
     height: 40,
@@ -84,10 +89,16 @@ export default coursesStyles = StyleSheet.create({
     alignItems: "center",
   },
   viewCertificateButton: {
-    backgroundColor: "#005CFE",  // Color de fondo similar al original
+    backgroundColor: "#005CFE",
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
     marginTop: 10,
+  },
+  separator: {
+    height: 2,
+    width: "100%",
+    backgroundColor: "black",
+    marginVertical: 5,
   },
 });

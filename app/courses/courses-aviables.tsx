@@ -73,7 +73,7 @@ export default function CourseAviablesForMe({
           width: "95%",
           height: "80%",
           margin: "auto",
-          paddingTop: 5,
+          paddingTop: 3,
         }}
         contentContainerStyle={{
           justifyContent: "space-between",
@@ -103,7 +103,7 @@ export default function CourseAviablesForMe({
               <Text
                 style={{
                   fontWeight: "bold",
-                  width: "90%",
+                  width: "100%",
                   textAlign: "center",
                   paddingBottom: 5,
                 }}
@@ -114,23 +114,22 @@ export default function CourseAviablesForMe({
               {/* Imagen */}
               <Image
                 src={e.data().imagen}
-                style={{ width: "80%", height: 200 }}
+                style={{ width: "60%", height: 300 }}
                 resizeMode="contain"
               />
 
-              {/* Descripción con ScrollView */}
-              <ScrollView
+              <View
                 style={{
-                  width: "90%",
-                  maxHeight: 150, // Limitar altura para evitar desbordes
+                  width: "100%",
                   marginVertical: 5,
+                  alignItems: "center",
                 }}
-                contentContainerStyle={{ alignItems: "center" }}
               >
-                <Text style={{ textAlign: "justify" }}>
+                <Text style={{ textAlign: "justify", fontWeight: "bold" }}>
                   {e.data().descripcion}
                 </Text>
-              </ScrollView>
+              </View>
+              <View style={styles.separator} />
 
               {/* Botón */}
               <TouchableOpacity
