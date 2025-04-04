@@ -149,7 +149,7 @@ export default function CoursesTakenByMe() {
       </Text>
 
       <ScrollView
-        style={{ width: "95%", height: "80%", margin: "auto", paddingTop: 20 }}
+        style={{ width: "95%", height: "80%", margin: "auto", paddingTop: 1 }}
         contentContainerStyle={{
           justifyContent: "space-between",
           alignItems: "center",
@@ -166,7 +166,8 @@ export default function CoursesTakenByMe() {
               <Text
                 style={{
                   fontWeight: "bold",
-                  width: "90%",
+                  fontSize: 17,
+                  width: "100%",
                   textAlign: "center",
                   paddingBottom: 5,
                 }}
@@ -206,8 +207,8 @@ export default function CoursesTakenByMe() {
                         });
                       } else {
                         Alert.alert(
-                          "Certificado Digital no disponible",
-                          "Certificado disponible a partir del año 2025.",
+                          "Certificado Digital",
+                          "El Certificado Digital no esta disponible por el momento.",
                           [{ text: "Aceptar" }],
                           { cancelable: false }
                         );

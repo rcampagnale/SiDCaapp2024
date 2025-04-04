@@ -81,7 +81,7 @@ export default coursesStyles = StyleSheet.create({
   },
   coursesDoneBox: {
     width: "100%",
-    height: 460,
+    height: 500,
     backgroundColor: "#fea200",
     borderRadius: 10,
     display: "flex",
@@ -93,7 +93,7 @@ export default coursesStyles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
-    marginTop: 10,
+    
   },
   separator: {
     height: 2,
