@@ -24,7 +24,7 @@ export default function HandleTourist() {
   const statusBarHeight = StatusBar.currentHeight;
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const [dataTravel, setDataTravel] = useState<any[]>([]); // Ahora es un array para manejar múltiples documentos
+  const [dataTravel, setDataTravel] = useState<any[]>([]);
   const analytics = getFirestore(firebaseconn);
 
   const openOtherData = (urlMedia: string) => {
@@ -43,7 +43,13 @@ export default function HandleTourist() {
         const q = query(dataRef, where("categoria", "==", "turismo"));
         const res = await getDocs(q);
         const filteredData = res.docs.map((doc) => doc.data());
-        setDataTravel(filteredData); // Guardar todos los documentos relacionados con turismo
+
+        // 🔽 Ordenar por prioridad
+        const sortedData = filteredData.sort(
+          (a, b) => a.prioridad - b.prioridad
+        );
+
+        setDataTravel(sortedData);
       } catch (error) {
         alert(`Error: ${error}`);
       } finally {
@@ -91,7 +97,6 @@ export default function HandleTourist() {
               source={require("../../assets/turismo/turismo1.jpg")}
               resizeMode="cover"
             />
-
             <Image
               style={{ width: 200, height: 130 }}
               source={require("../../assets/turismo/turismo2.jpg")}
@@ -119,6 +124,7 @@ export default function HandleTourist() {
             />
           </ScrollView>
         </View>
+
         <View style={styles.viewGetInformation}>
           <Text style={{ fontSize: 24, fontWeight: "600" }}>
             Hace tu reserva
@@ -135,6 +141,7 @@ export default function HandleTourist() {
             />
           </TouchableOpacity>
         </View>
+
         <TouchableOpacity
           style={styles.btnNews}
           activeOpacity={1}
@@ -142,11 +149,12 @@ export default function HandleTourist() {
         >
           <Text style={styles.btnText1}>Pack de viajes disponible</Text>
         </TouchableOpacity>
+
         <Modal
           animationType="slide"
           transparent={true}
           visible={modalVisible}
-          onRequestClose={toggleModal} // Cuando se cierra el modal
+          onRequestClose={toggleModal}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
@@ -165,13 +173,10 @@ export default function HandleTourist() {
                             padding: 10,
                           }}
                         >
-                          {/* Mostrar el título */}
                           {item.titulo && (
                             <Text style={styles.modalTitle}>{item.titulo}</Text>
                           )}
                           <View style={styles.separator} />
-
-                          {/* Mostrar la imagen */}
                           {item.imagen && (
                             <Image
                               source={{ uri: item.imagen }}
@@ -179,22 +184,22 @@ export default function HandleTourist() {
                               resizeMode="contain"
                             />
                           )}
-
-                          {/* Mostrar la descripción */}
                           {item.descripcion && (
                             <Text style={styles.textAbout}>
                               {item.descripcion}
                             </Text>
                           )}
                           <View style={styles.separator} />
-                          {/* Enlace para realizar la reserva */}
                           {item.link && (
                             <TouchableOpacity
                               style={styles.btnGetLink}
                               onPress={() => openOtherData(item.link)}
                             >
                               <Text
-                                style={{ color: "#ffffff", fontWeight: "bold" }}
+                                style={{
+                                  color: "#ffffff",
+                                  fontWeight: "bold",
+                                }}
                               >
                                 Reservar
                               </Text>
@@ -218,7 +223,6 @@ export default function HandleTourist() {
                 </ScrollView>
               )}
               <View style={styles.separator} />
-
               <TouchableOpacity style={styles.btnGetLink} onPress={toggleModal}>
                 <Text
                   style={{ fontSize: 18, fontWeight: "bold", color: "#ffffff" }}

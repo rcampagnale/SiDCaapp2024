@@ -17,6 +17,7 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  StatusBar,
 } from "react-native";
 import styles from "../../styles/courses/courses-styles";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -118,11 +119,17 @@ export default function CoursesTakenByMe() {
 
   return (
     <View style={{ height: "100%", width: "100%", backgroundColor: "#091d24" }}>
-      {/* Botón para volver a la pantalla anterior */}
-      <View style={styles.btnBackToOptions}>
+      <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
+        {/* Botón para volver a la pantalla anterior */}
+      <View
+        style={[
+          styles.btnBackToOptions,
+          { marginTop: StatusBar.currentHeight || 35 },
+        ]}
+      >
         <TouchableOpacity
           style={styles.btnBack}
-          onPress={() => navigation.goBack()} // Usamos navigation.goBack() para volver a la pantalla anterior
+          onPress={() => navigation.goBack()}
         >
           <AntDesign name="back" size={24} color="black" />
           <Text style={{ fontSize: 18, marginLeft: 5 }}>Volver</Text>

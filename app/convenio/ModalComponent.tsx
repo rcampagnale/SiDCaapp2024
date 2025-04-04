@@ -12,19 +12,36 @@ import {
 import styles from "../../styles/convenio/convenio-styles";
 
 // Este componente se encargará de mostrar los modales para las categorías
+interface ModalComponentProps {
+  isModalVisible: boolean;
+  toggleModal: () => void;
+  category: string;
+  loading: boolean;
+  data: Array<{
+    prioridad: number;
+    titulo?: string;
+    imagen?: string;
+    descripcion?: string;
+    link?: string;
+  }>;
+}
+
 export default function ModalComponent({
   isModalVisible,
   toggleModal,
   category,
   loading,
   data,
-}) {
+}: ModalComponentProps) {
   // Función para abrir enlaces externos
   const openOtherData = (urlMedia) => {
     Linking.openURL(urlMedia).catch((err) =>
       console.error("Error al abrir el enlace:", err)
     );
   };
+
+  // Ordenamos los datos por prioridad (de menor a mayor)
+  const sortedData = [...data].sort((a, b) => a.prioridad - b.prioridad);
 
   return (
     <Modal visible={isModalVisible} animationType="fade" transparent={true}>
@@ -39,8 +56,8 @@ export default function ModalComponent({
               keyboardShouldPersistTaps="handled"
               removeClippedSubviews={true}
             >
-              {data.length > 0 ? (
-                data.map((item, index) => (
+              {sortedData.length > 0 ? (
+                sortedData.map((item, index) => (
                   <View key={index} style={styles.modalItem}>
                     {/* Visualiza el título del item */}
                     <View
@@ -79,7 +96,7 @@ export default function ModalComponent({
                       )}
                       <View style={styles.separator} />
 
-                      {/* Enlace del item (Contacto o Reservar) */}
+                      {/* Enlace del item */}
                       {item.link && (
                         <TouchableOpacity
                           style={styles.btnCommon}
@@ -100,9 +117,9 @@ export default function ModalComponent({
               )}
             </ScrollView>
           )}
-          
+
           <View style={styles.btnsBox}>
-          <View style={styles.separator} />
+            <View style={styles.separator} />
             <TouchableOpacity style={styles.btnCommon} onPress={toggleModal}>
               <Text style={styles.commonBtnText}>Cerrar</Text>
             </TouchableOpacity>

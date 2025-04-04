@@ -124,7 +124,7 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
               <TouchableOpacity
                 style={styles.btnSeeInfo}
                 activeOpacity={1}
-                onPress={() => setActionType("see")}
+                onPress={() => router.push("/courses/courses-picked")}
               >
                 <Text style={{ color: "#ffffff", fontSize: 20 }}>Ver</Text>
               </TouchableOpacity>
