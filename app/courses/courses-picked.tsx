@@ -40,6 +40,9 @@ export default function CoursesTakenByMe() {
   const [checkData, setCheckData] = useState(0);
   const { userData } = useContext(SidcaContext);
   const analytics = getFirestore(firebaseconn);
+  const [loadingCertificadoId, setLoadingCertificadoId] = useState<
+    string | null
+  >(null);
 
   // Usamos useNavigation para la navegación
   const navigation = useNavigation();
@@ -48,60 +51,57 @@ export default function CoursesTakenByMe() {
     const seeInfo = async () => {
       try {
         if (!userData) return;
-  
+
         // Consulta para obtener los datos del usuario
         const userQuery = query(
           collection(analytics, "usuarios"),
           where("dni", "==", userData.dni)
         );
         const userSnapshot = await getDocs(userQuery);
-  
+
         if (!userSnapshot.empty) {
           const userDoc = userSnapshot.docs[0];
-  
+
           // Consulta para obtener los cursos del usuario con estado "terminado"
           const cursosQuery = query(
             collection(analytics, "usuarios", userDoc.id, "cursos"),
             where("estado", "==", "terminado")
           );
           const cursosSnapshot = await getDocs(cursosQuery);
-  
+
           // Mapeamos los documentos de Firebase para incluir los campos adicionales
-          const mappedCourses = await Promise.all(cursosSnapshot.docs.map(async (doc) => {
-            const courseData = doc.data();
-  
-         
-            // Ahora buscamos en la colección "certificados" usando el ID del curso
-            const certificadosQuery = query(
-              collection(analytics, "certificados"),
-              where("cursoId", "==", doc.id)  // Usamos el ID del curso
-            );
-            const certificadosSnapshot = await getDocs(certificadosQuery);
-  
-         
-            if (!certificadosSnapshot.empty) {
-              const certificadoData = certificadosSnapshot.docs[0].data();
-  
-               return {
-                id: doc.id,
-                titulo: courseData.titulo || "",
-                imagen: certificadoData.imagen || courseData.imagen || "",
-                aprobo: courseData.aprobo || false,
-               
-              };
-            } else {
-              // Si no se encuentra el certificado, se puede continuar con los datos de los cursos
-              return {
-                id: doc.id,
-                titulo: courseData.titulo || "",
-                imagen: courseData.imagen || "",
-                aprobo: courseData.aprobo || false,
-               
-              };
-            }
-          }));
-  
-           
+          const mappedCourses = await Promise.all(
+            cursosSnapshot.docs.map(async (doc) => {
+              const courseData = doc.data();
+
+              // Ahora buscamos en la colección "certificados" usando el ID del curso
+              const certificadosQuery = query(
+                collection(analytics, "certificados"),
+                where("cursoId", "==", doc.id) // Usamos el ID del curso
+              );
+              const certificadosSnapshot = await getDocs(certificadosQuery);
+
+              if (!certificadosSnapshot.empty) {
+                const certificadoData = certificadosSnapshot.docs[0].data();
+
+                return {
+                  id: doc.id,
+                  titulo: courseData.titulo || "",
+                  imagen: certificadoData.imagen || courseData.imagen || "",
+                  aprobo: courseData.aprobo || false,
+                };
+              } else {
+                // Si no se encuentra el certificado, se puede continuar con los datos de los cursos
+                return {
+                  id: doc.id,
+                  titulo: courseData.titulo || "",
+                  imagen: courseData.imagen || "",
+                  aprobo: courseData.aprobo || false,
+                };
+              }
+            })
+          );
+
           setCourseAproved(mappedCourses);
         } else {
           setCheckData(1);
@@ -112,10 +112,10 @@ export default function CoursesTakenByMe() {
         setLoading(false);
       }
     };
-  
+
     seeInfo();
   }, [userData]);
-  
+
   return (
     <View style={{ height: "100%", width: "100%", backgroundColor: "#091d24" }}>
       {/* Botón para volver a la pantalla anterior */}
@@ -167,56 +167,63 @@ export default function CoursesTakenByMe() {
                 {e.titulo} {/* Aquí accedes directamente al campo titulo */}
               </Text>
               <Image
-                source={{ uri: e.imagen }}  
+                source={{ uri: e.imagen }}
                 style={{ width: "80%", height: "70%" }}
                 resizeMode="contain"
               />
               <Text style={{ fontSize: 22, fontWeight: "bold" }}>
-                {e.aprobo === true
-                  ? "Curso Aprobado"
-                  : "Curso NO Aprobado"}
+                {e.aprobo === true ? "Curso Aprobado" : "Curso NO Aprobado"}
               </Text>
               {/* Botón para redirigir a la página de certificados */}
               {e.aprobo && (
-               <TouchableOpacity
-               style={styles.viewCertificateButton}
-               onPress={async () => {
-                 try {
-                   const certificadosQuery = query(
-                     collection(analytics, "certificados"),
-                     where("titulo", "==", e.titulo)
-                   );
-                   const snapshot = await getDocs(certificadosQuery);
-             
-                   if (!snapshot.empty) {
-                     router.push({
-                       pathname: "/courses/certificados",
-                       params: {
-                         courseName: e.titulo,
-                         userName: userData.nombre,
-                         userLastName: userData.apellido,
-                         userDni: userData.dni,
-                       },
-                     });
-                   } else {
-                     Alert.alert(
-                       "Certificado Digital no disponible",
-                       "Certificado disponible a partir del año 2025.",
-                       [{ text: "Aceptar" }],
-                       { cancelable: false }
-                     );
-                   }
-                 } catch (error) {
-                   console.error("Error al verificar certificado:", error);
-                   Alert.alert("Error", "Ocurrió un problema al buscar el certificado.");
-                 }
-               }}
-             >
-               <Text style={{ color: "#ffffff", fontSize: 18 }}>
-                 Ver Certificado
-               </Text>
-             </TouchableOpacity>
-             
+                <TouchableOpacity
+                  style={styles.viewCertificateButton}
+                  onPress={async () => {
+                    setLoadingCertificadoId(e.id); // Activamos loading para este curso
+                    try {
+                      const certificadosQuery = query(
+                        collection(analytics, "certificados"),
+                        where("titulo", "==", e.titulo)
+                      );
+                      const snapshot = await getDocs(certificadosQuery);
+
+                      if (!snapshot.empty) {
+                        router.push({
+                          pathname: "/courses/certificados",
+                          params: {
+                            courseName: e.titulo,
+                            userName: userData.nombre,
+                            userLastName: userData.apellido,
+                            userDni: userData.dni,
+                          },
+                        });
+                      } else {
+                        Alert.alert(
+                          "Certificado Digital no disponible",
+                          "Certificado disponible a partir del año 2025.",
+                          [{ text: "Aceptar" }],
+                          { cancelable: false }
+                        );
+                      }
+                    } catch (error) {
+                      console.error("Error al verificar certificado:", error);
+                      Alert.alert(
+                        "Error",
+                        "Ocurrió un problema al buscar el certificado."
+                      );
+                    } finally {
+                      setLoadingCertificadoId(null); // Terminó la carga
+                    }
+                  }}
+                >
+                  {loadingCertificadoId === e.id ? (
+                    <ActivityIndicator size={30} color="#ffffff" />
+                  ) : (
+                    <Text style={{ color: "#ffffff", fontSize: 18 }}>
+                      Ver Certificado
+                    </Text>
+                  )}
+                </TouchableOpacity>
               )}
             </View>
           ))
