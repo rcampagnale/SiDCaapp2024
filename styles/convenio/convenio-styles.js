@@ -152,7 +152,7 @@ const convenioStyles = StyleSheet.create({
   },
 
   separator: {
-    height: 1,
+    height: 2,
     width: "100%",
     backgroundColor: "black",
     marginVertical: 5,

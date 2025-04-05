@@ -101,4 +101,10 @@ export default coursesStyles = StyleSheet.create({
     backgroundColor: "black",
     marginVertical: 5,
   },
+  separator1: {
+    height: 2,
+    width: "95%",
+    backgroundColor: "black",
+    marginVertical: 5,
+  },
 });

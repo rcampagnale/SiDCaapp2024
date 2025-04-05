@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from "react";
-import { useNavigation } from "@react-navigation/native"; // Usamos useNavigation para la navegación
-import { SidcaContext } from "../_layout"; // Importamos el contexto para obtener los datos del usuario
+import { useNavigation } from "@react-navigation/native";
+import { SidcaContext } from "../_layout";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import {
   getFirestore,
@@ -45,7 +45,6 @@ export default function CoursesTakenByMe() {
     string | null
   >(null);
 
-  // Usamos useNavigation para la navegación
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -53,7 +52,6 @@ export default function CoursesTakenByMe() {
       try {
         if (!userData) return;
 
-        // Consulta para obtener los datos del usuario
         const userQuery = query(
           collection(analytics, "usuarios"),
           where("dni", "==", userData.dni)
@@ -62,23 +60,18 @@ export default function CoursesTakenByMe() {
 
         if (!userSnapshot.empty) {
           const userDoc = userSnapshot.docs[0];
-
-          // Consulta para obtener los cursos del usuario con estado "terminado"
           const cursosQuery = query(
             collection(analytics, "usuarios", userDoc.id, "cursos"),
             where("estado", "==", "terminado")
           );
           const cursosSnapshot = await getDocs(cursosQuery);
 
-          // Mapeamos los documentos de Firebase para incluir los campos adicionales
           const mappedCourses = await Promise.all(
             cursosSnapshot.docs.map(async (doc) => {
               const courseData = doc.data();
-
-              // Ahora buscamos en la colección "certificados" usando el ID del curso
               const certificadosQuery = query(
                 collection(analytics, "certificados"),
-                where("cursoId", "==", doc.id) // Usamos el ID del curso
+                where("cursoId", "==", doc.id)
               );
               const certificadosSnapshot = await getDocs(certificadosQuery);
 
@@ -92,7 +85,6 @@ export default function CoursesTakenByMe() {
                   aprobo: courseData.aprobo || false,
                 };
               } else {
-                // Si no se encuentra el certificado, se puede continuar con los datos de los cursos
                 return {
                   id: doc.id,
                   titulo: courseData.titulo || "",
@@ -120,7 +112,6 @@ export default function CoursesTakenByMe() {
   return (
     <View style={{ height: "100%", width: "100%", backgroundColor: "#091d24" }}>
       <StatusBar backgroundColor="#ffffff" barStyle="dark-content" />
-        {/* Botón para volver a la pantalla anterior */}
       <View
         style={[
           styles.btnBackToOptions,
@@ -160,6 +151,18 @@ export default function CoursesTakenByMe() {
       >
         {loading ? (
           <ActivityIndicator size="large" color="#ffffff" />
+        ) : courseAproved.length === 0 ? (
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: 24,
+              fontWeight: "bold",
+              textAlign: "center",
+              marginTop: 45,
+            }}
+          >
+            No tienes Cursos Aprobados.
+          </Text>
         ) : (
           courseAproved.map((e, i) => (
             <View style={styles.coursesDoneBox} key={i}>
@@ -172,7 +175,7 @@ export default function CoursesTakenByMe() {
                   paddingBottom: 5,
                 }}
               >
-                {e.titulo} {/* Aquí accedes directamente al campo titulo */}
+                {e.titulo}
               </Text>
               <Image
                 source={{ uri: e.imagen }}
@@ -182,12 +185,13 @@ export default function CoursesTakenByMe() {
               <Text style={{ fontSize: 22, fontWeight: "bold" }}>
                 {e.aprobo === true ? "Curso Aprobado" : "Curso NO Aprobado"}
               </Text>
-              {/* Botón para redirigir a la página de certificados */}
+              <View style={styles.separator1} />
+
               {e.aprobo && (
                 <TouchableOpacity
                   style={styles.viewCertificateButton}
                   onPress={async () => {
-                    setLoadingCertificadoId(e.id); // Activamos loading para este curso
+                    setLoadingCertificadoId(e.id);
                     try {
                       const certificadosQuery = query(
                         collection(analytics, "certificados"),
@@ -208,7 +212,7 @@ export default function CoursesTakenByMe() {
                       } else {
                         Alert.alert(
                           "Certificado Digital",
-                          "El Certificado Digital no esta disponible por el momento.",
+                          "El Certificado Digital no está disponible por el momento.",
                           [{ text: "Aceptar" }],
                           { cancelable: false }
                         );
@@ -220,7 +224,7 @@ export default function CoursesTakenByMe() {
                         "Ocurrió un problema al buscar el certificado."
                       );
                     } finally {
-                      setLoadingCertificadoId(null); // Terminó la carga
+                      setLoadingCertificadoId(null);
                     }
                   }}
                 >

@@ -126,7 +126,7 @@ export default function Certificados() {
       {/* Nombre y DNI */}
       <View style={{ position: "absolute", left: "27.8%", top: 557 }}>
         <Text style={styles.tituloUsuario}>
-          {userLastName}, {userName}
+          {userLastName} {userName}
         </Text>
       </View>
       <View style={{ position: "absolute", left: "27.5%", top: 806 }}>

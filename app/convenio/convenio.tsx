@@ -48,41 +48,37 @@ export default function HandleCampusTeachers() {
     setIsModalVisible2(!isModalVisible2);
   };
 
-  useEffect(() => {
-    const getDataPredio = async () => {
-      try {
-        setLoading1(true);
-        const filteredData = query(data, where("categoria", "==", "predio"));
-        const res = await getDocs(filteredData);
-        const dataList = res.docs.map((doc) => doc.data());
-        setDataPredio(dataList);
-      } catch (error) {
-        console.error("Error al cargar datos de predio:", error);
-        alert(`Error: ${error}`);
-      } finally {
-        setLoading1(false);
-      }
-    };
-    getDataPredio();
-  }, []);
+  const handleOpenModal1 = async () => {
+    setLoading1(true);
+    setIsModalVisible1(true);
+    try {
+      const filteredData = query(data, where("categoria", "==", "predio"));
+      const res = await getDocs(filteredData);
+      const dataList = res.docs.map((doc) => doc.data());
+      setDataPredio(dataList);
+    } catch (error) {
+      console.error("Error al cargar datos de predio:", error);
+      alert(`Error: ${error}`);
+    } finally {
+      setLoading1(false);
+    }
+  };
 
-  useEffect(() => {
-    const getDataCasa = async () => {
-      try {
-        setLoading2(true);
-        const filteredData = query(data, where("categoria", "==", "casa"));
-        const res = await getDocs(filteredData);
-        const dataList = res.docs.map((doc) => doc.data());
-        setDataCasa(dataList);
-      } catch (error) {
-        console.error("Error al cargar datos de casa:", error);
-        alert(`Error: ${error}`);
-      } finally {
-        setLoading2(false);
-      }
-    };
-    getDataCasa();
-  }, []);
+  const handleOpenModal2 = async () => {
+    setLoading2(true);
+    setIsModalVisible2(true);
+    try {
+      const filteredData = query(data, where("categoria", "==", "casa"));
+      const res = await getDocs(filteredData);
+      const dataList = res.docs.map((doc) => doc.data());
+      setDataCasa(dataList);
+    } catch (error) {
+      console.error("Error al cargar datos de casa:", error);
+      alert(`Error: ${error}`);
+    } finally {
+      setLoading2(false);
+    }
+  };
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
@@ -140,18 +136,29 @@ export default function HandleCampusTeachers() {
             />
           </ScrollView>
         </View>
-        <View style={{width:'100%',height:'20%',display:'flex',justifyContent:'space-around',alignItems:'center',flexDirection:'column',marginBottom:10}}>
+        <View
+          style={{
+            width: "100%",
+            height: "20%",
+            display: "flex",
+            justifyContent: "space-around",
+            alignItems: "center",
+            flexDirection: "column",
+            marginBottom: 10,
+          }}
+        >
           <TouchableOpacity
             style={styles.btnNews}
             activeOpacity={1}
-            onPress={toggleModal1}
+            onPress={handleOpenModal1}
           >
             <Text style={styles.btnText1}>Lista de Comercios Adheridos</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.btnNews1}
-            activeOpacity={2}
-            onPress={toggleModal2}
+            activeOpacity={1}
+            onPress={handleOpenModal2}
           >
             <Text style={styles.btnText2}>
               Convenio Interprovincial Hoteleros
@@ -166,8 +173,6 @@ export default function HandleCampusTeachers() {
           data={dataPredio}
           title="Lista de Comercios Adheridos"
         />
-
-        
 
         <ModalComponent
           isModalVisible={isModalVisible2}
