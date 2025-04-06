@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Keyboard, // Importamos Keyboard
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SidcaContext } from "../_layout";
@@ -161,6 +162,9 @@ export default function ChatbotModal() {
       setMessages((prev) => [...prev, botResponse]);
       setLoading(false);
     }
+
+    // Ocultar el teclado automáticamente después de enviar la consulta
+    Keyboard.dismiss();
   };
 
   const buscarPorArticulo = (consulta: string, texto: string) => {
@@ -343,4 +347,6 @@ export default function ChatbotModal() {
     </>
   );
 }
+
+
 
