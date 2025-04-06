@@ -10,6 +10,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SidcaContext } from "../_layout";
@@ -31,6 +32,7 @@ export default function ChatbotModal() {
   const [contenidoLicencia, setContenidoLicencia] = useState("");
   const [contenidoGeneral, setContenidoGeneral] = useState("");
   const [modoConsulta, setModoConsulta] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const welcomeMessage = {
     id: "bienvenida",
@@ -98,6 +100,7 @@ export default function ChatbotModal() {
 
     setMessages((prev) => [...prev, newUserMessage]);
     setInputText("");
+    setLoading(true);
 
     const inputLower = text.toLowerCase();
 
@@ -111,6 +114,7 @@ export default function ChatbotModal() {
         tipo: "bot",
       };
       setMessages((prev) => [...prev, botResponse]);
+      setLoading(false);
     } else if (mostrarOpciones && modoConsulta === "") {
       if (inputLower.includes("licencia")) {
         setModoConsulta("licencia");
@@ -134,6 +138,7 @@ export default function ChatbotModal() {
           tipo: "bot",
         }]);
       }
+      setLoading(false);
     } else if (modoConsulta) {
       let textoUnificado = "";
       if (modoConsulta === "licencia") {
@@ -154,6 +159,7 @@ export default function ChatbotModal() {
       };
 
       setMessages((prev) => [...prev, botResponse]);
+      setLoading(false);
     }
   };
 
@@ -307,6 +313,10 @@ export default function ChatbotModal() {
                 );
               }}
             />
+
+            {loading && (
+              <ActivityIndicator size="small" color="#007AFF" style={{ marginVertical: 10 }} />
+            )}
 
             {renderSelector()}
             {renderOpcionesConsulta()}
