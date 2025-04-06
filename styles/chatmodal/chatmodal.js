@@ -23,8 +23,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffd59a",
     borderTopRightRadius: 15,
     borderTopLeftRadius: 15,
-    padding: 20,
-    height: "auto",
+    padding: 15,
+    height: 830,
   },
   header: {
     fontSize: 20,
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   closeButton: {
-    marginTop: 10,
+    marginTop: 20,
     backgroundColor: "#005CFE",
     padding: 10,
     borderRadius: 5,
@@ -67,14 +67,14 @@ botRow: {
 },
 
 avatar: {
-  width: 42,
-  height: 42,
+  width: 32,
+  height: 32,
   borderRadius: 16,
   marginHorizontal: 5,
 },
 
 messageBubble: {
-  maxWidth: '70%',
+  maxWidth: '90%',
   padding: 10,
   borderRadius: 15,
 },
@@ -105,9 +105,9 @@ input: {
   flex: 1,
   borderWidth: 1,
   borderColor: "#ccc",
-  borderRadius: 20,
+  borderRadius: 10,
   paddingHorizontal: 15,
-  paddingVertical: 8,
+  paddingVertical: 10,
   fontSize: 16,
   backgroundColor: "#fff",
   marginRight: 10,
@@ -124,6 +124,44 @@ sendButtonText: {
   color: "#fff",
   fontSize: 16,
 },
+selectorContainer: {
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 10,
+  marginTop: 15,
+  marginBottom: 10,
+},
+
+selectorButton: {
+  backgroundColor: "#f2f2f2",
+  paddingVertical: 14,
+  paddingHorizontal: 30,
+  borderRadius: 12,
+  width: "90%",
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+  borderWidth: 1,
+  borderColor: "#ccc",
+},
+
+selectorButtonText: {
+  fontSize: 17,
+  fontWeight: "600",
+  color: "#333",
+},
+iconSendButton: {
+  backgroundColor: "#005CFE",
+  padding: 10,
+  borderRadius: 10,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+
 
 
 });

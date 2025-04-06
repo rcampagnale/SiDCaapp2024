@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -11,13 +11,14 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { SidcaContext } from "../_layout";
 import styles from "@/styles/chatmodal/chatmodal";
 
 export default function ChatbotModal() {
   const { userData } = useContext(SidcaContext);
-
   const fullName =
     userData?.apellido && userData?.nombre
       ? `${userData.apellido}, ${userData.nombre}`
@@ -26,37 +27,234 @@ export default function ChatbotModal() {
   const [visible, setVisible] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState("");
+  const [selectorVisible, setSelectorVisible] = useState(true);
+  const [mostrarOpciones, setMostrarOpciones] = useState(false);
+  const [contenidoProvincial, setContenidoProvincial] = useState("");
+  const [contenidoLicencia, setContenidoLicencia] = useState("");
+  const [modoConsulta, setModoConsulta] = useState("");
+
+  const db = getFirestore(firebaseconn);
 
   const welcomeMessage = {
     id: "bienvenida",
-    texto: `¡Hola ${fullName}! Soy el asistente virtual de SiDCa. Podés consultarme sobre capacitaciones, credenciales, horarios, o cualquier duda que tengas 📚💬`,
+    texto: `¡Hola ${fullName}! Soy el asistente virtual de SiDCa. Podés consultarme sobre capacitaciones, Beneficios, Estatuto Docente, Licencia o cualquier duda que tengas 📚💬`,
+    tipo: "bot",
+  };
+
+  const preguntaSistemaMessage = {
+    id: "pregunta-sistema",
+    texto: "Antes de continuar, por favor seleccioná a qué sistema educativo perteneces:",
     tipo: "bot",
   };
 
   const toggleModal = () => {
-    if (visible) {
-      // Al cerrar, reiniciar el estado del chat
-      setMessages([welcomeMessage]);
+    if (!visible) {
+      // Mostrar el modal primero
+      setVisible(true);
+  
+      // Inicializar mensajes y estados
+      setMessages([welcomeMessage, preguntaSistemaMessage]);
+      setSelectorVisible(true);
+      setMostrarOpciones(false);
+      setModoConsulta("");
       setInputText("");
+  
+      // Cargar contenido después
+      setTimeout(async () => {
+        try {
+          const ref = doc(db, "Chatboot", "Provincial");
+          const snap = await getDoc(ref);
+          if (snap.exists()) {
+            const data = snap.data();
+            const estatutoURL = data.Estatuto_Docente;
+            const licenciaURL = data.Licencia_Docente;
+  
+            if (estatutoURL) {
+              const res = await fetch(estatutoURL);
+              const text = await res.text();
+              setContenidoProvincial(text);
+            }
+  
+            if (licenciaURL) {
+              const res = await fetch(licenciaURL);
+              const text = await res.text();
+              setContenidoLicencia(text);
+            }
+          }
+        } catch (error) {
+          console.error("❌ Error al cargar los archivos:", error);
+        }
+      }, 200); // espera mínima para que el modal se abra primero
     } else {
-      // Al abrir, iniciar con mensaje de bienvenida
-      setMessages([welcomeMessage]);
+      // Si se cierra el modal, limpiar estado
+      setVisible(false);
+      setMessages([]);
+      setInputText("");
+      setSelectorVisible(true);
+      setMostrarOpciones(false);
+      setModoConsulta("");
     }
-
-    setVisible(!visible);
   };
 
-  const handleSendMessage = () => {
-    if (inputText.trim() === "") return;
+  const volverAlMenuPrincipal = () => {
+    setMessages([welcomeMessage, preguntaSistemaMessage]);
+    setSelectorVisible(true);
+    setMostrarOpciones(false);
+    setModoConsulta("");
+  };
 
-    const newMessage = {
+  const handleSendMessage = async (text: string) => {
+    if (text.trim() === "") return;
+
+    const newUserMessage = {
       id: Date.now().toString(),
-      texto: inputText,
+      texto: text,
       tipo: "usuario",
     };
 
-    setMessages((prev) => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newUserMessage]);
     setInputText("");
+
+    const inputLower = text.toLowerCase();
+
+    if (inputLower.includes("provincial") || inputLower.includes("municipal")) {
+      setSelectorVisible(false);
+      setMostrarOpciones(true);
+
+      const botResponse = {
+        id: `respuesta-opciones`,
+        texto: `Seleccioná una opción para continuar:`,
+        tipo: "bot",
+      };
+      setMessages((prev) => [...prev, botResponse]);
+    } else if (mostrarOpciones && modoConsulta === "") {
+      if (inputLower.includes("licencia")) {
+        setModoConsulta("licencia");
+        setMessages((prev) => [...prev, {
+          id: "modo-licencia",
+          texto: "Has seleccionado Régimen de Licencia. Ahora podés escribir tu consulta específica.",
+          tipo: "bot",
+        }]);
+      } else if (inputLower.includes("estatuto")) {
+        setModoConsulta("estatuto");
+        setMessages((prev) => [...prev, {
+          id: "modo-estatuto",
+          texto: "Has seleccionado Estatuto del Docente. Ahora podés escribir tu consulta específica.",
+          tipo: "bot",
+        }]);
+      } else if (inputLower.includes("consulta")) {
+        setModoConsulta("general");
+        setMessages((prev) => [...prev, {
+          id: "modo-general",
+          texto: "Has seleccionado Consulta General. Ahora podés escribir tu consulta específica.",
+          tipo: "bot",
+        }]);
+      }
+    } else if (modoConsulta) {
+      let textoUnificado = "";
+      if (modoConsulta === "licencia") {
+        textoUnificado = contenidoLicencia;
+      } else if (modoConsulta === "estatuto") {
+        textoUnificado = contenidoProvincial;
+      } else {
+        textoUnificado = `${contenidoProvincial}\n\n${contenidoLicencia}`;
+      }
+
+      let respuesta = buscarPorArticulo(text, textoUnificado);
+      if (!respuesta) respuesta = buscarEnTexto(text, textoUnificado);
+
+      const botResponse = {
+        id: `respuesta-opcion-${Date.now()}`,
+        texto: respuesta || "No encontré una respuesta clara para tu consulta.",
+        tipo: "bot",
+      };
+
+      setMessages((prev) => [...prev, botResponse]);
+    }
+  };
+
+  const buscarPorArticulo = (consulta: string, texto: string) => {
+    const match = consulta.match(/art[íi]culo\s*(\d{1,3})/i);
+    if (!match) return null;
+
+    const numero = match[1];
+    const regex = new RegExp(`art[íi]culo\\s*${numero}\\D`, "i");
+
+    const secciones = texto.split(/(?=art[íi]culo\s*\d{1,3})/i);
+    for (const s of secciones) {
+      if (regex.test(s)) return s.trim();
+    }
+
+    return null;
+  };
+
+  const buscarEnTexto = (consulta: string, texto: string) => {
+    const consultaLimpia = consulta.toLowerCase().trim();
+    const lineas = texto.split("\n");
+
+    const coincidenciasExactas = lineas.filter((linea) =>
+      linea.toLowerCase().includes(consultaLimpia)
+    );
+    if (coincidenciasExactas.length > 0) {
+      return coincidenciasExactas.slice(0, 3).join("\n");
+    }
+
+    const palabrasClave = consultaLimpia.split(" ");
+    const coincidenciasParciales = lineas.filter((linea) =>
+      palabrasClave.every((palabra) => linea.toLowerCase().includes(palabra))
+    );
+
+    if (coincidenciasParciales.length > 0) {
+      return coincidenciasParciales.slice(0, 3).join("\n");
+    }
+
+    return null;
+  };
+
+  const renderSelector = () => {
+    if (!selectorVisible) return null;
+    return (
+      <View style={styles.selectorContainer}>
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => handleSendMessage("Provincial")}
+        >
+          <Text style={styles.selectorButtonText}>Provincial</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => handleSendMessage("Municipal")}
+        >
+          <Text style={styles.selectorButtonText}>Municipal</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const renderOpcionesConsulta = () => {
+    if (!mostrarOpciones || modoConsulta) return null;
+    return (
+      <View style={styles.selectorContainer}>
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => handleSendMessage("Régimen de Licencia")}
+        >
+          <Text style={styles.selectorButtonText}>Régimen de Licencia</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => handleSendMessage("Estatuto del Docente")}
+        >
+          <Text style={styles.selectorButtonText}>Estatuto del Docente</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => handleSendMessage("Consulta General")}
+        >
+          <Text style={styles.selectorButtonText}>Consulta General</Text>
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
@@ -76,7 +274,7 @@ export default function ChatbotModal() {
         >
           <View style={styles.modalContent}>
             <Text style={styles.header}>
-              {`¡Hola ${fullName}! Bienvenido al Asistente Virtual SiDCa 👋`}
+              {`👋 Bienvenido al Asistente Virtual SiDCa 👋`}
             </Text>
 
             <FlatList
@@ -103,12 +301,14 @@ export default function ChatbotModal() {
                       item.tipo === "usuario" ? styles.userRow : styles.botRow,
                     ]}
                   >
-                    {item.tipo === "bot" && (
-                      <Image
-                        source={require("@/assets/logos/Chatboot4.png")}
-                        style={styles.avatar}
-                      />
-                    )}
+                    <Image
+                      source={
+                        item.tipo === "usuario"
+                          ? require("@/assets/logos/chatdocente.png")
+                          : require("@/assets/logos/Chatboot4.png")
+                      }
+                      style={styles.avatar}
+                    />
                     <View
                       style={[
                         styles.messageBubble,
@@ -119,29 +319,39 @@ export default function ChatbotModal() {
                     >
                       <Text style={styles.messageText}>{item.texto}</Text>
                     </View>
-                    {item.tipo === "usuario" && (
-                      <Image
-                        source={require("@/assets/logos/chatdocente.png")}
-                        style={styles.avatar}
-                      />
-                    )}
                   </Animated.View>
                 );
               }}
             />
 
-            {/* Campo de entrada y botón de enviar */}
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Escribí tu consulta..."
-                value={inputText}
-                onChangeText={setInputText}
-              />
-              <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                <Text style={styles.sendButtonText}>Enviar</Text>
+            {renderSelector()}
+            {renderOpcionesConsulta()}
+
+            {!selectorVisible && (
+              <TouchableOpacity
+                style={{ alignSelf: "flex-end", marginRight: 8, marginBottom: 1 }}
+                onPress={volverAlMenuPrincipal}
+              >
+                <Ionicons name="home" size={26} color="#007AFF" />
               </TouchableOpacity>
-            </View>
+            )}
+
+            {(modoConsulta !== "" || (!selectorVisible && !mostrarOpciones)) && (
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Escribí tu consulta..."
+                  value={inputText}
+                  onChangeText={setInputText}
+                />
+                <TouchableOpacity
+                  style={styles.iconSendButton}
+                  onPress={() => handleSendMessage(inputText)}
+                >
+                  <Ionicons name="send" size={22} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            )}
 
             <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
               <Text style={styles.closeText}>Cerrar</Text>
@@ -152,4 +362,3 @@ export default function ChatbotModal() {
     </>
   );
 }
-
