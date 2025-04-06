@@ -12,8 +12,6 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { firebaseconn } from "@/constants/FirebaseConn";
 import { SidcaContext } from "../_layout";
 import styles from "@/styles/chatmodal/chatmodal";
 
@@ -31,9 +29,8 @@ export default function ChatbotModal() {
   const [mostrarOpciones, setMostrarOpciones] = useState(false);
   const [contenidoProvincial, setContenidoProvincial] = useState("");
   const [contenidoLicencia, setContenidoLicencia] = useState("");
+  const [contenidoGeneral, setContenidoGeneral] = useState("");
   const [modoConsulta, setModoConsulta] = useState("");
-
-  const db = getFirestore(firebaseconn);
 
   const welcomeMessage = {
     id: "bienvenida",
@@ -49,44 +46,31 @@ export default function ChatbotModal() {
 
   const toggleModal = () => {
     if (!visible) {
-      // Mostrar el modal primero
       setVisible(true);
-  
-      // Inicializar mensajes y estados
       setMessages([welcomeMessage, preguntaSistemaMessage]);
       setSelectorVisible(true);
       setMostrarOpciones(false);
       setModoConsulta("");
       setInputText("");
-  
-      // Cargar contenido después
+
       setTimeout(async () => {
         try {
-          const ref = doc(db, "Chatboot", "Provincial");
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            const data = snap.data();
-            const estatutoURL = data.Estatuto_Docente;
-            const licenciaURL = data.Licencia_Docente;
-  
-            if (estatutoURL) {
-              const res = await fetch(estatutoURL);
-              const text = await res.text();
-              setContenidoProvincial(text);
-            }
-  
-            if (licenciaURL) {
-              const res = await fetch(licenciaURL);
-              const text = await res.text();
-              setContenidoLicencia(text);
-            }
-          }
+          const estatutoRes = await fetch("https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/texto_provincial_para_firestore.txt");
+          const estatutoText = await estatutoRes.text();
+          setContenidoProvincial(estatutoText);
+
+          const licenciaRes = await fetch("https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/REGIMEN_LICENCIAS_DOCENTES_COMPLETO.txt");
+          const licenciaText = await licenciaRes.text();
+          setContenidoLicencia(licenciaText);
+
+          const generalRes = await fetch("https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/consultas%20generales.txt");
+          const generalText = await generalRes.text();
+          setContenidoGeneral(generalText);
         } catch (error) {
-          console.error("❌ Error al cargar los archivos:", error);
+          console.error("❌ Error al cargar los archivos desde GitHub:", error);
         }
-      }, 200); // espera mínima para que el modal se abra primero
+      }, 200);
     } else {
-      // Si se cierra el modal, limpiar estado
       setVisible(false);
       setMessages([]);
       setInputText("");
@@ -157,7 +141,7 @@ export default function ChatbotModal() {
       } else if (modoConsulta === "estatuto") {
         textoUnificado = contenidoProvincial;
       } else {
-        textoUnificado = `${contenidoProvincial}\n\n${contenidoLicencia}`;
+        textoUnificado = contenidoGeneral;
       }
 
       let respuesta = buscarPorArticulo(text, textoUnificado);
@@ -196,7 +180,7 @@ export default function ChatbotModal() {
       linea.toLowerCase().includes(consultaLimpia)
     );
     if (coincidenciasExactas.length > 0) {
-      return coincidenciasExactas.slice(0, 3).join("\n");
+      return coincidenciasExactas.slice(0, 5).join("\n");
     }
 
     const palabrasClave = consultaLimpia.split(" ");
@@ -205,7 +189,7 @@ export default function ChatbotModal() {
     );
 
     if (coincidenciasParciales.length > 0) {
-      return coincidenciasParciales.slice(0, 3).join("\n");
+      return coincidenciasParciales.slice(0, 5).join("\n");
     }
 
     return null;
