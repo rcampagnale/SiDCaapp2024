@@ -271,22 +271,9 @@ export default function ChatbotModal() {
               data={messages}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => {
-                const animatedValue = new Animated.Value(0);
-                Animated.timing(animatedValue, {
-                  toValue: 1,
-                  duration: 300,
-                  useNativeDriver: true,
-                }).start();
-
-                const animatedStyle = {
-                  opacity: animatedValue,
-                  transform: [{ scale: animatedValue }],
-                };
-
                 return (
-                  <Animated.View
+                  <View
                     style={[
-                      animatedStyle,
                       styles.messageRow,
                       item.tipo === "usuario" ? styles.userRow : styles.botRow,
                     ]}
@@ -309,7 +296,7 @@ export default function ChatbotModal() {
                     >
                       <Text style={styles.messageText}>{item.texto}</Text>
                     </View>
-                  </Animated.View>
+                  </View>
                 );
               }}
             />
@@ -356,3 +343,4 @@ export default function ChatbotModal() {
     </>
   );
 }
+
