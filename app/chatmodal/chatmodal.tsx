@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,16 +6,16 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  Animated,
   TextInput,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Keyboard, // Importamos Keyboard
+  Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SidcaContext } from "../_layout";
 import styles from "@/styles/chatmodal/chatmodal";
+import Fuse from "fuse.js";
 
 export default function ChatbotModal() {
   const { userData } = useContext(SidcaContext);
@@ -29,9 +29,9 @@ export default function ChatbotModal() {
   const [inputText, setInputText] = useState("");
   const [selectorVisible, setSelectorVisible] = useState(true);
   const [mostrarOpciones, setMostrarOpciones] = useState(false);
-  const [contenidoProvincial, setContenidoProvincial] = useState("");
-  const [contenidoLicencia, setContenidoLicencia] = useState("");
-  const [contenidoGeneral, setContenidoGeneral] = useState("");
+  const [contenidoProvincial, setContenidoProvincial] = useState([]);
+  const [contenidoLicencia, setContenidoLicencia] = useState([]);
+  const [contenidoGeneral, setContenidoGeneral] = useState([]);
   const [modoConsulta, setModoConsulta] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -43,8 +43,22 @@ export default function ChatbotModal() {
 
   const preguntaSistemaMessage = {
     id: "pregunta-sistema",
-    texto: "Antes de continuar, por favor seleccioná a qué sistema educativo perteneces:",
+    texto:
+      "Antes de continuar, por favor seleccioná a qué sistema educativo perteneces:",
     tipo: "bot",
+  };
+
+  const buscarInteligente = (consulta, datos) => {
+    const fuse = new Fuse(datos, {
+      keys: ["contenido", "pregunta", "respuesta"],
+      threshold: 0.3,
+      minMatchCharLength: 3,
+      includeScore: true,
+      ignoreLocation: true,
+    });
+
+    const resultados = fuse.search(consulta);
+    return resultados.slice(0, 3).map((r) => r.item);
   };
 
   const toggleModal = () => {
@@ -58,17 +72,23 @@ export default function ChatbotModal() {
 
       setTimeout(async () => {
         try {
-          const estatutoRes = await fetch("https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/texto_provincial_para_firestore.txt");
-          const estatutoText = await estatutoRes.text();
-          setContenidoProvincial(estatutoText);
+          const estatutoRes = await fetch(
+            "https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/texto_provincial_para_firestore.json"
+          );
+          const estatutoJson = await estatutoRes.json();
+          setContenidoProvincial(estatutoJson);
 
-          const licenciaRes = await fetch("https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/REGIMEN_LICENCIAS_DOCENTES_COMPLETO.txt");
-          const licenciaText = await licenciaRes.text();
-          setContenidoLicencia(licenciaText);
+          const licenciaRes = await fetch(
+            "https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/regimen_licencias_docentes.json"
+          );
+          const licenciaJson = await licenciaRes.json();
+          setContenidoLicencia(licenciaJson);
 
-          const generalRes = await fetch("https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/consultas%20generales.txt");
-          const generalText = await generalRes.text();
-          setContenidoGeneral(generalText);
+          const generalRes = await fetch(
+            "https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/consultas_generales.json"
+          );
+          const generalJson = await generalRes.json();
+          setContenidoGeneral(generalJson);
         } catch (error) {
           console.error("❌ Error al cargar los archivos desde GitHub:", error);
         }
@@ -81,13 +101,6 @@ export default function ChatbotModal() {
       setMostrarOpciones(false);
       setModoConsulta("");
     }
-  };
-
-  const volverAlMenuPrincipal = () => {
-    setMessages([welcomeMessage, preguntaSistemaMessage]);
-    setSelectorVisible(true);
-    setMostrarOpciones(false);
-    setModoConsulta("");
   };
 
   const handleSendMessage = async (text: string) => {
@@ -119,39 +132,52 @@ export default function ChatbotModal() {
     } else if (mostrarOpciones && modoConsulta === "") {
       if (inputLower.includes("licencia")) {
         setModoConsulta("licencia");
-        setMessages((prev) => [...prev, {
-          id: "modo-licencia",
-          texto: "Has seleccionado Régimen de Licencia. Ahora podés escribir tu consulta específica.",
-          tipo: "bot",
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: "modo-licencia",
+            texto:
+              "Has seleccionado Régimen de Licencia. Ahora podés escribir tu consulta específica.",
+            tipo: "bot",
+          },
+        ]);
       } else if (inputLower.includes("estatuto")) {
         setModoConsulta("estatuto");
-        setMessages((prev) => [...prev, {
-          id: "modo-estatuto",
-          texto: "Has seleccionado Estatuto del Docente. Ahora podés escribir tu consulta específica.",
-          tipo: "bot",
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: "modo-estatuto",
+            texto:
+              "Has seleccionado Estatuto del Docente. Ahora podés escribir tu consulta específica.",
+            tipo: "bot",
+          },
+        ]);
       } else if (inputLower.includes("consulta")) {
         setModoConsulta("general");
-        setMessages((prev) => [...prev, {
-          id: "modo-general",
-          texto: "Has seleccionado Consulta General. Ahora podés escribir tu consulta específica.",
-          tipo: "bot",
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: "modo-general",
+            texto:
+              "Has seleccionado Consulta General. Ahora podés escribir tu consulta específica.",
+            tipo: "bot",
+          },
+        ]);
       }
       setLoading(false);
     } else if (modoConsulta) {
-      let textoUnificado = "";
+      let resultados = [];
       if (modoConsulta === "licencia") {
-        textoUnificado = contenidoLicencia;
+        resultados = buscarInteligente(text, contenidoLicencia);
       } else if (modoConsulta === "estatuto") {
-        textoUnificado = contenidoProvincial;
+        resultados = buscarInteligente(text, contenidoProvincial);
       } else {
-        textoUnificado = contenidoGeneral;
+        resultados = buscarInteligente(text, contenidoGeneral);
       }
 
-      let respuesta = buscarPorArticulo(text, textoUnificado);
-      if (!respuesta) respuesta = buscarEnTexto(text, textoUnificado);
+      const respuesta = resultados
+        .map((r) => `🟦 ${r.contenido}`)
+        .join("\n\n─────────────────────\n\n");
 
       const botResponse = {
         id: `respuesta-opcion-${Date.now()}`,
@@ -163,7 +189,6 @@ export default function ChatbotModal() {
       setLoading(false);
     }
 
-    // Ocultar el teclado automáticamente después de enviar la consulta
     Keyboard.dismiss();
   };
 
@@ -251,6 +276,15 @@ export default function ChatbotModal() {
     );
   };
 
+  function volverAlMenuPrincipal(): void {
+    setSelectorVisible(true);
+    setMostrarOpciones(false);
+    setModoConsulta("");
+    setMessages([welcomeMessage, preguntaSistemaMessage]);
+    setInputText("");
+    Keyboard.dismiss();
+  }
+
   return (
     <>
       <TouchableOpacity style={styles.fab} onPress={toggleModal}>
@@ -268,7 +302,7 @@ export default function ChatbotModal() {
         >
           <View style={styles.modalContent}>
             <Text style={styles.header}>
-              {`👋 Bienvenido al Asistente Virtual SiDCa 👋`}
+              {`🤖 Bienvenido al Asistente Virtual SiDCa 🤖`}
             </Text>
 
             <FlatList
@@ -306,7 +340,11 @@ export default function ChatbotModal() {
             />
 
             {loading && (
-              <ActivityIndicator size="small" color="#007AFF" style={{ marginVertical: 10 }} />
+              <ActivityIndicator
+                size="small"
+                color="#007AFF"
+                style={{ marginVertical: 10 }}
+              />
             )}
 
             {renderSelector()}
@@ -314,14 +352,19 @@ export default function ChatbotModal() {
 
             {!selectorVisible && (
               <TouchableOpacity
-                style={{ alignSelf: "flex-end", marginRight: 8, marginBottom: 1 }}
+                style={{
+                  alignSelf: "flex-end",
+                  marginRight: 8,
+                  marginBottom: 1,
+                }}
                 onPress={volverAlMenuPrincipal}
               >
                 <Ionicons name="home" size={26} color="#007AFF" />
               </TouchableOpacity>
             )}
 
-            {(modoConsulta !== "" || (!selectorVisible && !mostrarOpciones)) && (
+            {(modoConsulta !== "" ||
+              (!selectorVisible && !mostrarOpciones)) && (
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
@@ -347,6 +390,3 @@ export default function ChatbotModal() {
     </>
   );
 }
-
-
-

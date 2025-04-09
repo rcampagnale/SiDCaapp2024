@@ -26,9 +26,10 @@ const styles = StyleSheet.create({
     height: 830,
   },
   header: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     marginBottom: 10,
+    textAlign: "center",
   },
   closeButton: {
     marginTop: 20,
