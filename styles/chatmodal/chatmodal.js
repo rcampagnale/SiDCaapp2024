@@ -53,6 +53,7 @@ const styles = StyleSheet.create({
   },
   botRow: {
     alignItems: "flex-start",
+    width: "100%",
   },
   avatar: {
     width: 44,
