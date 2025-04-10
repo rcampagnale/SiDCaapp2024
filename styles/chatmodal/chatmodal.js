@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#ffd59a",
+    backgroundColor: "#fea200",
     borderTopRightRadius: 15,
     borderTopLeftRadius: 15,
     padding: 15,
@@ -43,42 +43,45 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   messageRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginVertical: 5,
-    marginHorizontal: 10,
+    flexDirection: "column", // vertical
+    alignItems: "flex-start",
+    marginVertical: 6,
+    paddingHorizontal: 10,
   },
   userRow: {
-    justifyContent: 'flex-end',
+    alignItems: "flex-end",
   },
   botRow: {
-    justifyContent: 'flex-start',
+    alignItems: "flex-start",
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginHorizontal: 5,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    marginBottom: 4,
   },
   messageBubble: {
-    maxWidth: '85%',
-    padding: 10,
-    borderRadius: 15,
+    maxWidth: "100%", 
+    padding: 12,
+    borderRadius: 12,
   },
   userBubble: {
-    backgroundColor: '#DCF8C6',
+    backgroundColor: "#DCF8C6",
     borderTopRightRadius: 0,
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
+    maxWidth: "85%",
   },
   botBubble: {
-    backgroundColor: '#F0F0F0',
+    backgroundColor: "#F0F0F0",
     borderTopLeftRadius: 0,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   messageText: {
     fontSize: 16,
-    color: '#333',
-    textAlign: 'justify',
+    color: "#333",
+    textAlign: "justify",
+    lineHeight: 22,
+    
   },
   inputContainer: {
     flexDirection: "row",
@@ -140,6 +143,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  userText: {
+    textAlign: "right",
+  }
+  
 });
 
 export default styles;
