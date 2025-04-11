@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#fea200",
+    backgroundColor: "#FFCC80",
     borderTopRightRadius: 15,
     borderTopLeftRadius: 15,
     padding: 15,
@@ -146,7 +146,53 @@ const styles = StyleSheet.create({
   },
   userText: {
     textAlign: "right",
-  }
+  },
+  
+  modalPreguntasOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  
+  modalPreguntasContainer: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "90%",
+    maxHeight: "80%",
+  },
+  
+  modalPreguntasTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  
+  modalPreguntaItem: {
+    paddingVertical: 8,
+    borderBottomColor: "#ccc",
+    borderBottomWidth: 1,
+  },
+  
+  modalPreguntaTexto: {
+    fontSize: 16,
+    color: "#007AFF",
+  },
+  
+  modalCloseButton: {
+    marginTop: 15,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#007AFF",
+    borderRadius: 5,
+  },
+  
+  modalCloseText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
   
 });
 

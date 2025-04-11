@@ -15,7 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { SidcaContext } from "../_layout";
 import styles from "@/styles/chatmodal/chatmodal";
-import Fuse from "fuse.js";
+import Fuse, { Expression } from "fuse.js";
 
 export default function ChatbotModal() {
   const { userData } = useContext(SidcaContext);
@@ -33,6 +33,11 @@ export default function ChatbotModal() {
   const [loading, setLoading] = useState(false);
   const [contenidoUnificado, setContenidoUnificado] = useState<any[]>([]);
   const flatListRef = useRef<FlatList>(null);
+  const [preguntasGenerales, setPreguntasGenerales] = useState<any[]>([]);
+  const [mostrarPreguntas, setMostrarPreguntas] = useState(false);
+  
+
+
 
   const welcomeMessage = {
     id: "bienvenida",
@@ -47,17 +52,34 @@ export default function ChatbotModal() {
     tipo: "bot",
   };
 
-  const buscarInteligente = (consulta, datos) => {
-    const fuse = new Fuse(datos, {
-      keys: ["contenido", "pregunta", "respuesta"],
+  const buscarInteligente = (
+    consulta: string | Expression,
+    datos: any[]
+  ) => {
+    // Normalizamos los datos para que todos tengan "contenido" y "pregunta"
+    const datosNormalizados = datos.map((item: any) => {
+      const contenido = item.respuesta || item.contenido || "";
+      const pregunta =
+        item.pregunta || (item.articulo ? `Artículo ${item.articulo}` : "");
+      return {
+        ...item,
+        contenido,
+        pregunta,
+      };
+    });
+  
+    const fuse = new Fuse(datosNormalizados, {
+      keys: ["pregunta", "contenido"],
       threshold: 0.3,
       minMatchCharLength: 3,
       includeScore: true,
       ignoreLocation: true,
     });
+  
     const resultados = fuse.search(consulta);
     return resultados.length > 0 ? [resultados[0].item] : [];
   };
+  
 
   const toggleModal = () => {
     if (!visible) {
@@ -68,41 +90,7 @@ export default function ChatbotModal() {
       setModoConsulta("");
       setInputText("");
 
-      setTimeout(async () => {
-        try {
-          const estatutoRes = await fetch(
-            "https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/texto_provincial_para_firestore.json"
-          );
-          const estatutoJson = (await estatutoRes.json()).map((item) => ({
-            ...item,
-            origen: "estatuto",
-          }));
-
-          const licenciaRes = await fetch(
-            "https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/regimen_licencias_docentes.json"
-          );
-          const licenciaJson = (await licenciaRes.json()).map((item) => ({
-            ...item,
-            origen: "licencia",
-          }));
-
-          const generalRes = await fetch(
-            "https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/consultas_generales.json"
-          );
-          const generalJson = (await generalRes.json()).map((item) => ({
-            ...item,
-            origen: "general",
-          }));
-
-          setContenidoUnificado([
-            ...estatutoJson,
-            ...licenciaJson,
-            ...generalJson,
-          ]);
-        } catch (error) {
-          console.error("❌ Error al cargar los archivos desde GitHub:", error);
-        }
-      }, 200);
+      
     } else {
       setVisible(false);
       setMessages([]);
@@ -198,45 +186,159 @@ export default function ChatbotModal() {
   const renderSelector = () =>
     selectorVisible && (
       <View style={styles.selectorContainer}>
+        {/* Botón Provincial */}
         <TouchableOpacity
           style={styles.selectorButton}
-          onPress={() => handleSendMessage("Provincial")}
+          onPress={() => {
+            setVisible(true);
+            setMessages([welcomeMessage, preguntaSistemaMessage]);
+            setSelectorVisible(false);
+            setMostrarOpciones(true);
+            setModoConsulta("");
+            setInputText("");
+
+            setTimeout(async () => {
+              try {
+                const baseUrl =
+                  "https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/";
+
+                const estatutoRes = await fetch(
+                  `${baseUrl}texto_provincial_para_firestore.json`
+                );
+                const estatutoJson = (await estatutoRes.json()).map(
+                  (item: any) => ({
+                    ...item,
+                    origen: "estatuto",
+                  })
+                );
+
+                const licenciaRes = await fetch(
+                  `${baseUrl}regimen_licencias_docentes.json`
+                );
+                const licenciaJson = (await licenciaRes.json()).map(
+                  (item: any) => ({
+                    ...item,
+                    origen: "licencia",
+                  })
+                );
+
+                const generalRes = await fetch(
+                  `${baseUrl}consultas_generales.json`
+                );
+                const generalJson = (await generalRes.json()).map(
+                  (item: any) => ({
+                    ...item,
+                    origen: "general",
+                  })
+                );
+
+                setContenidoUnificado([
+                  ...estatutoJson,
+                  ...licenciaJson,
+                  ...generalJson,
+                ]);
+                setPreguntasGenerales(generalJson);
+              } catch (error) {
+                console.error(
+                  "❌ Error al cargar los archivos desde GitHub (PROVINCIAL):",
+                  error
+                );
+              }
+            }, 200);
+          }}
         >
           <Text style={styles.selectorButtonText}>Provincial</Text>
         </TouchableOpacity>
+
+        {/* Botón Municipal */}
         <TouchableOpacity
           style={styles.selectorButton}
-          onPress={() => handleSendMessage("Municipal")}
+          onPress={async () => {
+            setVisible(true);
+            setMessages([welcomeMessage, preguntaSistemaMessage]);
+            setSelectorVisible(false);
+            setMostrarOpciones(true);
+            setModoConsulta("");
+            setInputText("");
+
+            try {
+              const baseUrl =
+                "https://raw.githubusercontent.com/rcampagnale/sidca-chatbot-docs/main/";
+
+              const estatutoRes = await fetch(
+                `${baseUrl}estatuto_docente_municipio.json`
+              );
+              const estatutoJson = (await estatutoRes.json()).map((item) => ({
+                ...item,
+                origen: "estatuto",
+              }));
+
+              const licenciaRes = await fetch(
+                `${baseUrl}regimen_licencias_docentes_municipio.json`
+              );
+              const licenciaJson = (await licenciaRes.json()).map((item) => ({
+                ...item,
+                origen: "licencia",
+              }));
+
+              const generalRes = await fetch(
+                `${baseUrl}consulta_general_municipio.json`
+              );
+              const generalJson = (await generalRes.json()).map((item) => ({
+                ...item,
+                origen: "general",
+              }));
+
+              setContenidoUnificado([
+                ...estatutoJson,
+                ...licenciaJson,
+                ...generalJson,
+              ]);
+            } catch (error) {
+              console.error(
+                "❌ Error al cargar los archivos del sistema MUNICIPAL:",
+                error
+              );
+            }
+          }}
         >
           <Text style={styles.selectorButtonText}>Municipal</Text>
         </TouchableOpacity>
       </View>
     );
 
-  const renderOpcionesConsulta = () =>
-    mostrarOpciones &&
-    !modoConsulta && (
-      <View style={styles.selectorContainer}>
-        <TouchableOpacity
-          style={styles.selectorButton}
-          onPress={() => handleSendMessage("Régimen de Licencia")}
-        >
-          <Text style={styles.selectorButtonText}>Régimen de Licencia</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.selectorButton}
-          onPress={() => handleSendMessage("Estatuto del Docente")}
-        >
-          <Text style={styles.selectorButtonText}>Estatuto del Docente</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.selectorButton}
-          onPress={() => handleSendMessage("Consulta General")}
-        >
-          <Text style={styles.selectorButtonText}>Consulta General</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    const renderOpcionesConsulta = () =>
+      mostrarOpciones && !modoConsulta && (
+        <View style={styles.selectorContainer}>
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => handleSendMessage("Régimen de Licencia")}
+          >
+            <Text style={styles.selectorButtonText}>Régimen de Licencia</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => handleSendMessage("Estatuto del Docente")}
+          >
+            <Text style={styles.selectorButtonText}>Estatuto del Docente</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => handleSendMessage("Consulta General")}
+          >
+            <Text style={styles.selectorButtonText}>Consulta General</Text>
+          </TouchableOpacity>
+    
+          {/* Botón de preguntas frecuentes */}
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => setMostrarPreguntas(!mostrarPreguntas)}
+          >
+            <Text style={styles.selectorButtonText}>Preguntas Frecuentes</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    
 
   const volverAlMenuPrincipal = () => {
     setSelectorVisible(true);
@@ -334,7 +436,7 @@ export default function ChatbotModal() {
                 <Ionicons name="home" size={26} color="#007AFF" />
               </TouchableOpacity>
             )}
-
+            
             {(modoConsulta !== "" ||
               (!selectorVisible && !mostrarOpciones)) && (
               <View style={styles.inputContainer}>
