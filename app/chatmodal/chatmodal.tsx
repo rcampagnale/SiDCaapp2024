@@ -35,9 +35,10 @@ export default function ChatbotModal() {
   const flatListRef = useRef<FlatList>(null);
   const [preguntasGenerales, setPreguntasGenerales] = useState<any[]>([]);
   const [mostrarPreguntas, setMostrarPreguntas] = useState(false);
-  
-
-
+  const [modalPreguntasVisible, setModalPreguntasVisible] = useState(false);
+  const [sistemaSeleccionado, setSistemaSeleccionado] = useState<
+    "provincial" | "municipal" | null
+  >(null);
 
   const welcomeMessage = {
     id: "bienvenida",
@@ -52,10 +53,7 @@ export default function ChatbotModal() {
     tipo: "bot",
   };
 
-  const buscarInteligente = (
-    consulta: string | Expression,
-    datos: any[]
-  ) => {
+  const buscarInteligente = (consulta: string | Expression, datos: any[]) => {
     // Normalizamos los datos para que todos tengan "contenido" y "pregunta"
     const datosNormalizados = datos.map((item: any) => {
       const contenido = item.respuesta || item.contenido || "";
@@ -67,7 +65,7 @@ export default function ChatbotModal() {
         pregunta,
       };
     });
-  
+
     const fuse = new Fuse(datosNormalizados, {
       keys: ["pregunta", "contenido"],
       threshold: 0.3,
@@ -75,11 +73,10 @@ export default function ChatbotModal() {
       includeScore: true,
       ignoreLocation: true,
     });
-  
+
     const resultados = fuse.search(consulta);
     return resultados.length > 0 ? [resultados[0].item] : [];
   };
-  
 
   const toggleModal = () => {
     if (!visible) {
@@ -89,8 +86,6 @@ export default function ChatbotModal() {
       setMostrarOpciones(false);
       setModoConsulta("");
       setInputText("");
-
-      
     } else {
       setVisible(false);
       setMessages([]);
@@ -196,6 +191,7 @@ export default function ChatbotModal() {
             setMostrarOpciones(true);
             setModoConsulta("");
             setInputText("");
+            setSistemaSeleccionado("provincial");
 
             setTimeout(async () => {
               try {
@@ -260,6 +256,7 @@ export default function ChatbotModal() {
             setMostrarOpciones(true);
             setModoConsulta("");
             setInputText("");
+            setSistemaSeleccionado("municipal");
 
             try {
               const baseUrl =
@@ -294,6 +291,7 @@ export default function ChatbotModal() {
                 ...licenciaJson,
                 ...generalJson,
               ]);
+              setPreguntasGenerales(generalJson);
             } catch (error) {
               console.error(
                 "❌ Error al cargar los archivos del sistema MUNICIPAL:",
@@ -307,38 +305,38 @@ export default function ChatbotModal() {
       </View>
     );
 
-    const renderOpcionesConsulta = () =>
-      mostrarOpciones && !modoConsulta && (
-        <View style={styles.selectorContainer}>
-          <TouchableOpacity
-            style={styles.selectorButton}
-            onPress={() => handleSendMessage("Régimen de Licencia")}
-          >
-            <Text style={styles.selectorButtonText}>Régimen de Licencia</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.selectorButton}
-            onPress={() => handleSendMessage("Estatuto del Docente")}
-          >
-            <Text style={styles.selectorButtonText}>Estatuto del Docente</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.selectorButton}
-            onPress={() => handleSendMessage("Consulta General")}
-          >
-            <Text style={styles.selectorButtonText}>Consulta General</Text>
-          </TouchableOpacity>
-    
-          {/* Botón de preguntas frecuentes */}
-          <TouchableOpacity
-            style={styles.selectorButton}
-            onPress={() => setMostrarPreguntas(!mostrarPreguntas)}
-          >
-            <Text style={styles.selectorButtonText}>Preguntas Frecuentes</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    
+  const renderOpcionesConsulta = () =>
+    mostrarOpciones &&
+    !modoConsulta && (
+      <View style={styles.selectorContainer}>
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => handleSendMessage("Régimen de Licencia")}
+        >
+          <Text style={styles.selectorButtonText}>Régimen de Licencia</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => handleSendMessage("Estatuto del Docente")}
+        >
+          <Text style={styles.selectorButtonText}>Estatuto del Docente</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => handleSendMessage("Consulta General")}
+        >
+          <Text style={styles.selectorButtonText}>Consulta General</Text>
+        </TouchableOpacity>
+
+        {/* Botón de preguntas frecuentes */}
+        <TouchableOpacity
+          style={styles.selectorButton}
+          onPress={() => setMostrarPreguntas(!mostrarPreguntas)}
+        >
+          <Text style={styles.selectorButtonText}>Preguntas Frecuentes</Text>
+        </TouchableOpacity>
+      </View>
+    );
 
   const volverAlMenuPrincipal = () => {
     setSelectorVisible(true);
@@ -365,78 +363,119 @@ export default function ChatbotModal() {
           style={styles.modalContainer}
         >
           <View style={styles.modalContent}>
-            <Text
-              style={styles.header}
-            >{`🤖 Bienvenido al Asistente Virtual SiDCa 🤖`}</Text>
+            <Text style={styles.header}>
+              🤖 Bienvenido al Asistente Virtual SiDCa 🤖
+            </Text>
 
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={{ paddingBottom: 80 }} // margen inferior
-              onContentSizeChange={() =>
-                flatListRef.current?.scrollToEnd({ animated: true })
-              }
-              renderItem={({ item }) => (
-                <View
-                  style={[
-                    styles.messageRow,
-                    item.tipo === "usuario" ? styles.userRow : styles.botRow,
-                  ]}
-                >
-                  <Image
-                    source={
-                      item.tipo === "usuario"
-                        ? require("@/assets/logos/chatdocente.png")
-                        : require("@/assets/logos/Chatboot4.png")
-                    }
-                    style={styles.avatar}
-                  />
-                  <View
-                    style={[
-                      styles.messageBubble,
-                      item.tipo === "usuario"
-                        ? styles.userBubble
-                        : styles.botBubble,
-                    ]}
-                  >
-                    <Text
+            {mostrarPreguntas ? (
+              <View style={styles.modalPreguntasContainer}>
+                <Text style={styles.modalPreguntasTitle}>
+                  Preguntas Frecuentes
+                </Text>
+                <FlatList
+                  data={preguntasGenerales}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => {
+                        handleSendMessage(item.pregunta);
+                        setMostrarPreguntas(false);
+                      }}
+                      style={styles.modalPreguntaItem}
+                    >
+                      <Text style={styles.modalPreguntaTexto}>
+                        {item.pregunta}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            ) : (
+              <>
+                <FlatList
+                  ref={flatListRef}
+                  data={messages}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={{ paddingBottom: 80 }}
+                  onContentSizeChange={() =>
+                    flatListRef.current?.scrollToEnd({ animated: true })
+                  }
+                  renderItem={({ item }) => (
+                    <View
                       style={[
-                        styles.messageText,
-                        item.tipo === "usuario" && styles.userText,
+                        styles.messageRow,
+                        item.tipo === "usuario"
+                          ? styles.userRow
+                          : styles.botRow,
                       ]}
                     >
-                      {item.texto}
-                    </Text>
-                  </View>
-                </View>
-              )}
-            />
+                      <Image
+                        source={
+                          item.tipo === "usuario"
+                            ? require("@/assets/logos/chatdocente.png")
+                            : require("@/assets/logos/Chatboot4.png")
+                        }
+                        style={styles.avatar}
+                      />
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          item.tipo === "usuario"
+                            ? styles.userBubble
+                            : styles.botBubble,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.messageText,
+                            item.tipo === "usuario" && styles.userText,
+                          ]}
+                        >
+                          {item.texto}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                />
 
-            {loading && (
-              <ActivityIndicator
-                size="small"
-                color="#007AFF"
-                style={{ marginVertical: 10 }}
-              />
+                {loading && (
+                  <ActivityIndicator
+                    size="small"
+                    color="#007AFF"
+                    style={{ marginVertical: 10 }}
+                  />
+                )}
+
+                {renderSelector()}
+                {renderOpcionesConsulta()}
+              </>
             )}
 
-            {renderSelector()}
-            {renderOpcionesConsulta()}
-
-            {!selectorVisible && (
-              <TouchableOpacity
-                style={{
-                  alignSelf: "flex-end",
-                  marginRight: 8,
-                  marginBottom: 1,
-                }}
-                onPress={volverAlMenuPrincipal}
-              >
+            {/* ✅ BOTÓN SIEMPRE VISIBLE: Volver / Home */}
+            <TouchableOpacity
+              style={{
+                alignSelf: "flex-end",
+                marginRight: 8,
+                marginBottom: 10,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+              onPress={() => {
+                if (mostrarPreguntas) {
+                  setMostrarPreguntas(false);
+                } else {
+                  volverAlMenuPrincipal();
+                }
+              }}
+            >
+              {mostrarPreguntas ? (
+                <Text style={{ fontSize: 16, color: "#007AFF" }}>← Volver</Text>
+              ) : (
                 <Ionicons name="home" size={26} color="#007AFF" />
-              </TouchableOpacity>
-            )}
-            
+              )}
+            </TouchableOpacity>
+
+            {/* ✅ INPUT SOLO CUANDO CORRESPONDA */}
             {(modoConsulta !== "" ||
               (!selectorVisible && !mostrarOpciones)) && (
               <View style={styles.inputContainer}>
@@ -455,6 +494,7 @@ export default function ChatbotModal() {
               </View>
             )}
 
+            {/* ✅ CERRAR MODAL */}
             <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
               <Text style={styles.closeText}>Cerrar</Text>
             </TouchableOpacity>

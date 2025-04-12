@@ -156,28 +156,31 @@ const styles = StyleSheet.create({
   },
   
   modalPreguntasContainer: {
-    backgroundColor: "#fff",
+    backgroundColor: "#F0F0F0",
     padding: 20,
     borderRadius: 10,
-    width: "90%",
+    width: "100%",
     maxHeight: "80%",
   },
   
   modalPreguntasTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
+    textAlign: "center",
+    
   },
   
   modalPreguntaItem: {
     paddingVertical: 8,
     borderBottomColor: "#ccc",
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
   },
   
   modalPreguntaTexto: {
     fontSize: 16,
     color: "#007AFF",
+    textAlign: "justify",
   },
   
   modalCloseButton: {
