@@ -19,7 +19,7 @@ import CloseApp from "./log-out";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Fontisto from "react-native-vector-icons/Fontisto";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import ChatbotModal from "../chatmodal/chatmodal";
+// import ChatbotModal from "../chatmodal/chatmodal"; no borrar, se utilizará en el futuro
 export default function HomePage() {
   const statusBarHeight: number | undefined = StatusBar.currentHeight;
 
@@ -248,7 +248,7 @@ export default function HomePage() {
           </View>
         </ImageBackground>
       </ScrollView>
-      <ChatbotModal />
+      {/*<ChatbotModal />*/}
     </View>
   );
 }

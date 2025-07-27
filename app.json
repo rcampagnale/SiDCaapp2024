@@ -10,7 +10,14 @@
     "splash": {
       "image": "./assets/logos/logo-01.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff",
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "package": "com.jakiro12.one",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/apk.png",
+        "backgroundColor": "#ffffff"
+      },
       "permissions": [
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
@@ -22,13 +29,6 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/apk.jpeg",
-        "resizeMode": "contain"
-      },
-      "package": "com.jakiro12.one"
     },
     "web": {
       "bundler": "metro",

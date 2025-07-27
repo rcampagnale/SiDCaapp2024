@@ -187,6 +187,7 @@ export default function CoursesTakenByMe() {
               </Text>
               <View style={styles.separator1} />
 
+              {/* se urlizará el certificado digital en el futuro
               {e.aprobo && (
                 <TouchableOpacity
                   style={styles.viewCertificateButton}
@@ -237,6 +238,7 @@ export default function CoursesTakenByMe() {
                   )}
                 </TouchableOpacity>
               )}
+                */}
             </View>
           ))
         )}
