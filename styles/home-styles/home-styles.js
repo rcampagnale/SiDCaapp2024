@@ -1,19 +1,18 @@
 import { StyleSheet } from "react-native";
 
-export default homeStyles = StyleSheet.create({
+const homeStyles = StyleSheet.create({
   container: {
+    // Mejor práctica: usar flex en lugar de height: "100%"
+    flex: 1,
     width: "100%",
-    height: "100%",
-    display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
     backgroundColor: "#091d24",
   },
   topBar: {
     width: "100%",
-    height: 40,
+    height: 40, // si tus íconos son grandes, subí a 56–64
     backgroundColor: "#fea200",
-    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -21,7 +20,6 @@ export default homeStyles = StyleSheet.create({
   viewAbout: {
     width: "100%",
     height: 300,
-    display: "flex",
     flexDirection: "column",
     justifyContent: "space-around",
     alignItems: "center",
@@ -29,7 +27,6 @@ export default homeStyles = StyleSheet.create({
   viewInformation: {
     width: "100%",
     height: 230,
-    display: "flex",
     flexDirection: "column",
     justifyContent: "space-around",
     alignItems: "center",
@@ -37,23 +34,20 @@ export default homeStyles = StyleSheet.create({
   viewSupport: {
     width: "100%",
     height: 230,
-    display: "flex",
     flexDirection: "column",
     justifyContent: "space-around",
     alignItems: "center",
   },
   viewBenefits: {
     width: "100%",
-    height: 270,
-    display: "flex",
+    height: 300,
     flexDirection: "column",
     justifyContent: "space-around",
     alignItems: "center",
   },
   btnsContainer: {
     width: "80%",
-    height: "90%",
-    display: "flex",
+    height: "75%",
     justifyContent: "space-around",
     alignItems: "center",
     flexDirection: "column",
@@ -63,7 +57,6 @@ export default homeStyles = StyleSheet.create({
     height: 45,
     backgroundColor: "#fea200",
     borderRadius: 5,
-    display: "flex",
     justifyContent: "flex-start",
     alignItems: "center",
     flexDirection: "row",
@@ -71,7 +64,6 @@ export default homeStyles = StyleSheet.create({
   btnTextAction: {
     width: "100%",
     height: "100%",
-    display: "flex",
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
@@ -80,9 +72,10 @@ export default homeStyles = StyleSheet.create({
     width: "30%",
     height: "100%",
     marginRight: 10,
-    display: "flex",
     justifyContent: "flex-end",
     alignItems: "center",
     flexDirection: "row",
   },
 });
+
+export default homeStyles;

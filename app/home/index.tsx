@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ImageBackground,
   Image,
+  Platform,
 } from "react-native";
 import styles from "../../styles/home-styles/home-styles";
 import { router } from "expo-router";
@@ -16,15 +17,28 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
 import CloseApp from "./log-out";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import Fontisto from "react-native-vector-icons/Fontisto";
+import { MaterialIcons, Fontisto, FontAwesome6 } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useFocusEffect } from "expo-router";
+import React from "react";
 // import ChatbotModal from "../chatmodal/chatmodal"; no borrar, se utilizará en el futuro
 export default function HomePage() {
-  const statusBarHeight: number | undefined = StatusBar.currentHeight;
+  const statusBarHeight = StatusBar.currentHeight;
+
+  // ✅ Restaura el StatusBar blanco cada vez que volvés a esta pantalla
+  useFocusEffect(
+    React.useCallback(() => {
+      StatusBar.setBarStyle("dark-content");
+      if (Platform.OS === "android") {
+        StatusBar.setBackgroundColor("#ffffff"); // blanco en Android
+      }
+    }, [])
+  );
+  
 
   return (
-    <View style={{ height: "100%", paddingTop: statusBarHeight }}>
+    <View style={{ flex: 1, paddingTop: statusBarHeight }}>
+       <StatusBar translucent backgroundColor="#ffffff" barStyle="dark-content" />
       <View style={styles.topBar}>
         <View>
           <Image
