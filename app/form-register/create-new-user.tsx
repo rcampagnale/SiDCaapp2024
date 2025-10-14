@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -11,7 +12,6 @@ import {
   Alert,
 } from "react-native";
 import styles from "../../styles/new-user-styles/create-user-styles";
-import React, { useState } from "react";
 import {
   getFirestore,
   collection,
@@ -19,9 +19,14 @@ import {
   query,
   where,
   getDocs,
+  updateDoc,
+  doc,
+  runTransaction,
+  setDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
-import { regexRegister } from "./regex-form";
+import { regexRegister } from "../../src/utils/regex";
 import { router } from "expo-router";
 
 interface NewUserTypes {
@@ -55,13 +60,18 @@ const departamentos = [
   "Valle Viejo",
 ];
 
+const formatFecha = (d: Date) => {
+  const day = d.getDate();
+  const month = d.getMonth() + 1;
+  const year = d.getFullYear();
+  const hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
 export default function CreateNewUser() {
   const statusBarHeight: number | undefined = StatusBar.currentHeight;
-  const currentDay = new Date();
-  const day = String(currentDay.getDate()).padStart(2, "0");
-  const month = String(currentDay.getMonth() + 1).padStart(2, "0");
-  const year = currentDay.getFullYear();
-  const formattedDate = `${day}/${month}/${year}`;
+
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [newUser, setNewUser] = useState<NewUserTypes>({
@@ -73,53 +83,97 @@ export default function CreateNewUser() {
     departamento: "",
     establecimientos: "",
     descuento: "si",
-    fecha: formattedDate,
+    fecha: formatFecha(new Date()),
   });
 
-  const analytics = getFirestore(firebaseconn);
-  const usuariosRef = collection(analytics, "usuarios");
-  const nuevoAfiliadoRef = collection(analytics, "nuevoAfiliado");
+  const db = getFirestore(firebaseconn);
+  const usuariosRef = collection(db, "usuarios");
+  const nuevoAfiliadoRef = collection(db, "nuevoAfiliado");
 
-  const handleNewUserData = (key: string, value: string) => {
-    setNewUser({ ...newUser, [key]: value });
+  const handleNewUserData = (key: keyof NewUserTypes, value: string) => {
+    setNewUser((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const getNextNroAfiliacionAtomic = async (): Promise<number> => {
+    const counterRef = doc(getFirestore(firebaseconn), "meta", "afiliacion");
+    const nextNumber = await runTransaction(
+      getFirestore(firebaseconn),
+      async (tx) => {
+        const snap = await tx.get(counterRef);
+
+        if (!snap.exists()) {
+          tx.set(counterRef, {
+            last: 1,
+            next: 2,
+            updatedAt: serverTimestamp(),
+          });
+          return 1;
+        } else {
+          const data = snap.data() as any;
+          const currentNext: number =
+            typeof data?.next === "number" ? data.next : 1;
+          const assign = currentNext;
+          tx.update(counterRef, {
+            last: assign,
+            next: assign + 1,
+            updatedAt: serverTimestamp(),
+          });
+          return assign;
+        }
+      }
+    );
+    return nextNumber;
   };
 
   const onSubmitForm = async () => {
-    if (Object.values(newUser).includes(""))
-      return alert("Debe completar todos los campos");
+    if (Object.values(newUser).some((v) => v === "")) {
+      Alert.alert("SiDCa", "Debe completar todos los campos");
+      return;
+    }
     if (
-      regexRegister.names.test(newUser.nombre) === false ||
-      regexRegister.names.test(newUser.apellido) === false
-    )
-      return alert("Nombre o apellido no válido");
-    if (regexRegister.dni.test(newUser.dni) === false)
-      return alert("DNI no válido");
+      !regexRegister.names.test(newUser.nombre) ||
+      !regexRegister.names.test(newUser.apellido)
+    ) {
+      Alert.alert("SiDCa", "Nombre o apellido no válido");
+      return;
+    }
+    if (!regexRegister.dni.test(newUser.dni)) {
+      Alert.alert("SiDCa", "DNI no válido");
+      return;
+    }
+    if (!regexRegister.email.test(newUser.email)) {
+      Alert.alert("SiDCa", "Email no válido");
+      return;
+    }
 
     try {
-      // Verificar si el DNI ya existe en la colección "usuarios"
       setLoading(true);
-      const dniQuery = query(usuariosRef, where("dni", "==", newUser.dni));
-      const querySnapshot = await getDocs(dniQuery);
-      if (querySnapshot.empty) {
-        // DNI no existe, agregar a ambas colecciones
-        await addDoc(usuariosRef, newUser);
-        await addDoc(nuevoAfiliadoRef, newUser);
+
+      const payloadBase = {
+        ...newUser,
+        fecha: formatFecha(new Date()),
+      };
+
+      const nroAfiliacion = await getNextNroAfiliacionAtomic();
+      await addDoc(nuevoAfiliadoRef, { ...payloadBase, nroAfiliacion });
+
+      const userSnap = await getDocs(
+        query(usuariosRef, where("dni", "==", newUser.dni))
+      );
+      if (userSnap.empty) {
+        await addDoc(usuariosRef, { ...payloadBase, nroAfiliacion });
         Alert.alert("SiDCa", "Afiliado exitosamente", [
           { text: "OK", onPress: () => router.navigate("/") },
         ]);
       } else {
-        // DNI ya existe, solo agregar a "nuevoAfiliado" con error
-        const errorData = {
-          ...newUser,
-          error: "Ya existe un usuario con este DNI en la base de datos",
-        };
-        await addDoc(nuevoAfiliadoRef, errorData);
-        alert(
-          "Ya existe un afiliado con este DNI. Contacta con el administrador."
-        );
+        const doc0 = userSnap.docs[0];
+        const uData: any = doc0.data();
+        if (uData?.nroAfiliacion !== nroAfiliacion) {
+          await updateDoc(doc0.ref, { nroAfiliacion }); // sincroniza con el último número
+        }
+        Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
       }
 
-      // Restablecer formulario
       setNewUser({
         nombre: "",
         apellido: "",
@@ -129,11 +183,16 @@ export default function CreateNewUser() {
         departamento: "",
         establecimientos: "",
         descuento: "si",
-        fecha: formattedDate,
+        fecha: formatFecha(new Date()),
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al afiliar usuario: ", error);
-      alert("Hubo un problema al procesar tu solicitud. Intenta nuevamente.");
+      Alert.alert(
+        "SiDCa",
+        `Hubo un problema al procesar la solicitud. Intenta nuevamente.\n${
+          error?.message ?? ""
+        }`.trim()
+      );
     } finally {
       setLoading(false);
     }
@@ -153,6 +212,10 @@ export default function CreateNewUser() {
           alignItems: "center",
           rowGap: 20,
         }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        overScrollMode="never"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.viewInformation}>
           <Text
@@ -169,6 +232,7 @@ export default function CreateNewUser() {
           <Text> CONVENIO DE ALOJAMIENTO EN OTRAS PROVINCIAS</Text>
           <Text> PLANES DE TURISMO FAMILIAR</Text>
         </View>
+
         <View style={styles.viewFormContainer}>
           <Text style={{ color: "#ffffff", fontWeight: "bold", width: "95%" }}>
             Al afiliarse, ACEPTA que se descontarán cuotas y servicios sociales
@@ -188,9 +252,13 @@ export default function CreateNewUser() {
             <TextInput
               style={styles.inputForm}
               value={newUser.nombre}
-              onChangeText={(getValue) => handleNewUserData("nombre", getValue)}
+              onChangeText={(v) => handleNewUserData("nombre", v)}
+              autoCapitalize="words"
+              autoCorrect={false}
+              returnKeyType="next"
             />
           </View>
+
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -204,11 +272,13 @@ export default function CreateNewUser() {
             <TextInput
               style={styles.inputForm}
               value={newUser.apellido}
-              onChangeText={(getValue) =>
-                handleNewUserData("apellido", getValue)
-              }
+              onChangeText={(v) => handleNewUserData("apellido", v)}
+              autoCapitalize="words"
+              autoCorrect={false}
+              returnKeyType="next"
             />
           </View>
+
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -222,9 +292,15 @@ export default function CreateNewUser() {
             <TextInput
               style={styles.inputForm}
               value={newUser.dni}
-              onChangeText={(getValue) => handleNewUserData("dni", getValue)}
+              onChangeText={(v) =>
+                handleNewUserData("dni", v.replace(/\D/g, ""))
+              }
+              keyboardType="numeric"
+              maxLength={9}
+              returnKeyType="next"
             />
           </View>
+
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -238,9 +314,14 @@ export default function CreateNewUser() {
             <TextInput
               style={styles.inputForm}
               value={newUser.email}
-              onChangeText={(getValue) => handleNewUserData("email", getValue)}
+              onChangeText={(v) => handleNewUserData("email", v.trim())}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
             />
           </View>
+
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -254,11 +335,15 @@ export default function CreateNewUser() {
             <TextInput
               style={styles.inputForm}
               value={newUser.celular}
-              onChangeText={(getValue) =>
-                handleNewUserData("celular", getValue)
+              onChangeText={(v) =>
+                handleNewUserData("celular", v.replace(/[^\d+]/g, ""))
               }
+              keyboardType="phone-pad"
+              autoCorrect={false}
+              returnKeyType="next"
             />
           </View>
+
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -284,9 +369,12 @@ export default function CreateNewUser() {
                 }}
                 editable={false}
                 value={newUser.departamento}
+                placeholder="Seleccionar…"
+                placeholderTextColor="#333"
               />
             </TouchableOpacity>
           </View>
+
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -300,15 +388,18 @@ export default function CreateNewUser() {
             <TextInput
               style={styles.inputForm}
               value={newUser.establecimientos}
-              onChangeText={(getValue) =>
-                handleNewUserData("establecimientos", getValue)
-              }
+              onChangeText={(v) => handleNewUserData("establecimientos", v)}
+              autoCapitalize="sentences"
+              autoCorrect
+              returnKeyType="done"
             />
           </View>
+
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={onSubmitForm}
             style={styles.btnSendInfo}
+            disabled={loading}
           >
             {loading ? (
               <ActivityIndicator size="large" color="#ffffff" />
@@ -317,9 +408,10 @@ export default function CreateNewUser() {
             )}
           </TouchableOpacity>
         </View>
+
         <Modal
           animationType="slide"
-          transparent={true}
+          transparent
           visible={modalVisible}
           onRequestClose={() => setModalVisible(false)}
         >
@@ -330,13 +422,16 @@ export default function CreateNewUser() {
                 keyExtractor={(item) => item}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    onPress={() => selectDepartment(item)}
+                    onPress={() => {
+                      handleNewUserData("departamento", item);
+                      setModalVisible(false);
+                    }}
                     style={{
                       width: "100%",
                       height: 50,
                       justifyContent: "center",
                       alignItems: "center",
-                      borderWidth: 2,
+                      borderBottomWidth: 1,
                       borderBottomColor: "#000000",
                     }}
                   >
