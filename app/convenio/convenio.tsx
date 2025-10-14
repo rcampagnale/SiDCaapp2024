@@ -52,7 +52,7 @@ export default function HandleCampusTeachers() {
     setLoading1(true);
     setIsModalVisible1(true);
     try {
-      const filteredData = query(data, where("categoria", "==", "predio"));
+      const filteredData = query(data, where("categoria", "==", "convenio_comercio"));
       const res = await getDocs(filteredData);
       const dataList = res.docs.map((doc) => doc.data());
       setDataPredio(dataList);
@@ -68,7 +68,7 @@ export default function HandleCampusTeachers() {
     setLoading2(true);
     setIsModalVisible2(true);
     try {
-      const filteredData = query(data, where("categoria", "==", "casa"));
+      const filteredData = query(data, where("categoria", "==", "convenio_hoteles"));
       const res = await getDocs(filteredData);
       const dataList = res.docs.map((doc) => doc.data());
       setDataCasa(dataList);
@@ -168,7 +168,7 @@ export default function HandleCampusTeachers() {
         <ModalComponent
           isModalVisible={isModalVisible1}
           toggleModal={toggleModal1}
-          category="predio"
+          category="convenio_comercio"
           loading={loading1}
           data={dataPredio}
           title="Lista de Comercios Adheridos"
