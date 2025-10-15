@@ -10,10 +10,13 @@ import {
   StatusBar,
   ActivityIndicator,
   ScrollView,
+  BackHandler,
+  Platform,
 } from "react-native";
 import styles from "../styles/signin-styles/sign-in-styles";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useCallback } from "react";
 import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   getFirestore,
   collection,
@@ -31,6 +34,22 @@ export default function SignInApp() {
   const [dniNumber, setDniNumber] = useState<string>("");
   const statusBarHeight: number | undefined = StatusBar.currentHeight;
   const { setUserData } = useContext(SidcaContext);
+
+  // Al estar en esta pantalla (index), el botón atrás cierra la app.
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (Platform.OS === "android") {
+          BackHandler.exitApp();
+          return true; // Consumimos el evento para evitar navegación
+        }
+        return false;
+      };
+
+      const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => sub.remove();
+    }, [])
+  );
 
   const openSocialMedia = (urlMedia: string) => {
     Linking.openURL(urlMedia);
@@ -68,19 +87,13 @@ export default function SignInApp() {
   };
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      () => {
-        setKeyboardVisible(true);
-      }
-    );
+    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
+    });
 
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => {
-        setKeyboardVisible(false);
-      }
-    );
+    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+    });
 
     return () => {
       keyboardDidShowListener.remove();
@@ -148,22 +161,21 @@ export default function SignInApp() {
               <Text style={{ fontSize: 20, fontWeight: "500" }}>AFILIARSE</Text>
             </TouchableOpacity>
           </ImageBackground>
-          {isKeyboardVisible === false ? <View style={{ width: "80%", height: 40, marginTop: 20 }}>
-            <TouchableOpacity
-              style={styles.btnWhatsApp}
-              activeOpacity={1}
-              onPress={() => openWspNumber("https://wa.me/5493832437803")}
-            >
-              <Text style={{ fontSize: 18 }}>Soporte Técnico</Text>
-              <Image
-                style={{ width: 30, height: 30 }}
-                source={require("../assets/logos/whatsapp.png")}
-              />
-            </TouchableOpacity>
-          </View>
-          
-        : null}
-          
+          {isKeyboardVisible === false ? (
+            <View style={{ width: "80%", height: 40, marginTop: 20 }}>
+              <TouchableOpacity
+                style={styles.btnWhatsApp}
+                activeOpacity={1}
+                onPress={() => openWspNumber("https://wa.me/5493832437803")}
+              >
+                <Text style={{ fontSize: 18 }}>Soporte Técnico</Text>
+                <Image
+                  style={{ width: 30, height: 30 }}
+                  source={require("../assets/logos/whatsapp.png")}
+                />
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
         {isKeyboardVisible === false ? (
           <>
