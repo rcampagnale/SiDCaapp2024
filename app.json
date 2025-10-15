@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.jakiro12.one",
-      "versionCode": 2,
+      "versionCode": 13,
       "adaptiveIcon": {
         "foregroundImage": "./assets/apk.png",
         "backgroundColor": "#ffffff"
