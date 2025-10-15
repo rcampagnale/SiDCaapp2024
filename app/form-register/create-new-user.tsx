@@ -94,109 +94,112 @@ export default function CreateNewUser() {
     setNewUser((prev) => ({ ...prev, [key]: value }));
   };
 
-  const getNextNroAfiliacionAtomic = async (): Promise<number> => {
-    const counterRef = doc(getFirestore(firebaseconn), "meta", "afiliacion");
-    const nextNumber = await runTransaction(
-      getFirestore(firebaseconn),
-      async (tx) => {
-        const snap = await tx.get(counterRef);
-
-        if (!snap.exists()) {
-          tx.set(counterRef, {
-            last: 1,
-            next: 2,
-            updatedAt: serverTimestamp(),
-          });
-          return 1;
-        } else {
-          const data = snap.data() as any;
-          const currentNext: number =
-            typeof data?.next === "number" ? data.next : 1;
-          const assign = currentNext;
-          tx.update(counterRef, {
-            last: assign,
-            next: assign + 1,
-            updatedAt: serverTimestamp(),
-          });
-          return assign;
-        }
-      }
-    );
-    return nextNumber;
-  };
+ 
 
   const onSubmitForm = async () => {
-    if (Object.values(newUser).some((v) => v === "")) {
-      Alert.alert("SiDCa", "Debe completar todos los campos");
-      return;
-    }
-    if (
-      !regexRegister.names.test(newUser.nombre) ||
-      !regexRegister.names.test(newUser.apellido)
-    ) {
-      Alert.alert("SiDCa", "Nombre o apellido no válido");
-      return;
-    }
-    if (!regexRegister.dni.test(newUser.dni)) {
-      Alert.alert("SiDCa", "DNI no válido");
-      return;
-    }
-    if (!regexRegister.email.test(newUser.email)) {
-      Alert.alert("SiDCa", "Email no válido");
-      return;
-    }
+  if (Object.values(newUser).includes(""))
+    return Alert.alert("SiDCa", "Debe completar todos los campos");
 
-    try {
-      setLoading(true);
+  if (
+    !regexRegister.names.test(newUser.nombre) ||
+    !regexRegister.names.test(newUser.apellido)
+  )
+    return Alert.alert("SiDCa", "Nombre o apellido no válido");
 
-      const payloadBase = {
-        ...newUser,
-        fecha: formatFecha(new Date()),
-      };
+  if (!regexRegister.dni.test(newUser.dni))
+    return Alert.alert("SiDCa", "DNI no válido");
 
-      const nroAfiliacion = await getNextNroAfiliacionAtomic();
-      await addDoc(nuevoAfiliadoRef, { ...payloadBase, nroAfiliacion });
+  try {
+    setLoading(true);
 
-      const userSnap = await getDocs(
-        query(usuariosRef, where("dni", "==", newUser.dni))
-      );
-      if (userSnap.empty) {
-        await addDoc(usuariosRef, { ...payloadBase, nroAfiliacion });
-        Alert.alert("SiDCa", "Afiliado exitosamente", [
-          { text: "OK", onPress: () => router.navigate("/") },
-        ]);
-      } else {
-        const doc0 = userSnap.docs[0];
-        const uData: any = doc0.data();
-        if (uData?.nroAfiliacion !== nroAfiliacion) {
-          await updateDoc(doc0.ref, { nroAfiliacion }); // sincroniza con el último número
-        }
-        Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
+    const db = getFirestore(firebaseconn);
+    const dniKey = newUser.dni.trim();
+
+    // Payload base (guardamos string de fecha y timestamp de servidor)
+    const payloadBase = {
+      ...newUser,
+      dni: dniKey,
+      fechaServer: serverTimestamp(),
+    };
+
+    await runTransaction(db, async (tx) => {
+      // 1) Chequear existencia del usuario activo por ID = DNI
+      const usuarioRef = doc(db, "usuarios", dniKey);
+      const usuarioSnap = await tx.get(usuarioRef);
+
+      if (usuarioSnap.exists()) {
+        // Si ya existe, NO creamos nada en ninguna colección
+        throw new Error("DNI_EXISTE");
       }
 
-      setNewUser({
-        nombre: "",
-        apellido: "",
-        dni: "",
-        email: "",
-        celular: "",
-        departamento: "",
-        establecimientos: "",
-        descuento: "si",
-        fecha: formatFecha(new Date()),
+      // 2) Obtener siguiente nroAfiliacion SOLO en la colección nuevoAfiliado
+      //    Usamos un doc "contador" por DNI dentro de la misma colección.
+      const counterRef = doc(db, "nuevoAfiliado", `${dniKey}_counter`);
+      const counterSnap = await tx.get(counterRef);
+
+      let nroAfiliacion = 1;
+      if (!counterSnap.exists()) {
+        // Primera afiliación para este DNI
+        tx.set(counterRef, {
+          last: 1,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        const last = typeof counterSnap.data()?.last === "number"
+          ? counterSnap.data()!.last
+          : 0;
+        nroAfiliacion = last + 1;
+        tx.update(counterRef, {
+          last: nroAfiliacion,
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      // 3) Crear usuario activo (usuarios/{dni})
+      tx.set(usuarioRef, payloadBase);
+
+      // 4) Registrar evento de afiliación (nuevoAfiliado con auto-ID)
+      const eventoRef = doc(collection(db, "nuevoAfiliado"));
+      tx.set(eventoRef, {
+        ...payloadBase,
+        nroAfiliacion,
       });
-    } catch (error: any) {
+    });
+
+    Alert.alert("SiDCa", "Afiliado exitosamente", [
+      { text: "OK", onPress: () => router.navigate("/") },
+    ]);
+
+    // Limpiar formulario solo si se creó correctamente
+    setNewUser({
+      nombre: "",
+      apellido: "",
+      dni: "",
+      email: "",
+      celular: "",
+      departamento: "",
+      establecimientos: "",
+      descuento: "si",
+      fecha: formatFecha(new Date()),
+    });
+  } catch (error: any) {
+    if (error?.message === "DNI_EXISTE") {
+      Alert.alert(
+        "SiDCa",
+        "Ya existe un afiliado con este DNI. Contacta con el administrador."
+      );
+    } else {
       console.error("Error al afiliar usuario: ", error);
       Alert.alert(
         "SiDCa",
-        `Hubo un problema al procesar la solicitud. Intenta nuevamente.\n${
-          error?.message ?? ""
-        }`.trim()
+        "Hubo un problema al procesar tu solicitud. Intenta nuevamente."
       );
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const selectDepartment = (department: string) => {
     handleNewUserData("departamento", department);
