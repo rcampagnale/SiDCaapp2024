@@ -191,7 +191,7 @@ export default function ModalComponent({
                           onPress={() => openOtherData(item.link!)}
                         >
                           <Text style={styles.commonBtnText}>
-                            {category === "predio" ? "Contacto" : "Reservar"}
+                            {category === "predio" ? "Contacto" : "Contacto"}
                           </Text>
                         </TouchableOpacity>
                       )}
