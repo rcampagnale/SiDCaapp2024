@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-export default signInStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     width: "100%",
     height: "100%",
@@ -105,3 +105,5 @@ export default signInStyles = StyleSheet.create({
     flexDirection: "row",
   },
 });
+
+export default styles;
