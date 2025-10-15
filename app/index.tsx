@@ -12,6 +12,7 @@ import {
   ScrollView,
   BackHandler,
   Platform,
+  Alert,
 } from "react-native";
 import styles from "../styles/signin-styles/sign-in-styles";
 import { useEffect, useState, useContext, useCallback } from "react";
@@ -23,8 +24,20 @@ import {
   query,
   where,
   getDocs,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
+
+let Application: any;
+try {
+  // Require at runtime to avoid TypeScript compile errors if the package isn't installed
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  Application = require("expo-application");
+} catch {
+  // Fallback object so code that reads properties from Application won't crash at runtime
+  Application = { applicationId: undefined, nativeBuildVersion: undefined };
+}
 import { SidcaContext } from "./_layout";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
@@ -57,6 +70,55 @@ export default function SignInApp() {
 
   const db = getFirestore(firebaseconn);
   const usuariosCollection = collection(db, "usuarios");
+
+  // ---- Actualización: abrir Play Store y chequear versión remota (Firestore config/app) ----
+  const goToStore = async () => {
+    const pkg = Application.applicationId ?? "com.jakiro12.one"; // tu package
+    const marketUrl = `market://details?id=${pkg}`;
+    const webUrl = `https://play.google.com/store/apps/details?id=${pkg}`;
+    try {
+      const can = await Linking.canOpenURL(marketUrl);
+      await Linking.openURL(can ? marketUrl : webUrl);
+    } catch {
+      Linking.openURL(webUrl);
+    }
+  };
+
+  const checkUpdate = async () => {
+    try {
+      const snap = await getDoc(doc(db, "config", "app"));
+      if (!snap.exists()) return;
+
+      const { latestAndroidVersionCode, forceUpdate, message } = snap.data() as {
+        latestAndroidVersionCode?: number | string;
+        forceUpdate?: boolean;
+        message?: string;
+      };
+
+      const current = Number(Application.nativeBuildVersion ?? 0); // versionCode instalado
+      const latest = Number(latestAndroidVersionCode ?? 0);
+
+      if (Number.isFinite(latest) && latest > current) {
+        Alert.alert(
+          "Actualización disponible",
+          message || "Tenés una actualización disponible.",
+          [
+            ...(forceUpdate ? [] : [{ text: "Más tarde", style: "cancel" as const }]),
+            { text: "Actualizar ahora", onPress: goToStore },
+          ],
+          { cancelable: !forceUpdate }
+        );
+      }
+    } catch {
+      // No bloqueamos el inicio si falla
+    }
+  };
+
+  useEffect(() => {
+    checkUpdate(); // se ejecuta al montar esta pantalla
+  }, []);
+
+  // -------------------------------------------------------------------------------------------
 
   const findUser = async () => {
     if (dniNumber === "") return alert("Ingrese un Número Válido!!");
@@ -274,3 +336,4 @@ export default function SignInApp() {
     </ScrollView>
   );
 }
+
