@@ -70,7 +70,7 @@ const formatFecha = (d: Date) => {
 };
 
 export default function CreateNewUser() {
-  const statusBarHeight: number | undefined = StatusBar.currentHeight;
+  
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -207,9 +207,14 @@ export default function CreateNewUser() {
   };
 
   return (
-    <View style={{ flex: 1, paddingTop: statusBarHeight }}>
+    <View style={{ flex: 1, backgroundColor: "#091d24" }}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#ffffff"
+        translucent={false}
+      />
       <ScrollView
-        style={{ backgroundColor: "#091d24" }}
+        style={{ flex: 1 }}
         contentContainerStyle={{
           justifyContent: "space-between",
           alignItems: "center",

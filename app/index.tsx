@@ -168,11 +168,20 @@ export default function SignInApp() {
   };
 
   return (
-    <ScrollView
-      style={{ height: "100%", paddingTop: statusBarHeight }}
-      contentContainerStyle={{ flexGrow: 1 }}
-    >
-      <View style={styles.container}>
+    <>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#ffffff"
+        translucent={false}
+      />
+      <ScrollView
+        style={{
+          height: "100%",
+          backgroundColor: "#091d24",
+        }}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          <View style={styles.container}>
         <View
           style={[
             styles.viewGetData,
@@ -332,8 +341,9 @@ export default function SignInApp() {
             </ImageBackground>
           </>
         ) : null}
-      </View>
-    </ScrollView>
-  );
+       </View>
+        </ScrollView>
+      </>
+    );
 }
 
