@@ -15,15 +15,10 @@ import styles from "../../styles/new-user-styles/create-user-styles";
 import {
   getFirestore,
   collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  updateDoc,
   doc,
   runTransaction,
-  setDoc,
   serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { regexRegister } from "../../src/utils/regex";
@@ -35,6 +30,7 @@ interface NewUserTypes {
   dni: string;
   email: string;
   celular: string;
+  tituloGrado: string; // obligatorio
   departamento: string;
   establecimientos: string;
   descuento: string;
@@ -69,9 +65,10 @@ const formatFecha = (d: Date) => {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 };
 
-export default function CreateNewUser() {
-  
+// Helper para limpiar entradas de texto
+const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
 
+export default function CreateNewUser() {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [newUser, setNewUser] = useState<NewUserTypes>({
@@ -80,6 +77,7 @@ export default function CreateNewUser() {
     dni: "",
     email: "",
     celular: "",
+    tituloGrado: "",
     departamento: "",
     establecimientos: "",
     descuento: "si",
@@ -94,112 +92,137 @@ export default function CreateNewUser() {
     setNewUser((prev) => ({ ...prev, [key]: value }));
   };
 
- 
-
   const onSubmitForm = async () => {
-  if (Object.values(newUser).includes(""))
-    return Alert.alert("SiDCa", "Debe completar todos los campos");
-
-  if (
-    !regexRegister.names.test(newUser.nombre) ||
-    !regexRegister.names.test(newUser.apellido)
-  )
-    return Alert.alert("SiDCa", "Nombre o apellido no válido");
-
-  if (!regexRegister.dni.test(newUser.dni))
-    return Alert.alert("SiDCa", "DNI no válido");
-
-  try {
-    setLoading(true);
-
-    const db = getFirestore(firebaseconn);
-    const dniKey = newUser.dni.trim();
-
-    // Payload base (guardamos string de fecha y timestamp de servidor)
-    const payloadBase = {
-      ...newUser,
-      dni: dniKey,
-      fechaServer: serverTimestamp(),
+    // 1) Normalizar antes de validar
+    const normalized = {
+      nombre: normalize(newUser.nombre),
+      apellido: normalize(newUser.apellido),
+      dni: newUser.dni.trim(),
+      email: newUser.email.trim(),
+      celular: newUser.celular.trim(),
+      tituloGrado: normalize(newUser.tituloGrado),
+      departamento: (newUser.departamento ?? "").trim(),
+      establecimientos: normalize(newUser.establecimientos),
+      descuento: newUser.descuento,
+      fecha: newUser.fecha,
     };
 
-    await runTransaction(db, async (tx) => {
-      // 1) Chequear existencia del usuario activo por ID = DNI
-      const usuarioRef = doc(db, "usuarios", dniKey);
-      const usuarioSnap = await tx.get(usuarioRef);
+    // Reflejar en UI los textos ya limpios
+    setNewUser((prev) => ({ ...prev, ...normalized }));
 
-      if (usuarioSnap.exists()) {
-        // Si ya existe, NO creamos nada en ninguna colección
-        throw new Error("DNI_EXISTE");
-      }
-
-      // 2) Obtener siguiente nroAfiliacion SOLO en la colección nuevoAfiliado
-      //    Usamos un doc "contador" por DNI dentro de la misma colección.
-      const counterRef = doc(db, "nuevoAfiliado", `${dniKey}_counter`);
-      const counterSnap = await tx.get(counterRef);
-
-      let nroAfiliacion = 1;
-      if (!counterSnap.exists()) {
-        // Primera afiliación para este DNI
-        tx.set(counterRef, {
-          last: 1,
-          updatedAt: serverTimestamp(),
-        });
-      } else {
-        const last = typeof counterSnap.data()?.last === "number"
-          ? counterSnap.data()!.last
-          : 0;
-        nroAfiliacion = last + 1;
-        tx.update(counterRef, {
-          last: nroAfiliacion,
-          updatedAt: serverTimestamp(),
-        });
-      }
-
-      // 3) Crear usuario activo (usuarios/{dni})
-      tx.set(usuarioRef, payloadBase);
-
-      // 4) Registrar evento de afiliación (nuevoAfiliado con auto-ID)
-      const eventoRef = doc(collection(db, "nuevoAfiliado"));
-      tx.set(eventoRef, {
-        ...payloadBase,
-        nroAfiliacion,
-      });
-    });
-
-    Alert.alert("SiDCa", "Afiliado exitosamente", [
-      { text: "OK", onPress: () => router.navigate("/") },
-    ]);
-
-    // Limpiar formulario solo si se creó correctamente
-    setNewUser({
-      nombre: "",
-      apellido: "",
-      dni: "",
-      email: "",
-      celular: "",
-      departamento: "",
-      establecimientos: "",
-      descuento: "si",
-      fecha: formatFecha(new Date()),
-    });
-  } catch (error: any) {
-    if (error?.message === "DNI_EXISTE") {
-      Alert.alert(
-        "SiDCa",
-        "Ya existe un afiliado con este DNI. Contacta con el administrador."
-      );
-    } else {
-      console.error("Error al afiliar usuario: ", error);
-      Alert.alert(
-        "SiDCa",
-        "Hubo un problema al procesar tu solicitud. Intenta nuevamente."
-      );
+    // 2) Validaciones explícitas (evita falsos negativos por espacios)
+    if (
+      !normalized.nombre ||
+      !normalized.apellido ||
+      !normalized.dni ||
+      !normalized.email ||
+      !normalized.celular ||
+      !normalized.tituloGrado ||
+      !normalized.departamento ||
+      !normalized.establecimientos
+    ) {
+      return Alert.alert("SiDCa", "Debe completar todos los campos obligatorios.");
     }
-  } finally {
-    setLoading(false);
-  }
-};
 
+    if (
+      !regexRegister.names.test(normalized.nombre) ||
+      !regexRegister.names.test(normalized.apellido)
+    ) {
+      return Alert.alert("SiDCa", "Nombre o apellido no válido");
+    }
+
+    if (!regexRegister.dni.test(normalized.dni)) {
+      return Alert.alert("SiDCa", "DNI no válido");
+    }
+
+    try {
+      setLoading(true);
+
+      const dniKey = normalized.dni;
+
+      // Payload base
+      const payloadBase = {
+        ...normalized,
+        dni: dniKey,
+        fechaServer: serverTimestamp(),
+      };
+
+      await runTransaction(db, async (tx) => {
+        // 1) Chequear existencia del usuario activo por ID = DNI
+        const usuarioRef = doc(db, "usuarios", dniKey);
+        const usuarioSnap = await tx.get(usuarioRef);
+
+        if (usuarioSnap.exists()) {
+          throw new Error("DNI_EXISTE");
+        }
+
+        // 2) Obtener siguiente nroAfiliacion (contador por DNI según tu lógica actual)
+        const counterRef = doc(db, "nuevoAfiliado", `${dniKey}_counter`);
+        const counterSnap = await tx.get(counterRef);
+
+        let nroAfiliacion = 1;
+        if (!counterSnap.exists()) {
+          tx.set(counterRef, {
+            last: 1,
+            updatedAt: serverTimestamp(),
+          });
+        } else {
+          const last =
+            typeof counterSnap.data()?.last === "number"
+              ? counterSnap.data()!.last
+              : 0;
+          nroAfiliacion = last + 1;
+          tx.update(counterRef, {
+            last: nroAfiliacion,
+            updatedAt: serverTimestamp(),
+          });
+        }
+
+        // 3) Crear usuario activo (usuarios/{dni})
+        tx.set(usuarioRef, payloadBase);
+
+        // 4) Registrar evento de afiliación (nuevoAfiliado con auto-ID)
+        const eventoRef = doc(collection(db, "nuevoAfiliado"));
+        tx.set(eventoRef, {
+          ...payloadBase,
+          nroAfiliacion,
+        });
+      });
+
+      Alert.alert("SiDCa", "Afiliado exitosamente", [
+        { text: "OK", onPress: () => router.navigate("/") },
+      ]);
+
+      // Limpiar formulario
+      setNewUser({
+        nombre: "",
+        apellido: "",
+        dni: "",
+        email: "",
+        celular: "",
+        tituloGrado: "",
+        departamento: "",
+        establecimientos: "",
+        descuento: "si",
+        fecha: formatFecha(new Date()),
+      });
+    } catch (error: any) {
+      if (error?.message === "DNI_EXISTE") {
+        Alert.alert(
+          "SiDCa",
+          "Ya existe un afiliado con este DNI. Contacta con el administrador."
+        );
+      } else {
+        console.error("Error al afiliar usuario: ", error);
+        Alert.alert(
+          "SiDCa",
+          "Hubo un problema al procesar tu solicitud. Intenta nuevamente."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const selectDepartment = (department: string) => {
     handleNewUserData("departamento", department);
@@ -223,7 +246,7 @@ export default function CreateNewUser() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         overScrollMode="never"
-        showsVerticalScrollIndicator={false}
+       showsVerticalScrollIndicator={false}
       >
         <View style={styles.viewInformation}>
           <Text
@@ -247,6 +270,7 @@ export default function CreateNewUser() {
             de su Salario.
           </Text>
 
+          {/* Nombre */}
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -261,12 +285,16 @@ export default function CreateNewUser() {
               style={styles.inputForm}
               value={newUser.nombre}
               onChangeText={(v) => handleNewUserData("nombre", v)}
+              onBlur={() =>
+                handleNewUserData("nombre", normalize(newUser.nombre))
+              }
               autoCapitalize="words"
               autoCorrect={false}
               returnKeyType="next"
             />
           </View>
 
+          {/* Apellido */}
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -281,12 +309,16 @@ export default function CreateNewUser() {
               style={styles.inputForm}
               value={newUser.apellido}
               onChangeText={(v) => handleNewUserData("apellido", v)}
+              onBlur={() =>
+                handleNewUserData("apellido", normalize(newUser.apellido))
+              }
               autoCapitalize="words"
               autoCorrect={false}
               returnKeyType="next"
             />
           </View>
 
+          {/* DNI */}
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -309,6 +341,7 @@ export default function CreateNewUser() {
             />
           </View>
 
+          {/* Email */}
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -322,7 +355,8 @@ export default function CreateNewUser() {
             <TextInput
               style={styles.inputForm}
               value={newUser.email}
-              onChangeText={(v) => handleNewUserData("email", v.trim())}
+              onChangeText={(v) => handleNewUserData("email", v)}
+              onBlur={() => handleNewUserData("email", newUser.email.trim())}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -330,6 +364,7 @@ export default function CreateNewUser() {
             />
           </View>
 
+          {/* Celular */}
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -346,12 +381,16 @@ export default function CreateNewUser() {
               onChangeText={(v) =>
                 handleNewUserData("celular", v.replace(/[^\d+]/g, ""))
               }
+              onBlur={() =>
+                handleNewUserData("celular", newUser.celular.trim())
+              }
               keyboardType="phone-pad"
               autoCorrect={false}
               returnKeyType="next"
             />
           </View>
 
+          {/* Título de grado (obligatorio) */}
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -360,7 +399,34 @@ export default function CreateNewUser() {
                 fontSize: 18,
               }}
             >
-              Departamento
+              Título de grado (nombre de la carrera)
+            </Text>
+            <TextInput
+              style={styles.inputForm}
+              value={newUser.tituloGrado}
+              onChangeText={(v) => handleNewUserData("tituloGrado", v)}
+              onBlur={() =>
+                handleNewUserData(
+                  "tituloGrado",
+                  normalize(newUser.tituloGrado)
+                )
+              }
+              autoCapitalize="sentences"
+              autoCorrect
+              returnKeyType="next"
+            />
+          </View>
+
+          {/* Departamento (domicilio real) */}
+          <View style={styles.inputContainer}>
+            <Text
+              style={{
+                color: "#ffffff",
+                alignSelf: "flex-start",
+                fontSize: 18,
+              }}
+            >
+              Departamento (domicilio real)
             </Text>
             <TouchableOpacity
               onPress={() => setModalVisible(true)}
@@ -383,6 +449,7 @@ export default function CreateNewUser() {
             </TouchableOpacity>
           </View>
 
+          {/* Establecimientos */}
           <View style={styles.inputContainer}>
             <Text
               style={{
@@ -397,6 +464,12 @@ export default function CreateNewUser() {
               style={styles.inputForm}
               value={newUser.establecimientos}
               onChangeText={(v) => handleNewUserData("establecimientos", v)}
+              onBlur={() =>
+                handleNewUserData(
+                  "establecimientos",
+                  normalize(newUser.establecimientos)
+                )
+              }
               autoCapitalize="sentences"
               autoCorrect
               returnKeyType="done"
@@ -417,6 +490,7 @@ export default function CreateNewUser() {
           </TouchableOpacity>
         </View>
 
+        {/* Modal de departamentos */}
         <Modal
           animationType="slide"
           transparent
