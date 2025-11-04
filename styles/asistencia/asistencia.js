@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
   btnNews: {
     width: "75%",
     height: 40,
-    backgroundColor: "#005CFE", // Fondo azul
+    backgroundColor: "#005CFE",
     borderRadius: 5,
     display: "flex",
     justifyContent: "center",
@@ -45,26 +45,26 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: "flex-start", // Modal en la parte superior
+    justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo oscuro translúcido
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContainer: {
     width: "98%",
-    height: "95%", // Aumentamos la altura del modal
+    height: "95%",
     padding: 20,
     backgroundColor: "#fea200",
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "flex-start", // Alineación hacia la parte superior
+    justifyContent: "flex-start",
     alignSelf: "center",
-    paddingBottom: 20, // Aumentamos el padding en la parte inferior
+    paddingBottom: 20,
   },
   modalContent: {
     backgroundColor: "#fea200",
     width: "100%",
     height: "auto",
-    maxHeight: "auto", // Limitar la altura máxima
+    maxHeight: "auto",
     borderRadius: 10,
     padding: 10,
   },
@@ -76,10 +76,10 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   modalItemImage: {
-    width: "200%", // Ajuste para que la imagen ocupe el 100% del ancho
-    height: 400, // Aumento del tamaño de la imagen
+    width: "200%",
+    height: 400,
     marginBottom: 10,
-    alignSelf: "center", // Centrado de la imagen
+    alignSelf: "center",
   },
   btnCommon: {
     width: "auto",
@@ -122,40 +122,21 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 10,
   },
-  modalText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
-  pickerContainer: {
-    marginBottom: 20,
-  },
   mainInformationContainer: {
     marginBottom: 15,
-    alignItems: "flex-start", // Alineación a la izquierda
-    width: "100%", // Asegúrate de que ocupe todo el ancho disponible
+    alignItems: "flex-start",
+    width: "100%",
   },
   modalText: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 10,
     color: "#333",
-    textAlign: "left", // Alineación a la izquierda
+    textAlign: "left",
   },
   input: {
     width: "100%",
-    height: 50,
+    height: 55,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 5,
@@ -166,20 +147,56 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
-    paddingBottom: 20, // Adds extra space at the bottom to prevent cutoff
+    paddingBottom: 20,
   },
   separator: {
-    height: 2, // Alto de la línea
-    backgroundColor: "black", // Color de la línea
-    width: "100%", // Ocupa todo el ancho disponible
-    marginVertical: 10, // Ajustado para un espaciado adecuado
+    height: 2,
+    backgroundColor: "black",
+    width: "100%",
+    marginVertical: 10,
   },
   modalDescription: {
     fontSize: 16,
-    textAlign: "justify", // Cambié para que se alineara mejor
-    marginBottom: -8, // Ajustado para más espacio
+    textAlign: "justify",
+    marginBottom: -8,
     fontWeight: "bold",
   },
+});
+
+/* === Estilos para el card "Curso habilitado" === */
+export const cursoCardStyles = StyleSheet.create({
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#000000ff",
+    backgroundColor: "rgba(0,92,254,0.08)",
+    marginBottom: 8,
+  },
+  cardDisabled: {
+    borderColor: "#cfcfcf",
+    backgroundColor: "#f6f7f9",
+    borderStyle: "dashed",
+  },
+  
+  iconWrapDisabled: { backgroundColor: "#d3d7de" },
+  iconText: { fontSize: 22, color: "#fff" },
+  title: { fontSize: 16, fontWeight: "700", color: "#13213A" },
+  titleDisabled: { color: "#8a8f98", fontWeight: "600" },
+  chipsRow: { flexDirection: "row", gap: 8, marginTop: 6, flexWrap: "wrap" },
+  chip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    fontSize: 12,
+    overflow: "hidden",
+  },
+  chipOk: { backgroundColor: "#DCF3D6", color: "#1A7F37" },
+  chipWarn: { backgroundColor: "#FFE7E7", color: "#9B1C1C" },
+  chipMode: { backgroundColor: "#E6F0FF", color: "#0B4EC2" },
 });
 
 export default styles;

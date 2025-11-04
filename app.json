@@ -5,7 +5,7 @@
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/logos/logo-05.png",
-    "scheme": "myapp",
+    "scheme": "sidca",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/logos/logo-01.png",
@@ -19,13 +19,23 @@
         "foregroundImage": "./assets/apk.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": []  
+      "permissions": ["CAMERA"],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            { "scheme": "sidca", "host": "asistencia" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jakiro12.one",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Se utiliza para escanear el código QR de asistencia."
       }
     },
     "web": {
@@ -35,12 +45,15 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-build-properties", {
-        "android": {
-          "compileSdkVersion": 35,
-          "targetSdkVersion": 35
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35
+          }
         }
-      }]
+      ]
     ],
     "experiments": {
       "typedRoutes": true

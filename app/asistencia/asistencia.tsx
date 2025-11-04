@@ -1,3 +1,4 @@
+import React, { useContext, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,13 +8,12 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
-  FlatList,
   ScrollView,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import styles from "../../styles/asistencia/asistencia";
+import styles, { cursoCardStyles } from "../../styles/asistencia/asistencia";
 import { SidcaContext } from "../_layout";
-import { useContext, useState, useEffect } from "react";
 import {
   collection,
   getDocs,
@@ -23,150 +23,219 @@ import {
   doc,
   getDoc,
   where,
+  setDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
+import { CameraView, useCameraPermissions } from "expo-camera";
 
 const localImage = require("../../assets/logos/secretaria.png");
 
+/* ----- Card estético para "Curso habilitado" ----- */
+type CursoCardProps = {
+  titulo?: string;
+  modalidad?: "virtual" | "presencial";
+  habilitado: boolean;
+};
+const CursoHabilitadoCard: React.FC<CursoCardProps> = ({
+  titulo,
+  modalidad = "virtual",
+  habilitado,
+}) => (
+  <View
+    style={[cursoCardStyles.card, !habilitado && cursoCardStyles.cardDisabled]}
+  >
+    <View style={[!habilitado && cursoCardStyles.iconWrapDisabled]}>
+       </View>
+    <View style={{ flex: 1 }}>
+      <Text
+        numberOfLines={2}
+        style={[
+          cursoCardStyles.title,
+          !habilitado && cursoCardStyles.titleDisabled,
+        ]}
+      >
+        {habilitado ? titulo : "(no hay curso habilitado)"}
+      </Text>
+      <View style={cursoCardStyles.chipsRow}>
+        <Text
+          style={[
+            cursoCardStyles.chip,
+            habilitado ? cursoCardStyles.chipOk : cursoCardStyles.chipWarn,
+          ]}
+        >
+          {habilitado ? "Habilitado" : "Inactivo"}
+        </Text>
+        <Text style={[cursoCardStyles.chip, cursoCardStyles.chipMode]}>
+          {modalidad === "virtual" ? "Virtual" : "Presencial"}
+        </Text>
+      </View>
+    </View>
+  </View>
+);
+
 export default function HandleCampusTeachers() {
-  const { userData } = useContext(SidcaContext); // Obtener datos del contexto
+  const { userData } = useContext(SidcaContext);
   const statusBarHeight = StatusBar.currentHeight;
   const windowHeight = Dimensions.get("window").height;
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [dataTravel, setDataTravel] = useState<any>([]); // Cursos
-  const [selectedCourse, setSelectedCourse] = useState(""); // Curso seleccionado
-  const [selectedLevel, setSelectedLevel] = useState(""); // Nivel educativo seleccionado
-  const [currentDate, setCurrentDate] = useState<string>(""); // Fecha actual
-  const [isButtonEnabled, setIsButtonEnabled] = useState(false); // Estado del botón
-  const [attendances, setAttendances] = useState([]); // Esto crea un estado vacío para las asistencias.
 
-  const analytics = getFirestore(firebaseconn);
-  const coursesCollection = collection(analytics, "cursos"); // Colección de cursos
-  const asistenciaCollection = collection(analytics, "asistencia");
-  const codCollection = collection(analytics, "cod");
+  // Config leída de cod/asistencia
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [modalidad, setModalidad] = useState<"virtual" | "presencial">(
+    "virtual"
+  );
+  const [metodo, setMetodo] = useState<string | undefined>(undefined);
+  const [sessionIdCfg, setSessionIdCfg] = useState<string | undefined>(
+    undefined
+  );
+  const [habilitadaCfg, setHabilitadaCfg] = useState<boolean>(false);
 
-  const toggleModal = () => {
-    setIsModalVisible(!isModalVisible);
+  // Form + estado general
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [currentDate, setCurrentDate] = useState<string>("");
+  const [isButtonEnabled, setIsButtonEnabled] = useState(false);
+  const [attendances, setAttendances] = useState<any[]>([]);
+
+  // Cámara (para QR presencial)
+  const [, requestPermission] = useCameraPermissions();
+  const [scanVisible, setScanVisible] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [scannedOnce, setScannedOnce] = useState(false);
+
+  const db = getFirestore(firebaseconn);
+  const asistenciaCollection = collection(db, "asistencia");
+  const codCollection = collection(db, "cod");
+
+  const toggleModal = () => setIsModalVisible(!isModalVisible);
+
+  /* --------- Utilidades --------- */
+  const friendlyError = (msg: string) => Alert.alert("Asistencia", msg);
+  const nowIsBetween = (sinceISO: string, untilISO: string) => {
+    const now = new Date();
+    const a = new Date(sinceISO);
+    const b = new Date(untilISO);
+    return now >= a && now <= b;
   };
+  const parseAsistenciaUrl = (urlStr: string) => {
+    // sidca://asistencia?s=auto&c=ABCD-EF12&v=1
+    const raw = urlStr.trim();
+    const qIndex = raw.indexOf("?");
+    if (qIndex === -1) throw new Error("sin query");
+    const queryStr = raw.slice(qIndex + 1);
+    const params = new URLSearchParams(queryStr);
+    const s = params.get("s") || "auto";
+    const c = params.get("c") || "";
+    if (!s || !c) throw new Error("faltan params");
+    return { sessionParam: s, codeParam: c };
+  };
+  const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-  // Cargar los cursos desde Firebase
+  /* --------- Fecha actual DD/MM/YYYY --------- */
   useEffect(() => {
-    const fetchCourses = async () => {
+    const d = new Date();
+    const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+    const f = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+    setCurrentDate(f);
+  }, []);
+
+  /* --------- Historial por DNI --------- */
+  useEffect(() => {
+    const fetchAttendancesByDni = async () => {
+      try {
+        if (!userData?.dni) {
+          setAttendances([]);
+          return;
+        }
+        const qAtt = query(
+          asistenciaCollection,
+          where("dni", "==", userData.dni)
+        );
+        const snap = await getDocs(qAtt);
+        if (snap.empty) {
+          setAttendances([]);
+        } else {
+          const rows = snap.docs.map((d) => ({
+            curso: d.data().curso,
+            fecha: d.data().fecha,
+            modalidad: d.data().modalidad,
+          }));
+          setAttendances(rows);
+        }
+      } catch {
+        setAttendances([]);
+      }
+    };
+    fetchAttendancesByDni();
+  }, [userData?.dni]);
+
+  /* --------- Flag general cod/boton.cargar --------- */
+  useEffect(() => {
+    const fetchButtonState = async () => {
+      try {
+        const botonRef = doc(codCollection, "boton");
+        const botonSnap = await getDoc(botonRef);
+        const cargar = botonSnap.exists() ? botonSnap.data()?.cargar : "no";
+        setIsButtonEnabled(cargar === "si");
+      } catch {
+        setIsButtonEnabled(false);
+      }
+    };
+    fetchButtonState();
+  }, [isModalVisible]);
+
+  /* --------- Leer cod/asistencia (cursoTitulo, modalidad, metodo, sessionId, habilitada) --------- */
+  useEffect(() => {
+    const fetchAsistenciaConfig = async () => {
       setLoading(true);
       try {
-        const q = query(coursesCollection);
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-          console.log("No se encontraron cursos en Firebase.");
-          setDataTravel([]); // Limpia la lista si no hay cursos
+        const asisRef = doc(codCollection, "asistencia");
+        const asisSnap = await getDoc(asisRef);
+        if (asisSnap.exists()) {
+          const data = asisSnap.data() || {};
+          setSelectedCourse(data.cursoTitulo || "");
+          setModalidad(
+            (data.modalidad as "virtual" | "presencial") || "virtual"
+          );
+          setMetodo(data.metodo);
+          setSessionIdCfg(data.sessionId);
+          setHabilitadaCfg(!!data.habilitada);
         } else {
-          const courses = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            titulo: doc.data().titulo, // Extrae el campo 'titulo'
-          }));
-          setDataTravel(courses); // Almacena los cursos en el estado
+          setSelectedCourse("");
+          setModalidad("virtual");
+          setMetodo(undefined);
+          setSessionIdCfg(undefined);
+          setHabilitadaCfg(false);
         }
-      } catch (error) {
-        console.error("Error al cargar los cursos:", error);
-        alert(`Error: ${error}`);
+      } catch {
+        setSelectedCourse("");
+        setModalidad("virtual");
+        setMetodo(undefined);
+        setSessionIdCfg(undefined);
+        setHabilitadaCfg(false);
       } finally {
         setLoading(false);
       }
     };
+    fetchAsistenciaConfig();
+  }, [isModalVisible]);
 
-    fetchCourses();
-  }, []);
-
-  // Verificar el estado del botón al cargar el modal
-  useEffect(() => {
-    const fetchButtonState = async () => {
-      try {
-        const docRef = doc(codCollection, "boton"); // Referencia al documento en 'cuotas'
-        const docSnap = await getDoc(docRef);
-
-        if (!docSnap.exists()) {
-          console.warn(
-            "El documento 'boton' no existe en la colección 'cuotas'."
-          );
-          setIsButtonEnabled(false); // Deshabilitar si el documento no existe
-          return;
-        }
-
-        const cargarValue = docSnap.data().cargar;
-
-        // Verificar el valor del campo 'cargar'
-        if (cargarValue === "si") {
-          setIsButtonEnabled(true); // Habilitar botón
-        } else if (cargarValue === "no") {
-          setIsButtonEnabled(false); // Deshabilitar botón
-        } else {
-          console.warn(`Valor inesperado para 'cargar': ${cargarValue}`);
-          setIsButtonEnabled(false); // Manejar valores inesperados
-        }
-      } catch (error) {
-        console.error("Error al verificar el estado del botón:", error);
-        setIsButtonEnabled(false); // Deshabilitar en caso de error
-      }
-    };
-
-    fetchButtonState(); // Llamar a la función
-  }, [isModalVisible]); // Solo se ejecuta cuando el modal cambia de estado
-
-  // Obtener la fecha actual
-  useEffect(() => {
-    const date = new Date();
-    const formattedDate = `${date.getDate()}/${
-      date.getMonth() + 1
-    }/${date.getFullYear()}`;
-    setCurrentDate(formattedDate);
-  }, []);
-
-  // Obtener las asistencias del usuario por DNI
-  useEffect(() => {
-    const fetchAttendancesByDni = async () => {
-      try {
-        const q = query(
-          asistenciaCollection,
-          where("dni", "==", userData?.dni)
-        );
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-           setAttendances([]); // Limpia la lista si no hay asistencias
-        } else {
-          const asistenciaDocs = querySnapshot.docs.map((doc) => ({
-            curso: doc.data().curso,
-            fecha: doc.data().fecha,
-          }));
-          setAttendances(asistenciaDocs); // Almacena las asistencias en el estado
-          }
-      } catch (error) {
-        
-      }
-    };
-
-    if (userData?.dni) {
-      fetchAttendancesByDni(); // Solo hace la consulta si el DNI está disponible
-    }
-  }, [userData?.dni]); // Dependiendo de los cambios en el DNI
-
-  const registerAttendance = async () => {
+  /* --------- Registrar asistencia VIRTUAL (sin QR) --------- */
+  const registerAttendanceVirtual = async () => {
     try {
       if (!selectedCourse || !selectedLevel) {
-        alert("Por favor, seleccione un curso y un nivel educativo.");
+        friendlyError(
+          "Seleccione nivel educativo y verifique curso habilitado."
+        );
         return;
       }
-
       if (!userData?.dni) {
-        alert("No se encontró el DNI del usuario.");
+        friendlyError("No se encontró el DNI del usuario.");
         return;
       }
-
-      // Consultar si ya existe una asistencia para el mismo DNI, curso y fecha
-      const querySnapshot = await getDocs(
+      const dupSnap = await getDocs(
         query(
           asistenciaCollection,
           where("dni", "==", userData.dni),
@@ -174,14 +243,11 @@ export default function HandleCampusTeachers() {
           where("fecha", "==", currentDate)
         )
       );
-
-      if (!querySnapshot.empty) {
-        alert("Ya has registrado asistencia para este curso el día de hoy.");
+      if (!dupSnap.empty) {
+        friendlyError("Ya registraste asistencia para este curso hoy.");
         return;
       }
-
-      // Preparar datos con valores predeterminados para evitar errores en Firebase
-      const asistencia = {
+      await addDoc(asistenciaCollection, {
         apellido: userData?.apellido || "Sin apellido",
         nombre: userData?.nombre || "Sin nombre",
         dni: userData?.dni || "Sin DNI",
@@ -189,40 +255,139 @@ export default function HandleCampusTeachers() {
         nivelEducativo: selectedLevel,
         curso: selectedCourse,
         fecha: currentDate,
-      };
-
-      // Guardar en Firebase
-      await addDoc(asistenciaCollection, asistencia);
-
-      alert("Asistencia registrada con éxito");
-      toggleModal(); // Cerrar el modal automáticamente después de registrar la asistencia
-    } catch (error) {
-      console.error("Error al registrar la asistencia:", error);
-      alert("Error al registrar la asistencia. Intente nuevamente.");
+        presencial: false,
+        modalidad: "virtual",
+      });
+      Alert.alert("Asistencia", "Asistencia registrada con éxito.");
+      toggleModal();
+    } catch {
+      friendlyError("Error al registrar la asistencia. Intente nuevamente.");
     }
   };
 
-  const renderAssistanceItem = ({ item }) => (
-    <View
-      style={{
-        marginBottom: 15,
-        padding: 15,
-        backgroundColor: "#f5f5f5",
-        borderRadius: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      }}
-    >
-      <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-        <strong>Curso:</strong> {item.curso}
-      </Text>
-      <Text style={{ fontSize: 14, color: "#555" }}>
-        <strong>Fecha:</strong> {item.fecha}
-      </Text>
-    </View>
-  );
+  /* --------- Registrar asistencia PRESENCIAL (QR) --------- */
+  const openScanner = async () => {
+    if (!selectedLevel) {
+      friendlyError("Seleccione un nivel educativo antes de continuar.");
+      return;
+    }
+    if (!isButtonEnabled || !habilitadaCfg) {
+      friendlyError("Asistencia deshabilitada por el organizador.");
+      return;
+    }
+    if (!selectedCourse) {
+      friendlyError("No hay curso habilitado.");
+      return;
+    }
+    if (modalidad !== "presencial" || metodo !== "qr_static") {
+      friendlyError("Este curso no utiliza registro por QR.");
+      return;
+    }
+    const perm = await requestPermission();
+    setHasPermission(perm?.granted ?? false);
+    setScannedOnce(false);
+    setScanVisible(true);
+  };
+
+  const onBarcodeScan = async (result: { data: string; type: string }) => {
+    if (scannedOnce) return;
+    setScannedOnce(true);
+    setScanVisible(false);
+    try {
+      const { sessionParam, codeParam } = parseAsistenciaUrl(result.data);
+      const sessionId = sessionParam === "auto" ? sessionIdCfg : sessionParam;
+      if (!sessionId) {
+        friendlyError(
+          "No se pudo resolver la sesión activa. Intente nuevamente."
+        );
+        return;
+      }
+      const sesRef = doc(db, "asistencia_sesiones", sessionId);
+      const sesSnap = await getDoc(sesRef);
+      if (!sesSnap.exists()) {
+        friendlyError("Sesión de asistencia no encontrada.");
+        return;
+      }
+      const s = sesSnap.data() as {
+        estado: "abierta" | "cerrada";
+        desde: string;
+        hasta: string;
+        codigo: string;
+        cursoId?: string;
+        cursoTitulo?: string;
+      };
+      if (s.estado !== "abierta") {
+        friendlyError("Sesión cerrada o vencida.");
+        return;
+      }
+      if (!nowIsBetween(s.desde, s.hasta)) {
+        friendlyError("Fuera de la ventana horaria de asistencia.");
+        return;
+      }
+      if (s.codigo !== codeParam) {
+        friendlyError("Código inválido o no vigente.");
+        return;
+      }
+
+      // Idempotente: docId = sessionId + "_" + DNI (o uid)
+      const idUser = userData?.dni || userData?.uid || "sin_id";
+      const idDoc = `${sessionId}_${idUser}`;
+      const ref = doc(db, "asistencia", idDoc);
+      const ex = await getDoc(ref);
+      if (ex.exists()) {
+        Alert.alert("Asistencia", "Asistencia ya registrada.");
+        return;
+      }
+      await setDoc(ref, {
+        sessionId,
+        uid: idUser,
+        dni: userData?.dni ?? null,
+        apellido: userData?.apellido || "Sin apellido",
+        nombre: userData?.nombre || "Sin nombre",
+        departamento: userData?.departamento || "Sin departamento",
+        nivelEducativo: selectedLevel,
+        curso: selectedCourse,
+        cursoTitulo: selectedCourse,
+        codigoUsado: codeParam,
+        fecha: currentDate,
+        presencial: true,
+        modalidad: "presencial",
+        createdAt: serverTimestamp(),
+      });
+      Alert.alert("Asistencia", "¡Asistencia presencial registrada con éxito!");
+
+      // refrescar historial
+      const qAtt = query(
+        asistenciaCollection,
+        where("dni", "==", userData?.dni || "")
+      );
+      const snap = await getDocs(qAtt);
+      const rows = snap.docs.map((d) => ({
+        curso: d.data().curso,
+        fecha: d.data().fecha,
+        modalidad: d.data().modalidad,
+      }));
+      setAttendances(rows);
+    } catch {
+      friendlyError("QR inválido.");
+    }
+  };
+
+  /* --------- Habilitación de botones por modalidad --------- */
+  const levelSelected = !!selectedLevel;
+  const isVirtualActive =
+    isButtonEnabled &&
+    habilitadaCfg &&
+    !!selectedCourse &&
+    modalidad === "virtual" &&
+    levelSelected;
+  const isPresencialQRActive =
+    isButtonEnabled &&
+    habilitadaCfg &&
+    !!selectedCourse &&
+    modalidad === "presencial" &&
+    metodo === "qr_static" &&
+    levelSelected;
 
   return (
     <View style={{ height: "100%", paddingTop: statusBarHeight }}>
@@ -267,17 +432,15 @@ export default function HandleCampusTeachers() {
           </Text>
         </TouchableOpacity>
 
-        <Modal
-          visible={isModalVisible}
-          animationType="slide"
-          transparent={true}
-        >
+        {/* Modal principal */}
+        <Modal visible={isModalVisible} animationType="slide" transparent>
           <View style={styles.modalOverlay}>
             <View style={[styles.modalContainer, { margin: 20 }]}>
               {loading ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
                 <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                  {/* Datos afiliado */}
                   <View
                     style={{
                       borderColor: "black",
@@ -289,23 +452,20 @@ export default function HandleCampusTeachers() {
                     <View style={styles.mainInformationContainer}>
                       <Text style={{ fontSize: 18, fontWeight: "bold" }}>
                         Afiliado:{" "}
-                        {userData?.apellido !== undefined
-                          ? `${userData.apellido},`
-                          : null}{" "}
+                        {userData?.apellido ? `${userData.apellido}, ` : ""}
                         {userData?.nombre}
                       </Text>
                       <Text style={{ fontSize: 18, fontWeight: "bold" }}>
                         D.N.I.: {userData?.dni}
                       </Text>
                       <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                        Departamento:{" "}
-                        {userData?.departamento === undefined
-                          ? "Sin asignar"
-                          : userData?.departamento}
+                        Departamento: {userData?.departamento ?? "Sin asignar"}
                       </Text>
                     </View>
                   </View>
+
                   <View style={styles.separator} />
+
                   <View
                     style={{
                       borderColor: "black",
@@ -314,12 +474,11 @@ export default function HandleCampusTeachers() {
                       padding: 20,
                     }}
                   >
-                    {/* Selección de nivel educativo */}
                     <Text style={styles.modalText}>Nivel Educativo:</Text>
                     <Picker
                       selectedValue={selectedLevel}
                       style={styles.input}
-                      onValueChange={(itemValue) => setSelectedLevel(itemValue)}
+                      onValueChange={(v) => setSelectedLevel(v)}
                     >
                       <Picker.Item
                         label="Seleccione un nivel educativo"
@@ -341,35 +500,33 @@ export default function HandleCampusTeachers() {
                         label="Nivel Superior"
                         value="Nivel Superior"
                       />
+                      <Picker.Item
+                        label="Educación Técnica (Técnica/Agro/FP)"
+                        value="Educación Técnica (Técnica/Agro/FP)"
+                      />
                     </Picker>
+                    {!selectedLevel && (
+                      <Text
+                        style={{
+                          color: "#9B1C1C",
+                          marginTop: -14,
+                          marginBottom: 12,
+                          fontWeight: "600",
+                        }}
+                      >
+                        Campo obligatorio
+                      </Text>
+                    )}
 
-                    {/* Selección del curso */}
-                    <Text style={styles.modalText}>Seleccionar Curso:</Text>
-                    <Picker
-                      selectedValue={selectedCourse}
-                      style={styles.input}
-                      onValueChange={(itemValue) =>
-                        setSelectedCourse(itemValue)
-                      }
-                    >
-                      <Picker.Item label="Seleccione un curso" value="" />
-                      {dataTravel.length === 0 ? (
-                        <Picker.Item
-                          label="No se encontraron cursos"
-                          value=""
-                        />
-                      ) : (
-                        dataTravel.map((course) => (
-                          <Picker.Item
-                            key={course.id}
-                            label={course.titulo}
-                            value={course.titulo}
-                          />
-                        ))
-                      )}
-                    </Picker>
+                    {/* Curso desde cod/asistencia (sin lista) con estética mejorada */}
+                    <Text style={styles.modalText}>Curso habilitado:</Text>
+                    <CursoHabilitadoCard
+                      titulo={selectedCourse}
+                      modalidad={modalidad}
+                      habilitado={!!selectedCourse}
+                    />
 
-                    {/* Mostrar la fecha debajo de la lista de cursos */}
+                    {/* Fecha + Modalidad */}
                     <Text
                       style={{
                         fontSize: 16,
@@ -379,27 +536,59 @@ export default function HandleCampusTeachers() {
                     >
                       Fecha: {currentDate}
                     </Text>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.btnCommon,
-                        {
-                          backgroundColor: isButtonEnabled
-                            ? "#005CFE"
-                            : "#A9A9A9",
-                        },
-                      ]}
-                      onPress={isButtonEnabled ? registerAttendance : null}
-                      activeOpacity={isButtonEnabled ? 0.7 : 1}
+                    <Text
+                      style={{ fontSize: 16, fontWeight: "bold", marginTop: 2 }}
                     >
-                      <Text style={styles.commonBtnText}>
-                        Registrar Asistencia
-                      </Text>
-                    </TouchableOpacity>
+                      Modalidad: {cap(modalidad)}
+                    </Text>
+
+                    {/* Botón según modalidad (deshabilitado si falta nivel) */}
+                    {modalidad === "virtual" ? (
+                      <TouchableOpacity
+                        style={[
+                          styles.btnCommon,
+                          {
+                            backgroundColor: isVirtualActive
+                              ? "#005CFE"
+                              : "#A9A9A9",
+                            marginTop: 12,
+                          },
+                        ]}
+                        onPress={
+                          isVirtualActive
+                            ? registerAttendanceVirtual
+                            : undefined
+                        }
+                        activeOpacity={isVirtualActive ? 0.7 : 1}
+                      >
+                        <Text style={styles.commonBtnText}>
+                          Registrar Asistencia virtual
+                        </Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={[
+                          styles.btnCommon,
+                          {
+                            backgroundColor: isPresencialQRActive
+                              ? "#005CFE"
+                              : "#A9A9A9",
+                            marginTop: 12,
+                          },
+                        ]}
+                        onPress={isPresencialQRActive ? openScanner : undefined}
+                        activeOpacity={isPresencialQRActive ? 0.7 : 1}
+                      >
+                        <Text style={styles.commonBtnText}>
+                          Registrar asistencia Presencial QR
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
+
                   <View style={styles.separator} />
 
-                  {/* Mostrar las asistencias cargadas */}
+                  {/* Historial */}
                   <Text
                     style={[
                       styles.modalDescription,
@@ -410,7 +599,7 @@ export default function HandleCampusTeachers() {
                         borderRadius: 5,
                         padding: 5,
                         marginBottom: 5,
-                        backgroundColor: "#f0f0f0", // Cambia el color de fondo aquí
+                        backgroundColor: "#f0f0f0",
                       },
                     ]}
                   >
@@ -426,17 +615,19 @@ export default function HandleCampusTeachers() {
                   >
                     {Object.entries(
                       attendances
-                        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)) // Ordenar por fecha descendente
-                        .reduce((acc, item) => {
-                          if (!acc[item.curso]) {
-                            acc[item.curso] = [];
-                          }
+                        .sort(
+                          (a, b) =>
+                            (new Date(b.fecha) as any) -
+                            (new Date(a.fecha) as any)
+                        )
+                        .reduce((acc: any, item: any) => {
+                          if (!acc[item.curso]) acc[item.curso] = [];
                           acc[item.curso].push(item);
                           return acc;
                         }, {})
-                    ).map(([curso, asistencias], index) => (
+                    ).map(([curso, asistencias]: any, idx: number) => (
                       <View
-                        key={index}
+                        key={idx}
                         style={{
                           marginTop: 10,
                           padding: 10,
@@ -447,9 +638,10 @@ export default function HandleCampusTeachers() {
                         <Text style={{ fontSize: 16, fontWeight: "bold" }}>
                           Curso: {curso}
                         </Text>
-                        {asistencias.map((item, i) => (
+                        {asistencias.map((it: any, i: number) => (
                           <Text key={i} style={{ fontSize: 14, color: "#555" }}>
-                            Fecha: {item.fecha}
+                            Fecha: {it.fecha} — Modalidad:{" "}
+                            {cap(it.modalidad || "virtual")}
                           </Text>
                         ))}
                       </View>
@@ -460,6 +652,70 @@ export default function HandleCampusTeachers() {
               <View style={styles.separator} />
               <TouchableOpacity style={styles.btnCommon} onPress={toggleModal}>
                 <Text style={styles.commonBtnText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal de escaneo QR para presencial */}
+        <Modal visible={scanVisible} animationType="slide">
+          <View style={{ flex: 1, backgroundColor: "#000" }}>
+            {hasPermission === false ? (
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 24,
+                }}
+              >
+                <Text
+                  style={{ color: "#fff", fontSize: 16, textAlign: "center" }}
+                >
+                  Sin permisos de cámara. Otorgá el permiso desde Ajustes.
+                </Text>
+                <TouchableOpacity
+                  style={[
+                    styles.btnCommon,
+                    { backgroundColor: "#fff", marginTop: 16 },
+                  ]}
+                  onPress={() => setScanVisible(false)}
+                >
+                  <Text style={[styles.commonBtnText, { color: "#000" }]}>
+                    Cerrar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <CameraView
+                style={{ flex: 1 }}
+                facing="back"
+                barcodeScannerEnabled
+                barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+                onBarcodeScanned={(e) =>
+                  onBarcodeScan({ data: e.data, type: e.type as string })
+                }
+              />
+            )}
+            <View
+              style={{
+                position: "absolute",
+                top: 50,
+                left: 20,
+                right: 20,
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => setScanVisible(false)}
+                style={{
+                  backgroundColor: "#ffffffaa",
+                  padding: 10,
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={{ fontWeight: "700" }}>Cerrar</Text>
               </TouchableOpacity>
             </View>
           </View>
