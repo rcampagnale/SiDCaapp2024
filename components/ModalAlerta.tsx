@@ -39,7 +39,7 @@ const ModalAlerta: React.FC<Props> = ({
   onSalir,
   telefono = "+54 9 3834 53-9754",
   whatsapp = "+54 9 3834 53-9754",
-  titulo = "Afiliado Adherente — Acceso temporalmente restringido",
+  titulo = "Afiliado en carácter Adherente — Acceso temporalmente restringido",
   motivo = null,
   mensaje,
 }) => {
@@ -57,14 +57,14 @@ const ModalAlerta: React.FC<Props> = ({
 
   const body =
     mensaje ??
-    `Estimado/a docente, su afiliación figura como Afiliado Adherente y actualmente se encuentra INACTIVA.
+    `Estimado/a docente, su afiliación figura como Afiliado en carácter de Adherente y actualmente se encuentra SUSPENDIDA.
 ${
   motivo
     ? `\nMotivo: ${motivo}\n`
     : `\nMotivo: Sin información.\n`
 }
 Por favor, escríbanos por WhatsApp al Área Afiliado Adherente (solo mensajes; no llamadas).
-Horario de atención: 9:00–13:00 y 17:00–21:00.`;
+Horario de atención: Lunes a Viernes 8:00–12:00 y 16:00–18:00 Hs, Días no laborables: Feriados, Asuetos, Sábado y Domingo se atiende. La atención es por orden de ingreso de la consulta`;
 
   function openWspNumber(url: string): void {
     if (!url) return;
