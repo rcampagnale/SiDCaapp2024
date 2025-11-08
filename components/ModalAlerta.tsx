@@ -64,7 +64,7 @@ ${
     : `\nMotivo: Sin información.\n`
 }
 Por favor, escríbanos por WhatsApp al Área Afiliado Adherente (solo mensajes; no llamadas).
-Horario de atención: Lunes a Viernes 8:00–12:00 y 16:00–18:00 Hs, Días no laborables: Feriados, Asuetos, Sábado y Domingo se atiende. La atención es por orden de ingreso de la consulta`;
+Horario de atención: Lunes a Viernes 8:00–12:00 y 16:00–18:00 Hs, Días no laborables: Feriados, Asuetos, Sábado y Domingo no se atiende. La atención es por orden de ingreso de la consulta`;
 
   function openWspNumber(url: string): void {
     if (!url) return;
