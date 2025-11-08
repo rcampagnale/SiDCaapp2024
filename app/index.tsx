@@ -50,6 +50,18 @@ const toBool = (v: any): boolean => {
   return false;
 };
 
+// 🔎 Helper: busca por DNI en string y number
+const getByDni = async (colRef: any, dni: string) => {
+  let qs = await getDocs(query(colRef, where("dni", "==", dni)));
+  if (!qs.empty) return qs.docs[0].data();
+  const dniNum = Number(dni);
+  if (!Number.isNaN(dniNum)) {
+    qs = await getDocs(query(colRef, where("dni", "==", dniNum)));
+    if (!qs.empty) return qs.docs[0].data();
+  }
+  return null;
+};
+
 export default function SignInApp() {
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -127,83 +139,72 @@ export default function SignInApp() {
   // -------------------------------------------------------------------------------------------
 
   const findUser = async () => {
-  const dni = (dniNumber || "").trim();
-  if (!dni) {
-    Alert.alert("Atención", "Ingresá un DNI válido.");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    // 1) Usuario base
-    let snapUser = await getDocs(query(usuariosCollection, where("dni", "==", dni)));
-    if (snapUser.empty) {
-      const dniNum = Number(dni);
-      if (!Number.isNaN(dniNum)) {
-        snapUser = await getDocs(query(usuariosCollection, where("dni", "==", dniNum)));
-      }
-    }
-    if (snapUser.empty) {
-      Alert.alert("DNI no encontrado", "Verificá el número ingresado.");
+    const dni = (dniNumber || "").trim();
+    if (!dni) {
+      Alert.alert("Atención", "Ingresá un DNI válido.");
       return;
     }
-    const userDoc = snapUser.docs[0].data() || {};
 
-    // 2) Acceso: SOLO con 'nuevoAfiliado'
-    const nuevoAfiliadoCol = collection(db, "nuevoAfiliado");
-    let snapAf = await getDocs(query(nuevoAfiliadoCol, where("dni", "==", dni)));
-    if (snapAf.empty) {
-      const dniNum = Number(dni);
-      if (!Number.isNaN(dniNum)) {
-        snapAf = await getDocs(query(nuevoAfiliadoCol, where("dni", "==", dniNum)));
+    setLoading(true);
+    try {
+      // 1) Usuario base (datos generales y posible fallback de flags)
+      const userDoc = await getByDni(usuariosCollection, dni);
+      if (!userDoc) {
+        Alert.alert("DNI no encontrado", "Verificá el número ingresado.");
+        return;
       }
+
+      // 2) Flags canónicos: nuevoAfiliado (si existe)
+      const nuevoAfiliadoCol = collection(db, "nuevoAfiliado");
+      const af = await getByDni(nuevoAfiliadoCol, dni); // puede ser null
+
+      // 3) Resolver adherente/activo priorizando nuevoAfiliado y luego usuarios
+      const adherenteRaw =
+        (af?.adherente !== undefined ? af?.adherente : undefined) ??
+        userDoc?.adherente ??
+        false;
+
+      const activoRaw =
+        (af?.activo !== undefined ? af?.activo : undefined) ??
+        (af?.estado !== undefined ? af?.estado : undefined) ??
+        (userDoc?.activo !== undefined ? userDoc?.activo : undefined) ??
+        (userDoc?.estado !== undefined ? userDoc?.estado : undefined) ??
+        false;
+
+      const esAdherente = toBool(adherenteRaw);
+      // Si es adherente pero no tenemos flag de activo, por seguridad asumimos INACTIVO (false).
+      const esActivo = esAdherente ? toBool(activoRaw ?? false) : true;
+
+      // 4) Extras: motivo (y opcional wsp) desde "adherentes"
+      const adherentesCol = collection(db, "adherentes");
+      const adh = await getByDni(adherentesCol, dni); // puede ser null
+      const motivo = adh?.motivo ?? null;
+      const wspFromAdh =
+        adh?.whatsapp ?? adh?.wsp ?? adh?.celular ?? adh?.telefono ?? null;
+
+      // 5) Guardar en contexto (Home/ModalAlerta usan estos campos)
+      setUserData({
+        ...userDoc,
+        dni,
+        _afiliado: {
+          adherente: esAdherente,
+          activo: esActivo,
+          motivo,                 // ← del doc en "adherentes"
+          whatsapp: wspFromAdh ?? null,
+          _source: af ? "nuevoAfiliado+usuarios+adherentes" : "usuarios+adherentes",
+          ...(af ?? {}),          // conserva otros campos de nuevoAfiliado si existen
+        },
+      });
+
+      // 6) Ir al Home (si es adherente inactivo, el Modal bloquea el menú)
+      router.navigate("/home");
+      setDniNumber("");
+    } catch (error: any) {
+      Alert.alert("Error", String(error?.message || error));
+    } finally {
+      setLoading(false);
     }
-    const af = snapAf.empty ? null : (snapAf.docs[0].data() || {});
-    const esAdherente = toBool(af?.adherente ?? false);
-    const esActivo    = esAdherente ? toBool(af?.activo ?? af?.estado ?? false) : true;
-
-    // 3) Datos extra: 'motivo' (y opcional 'whatsapp') desde **adherentes**
-    const adherentesCol = collection(db, "adherentes");
-    let snapAdh = await getDocs(query(adherentesCol, where("dni", "==", dni)));
-    if (snapAdh.empty) {
-      const dniNum = Number(dni);
-      if (!Number.isNaN(dniNum)) {
-        snapAdh = await getDocs(query(adherentesCol, where("dni", "==", dniNum)));
-      }
-    }
-    const adh = snapAdh.empty ? null : (snapAdh.docs[0].data() || {});
-    const motivo = adh?.motivo ?? null; // 👈 ahora usamos este campo
-    const wspFromAdh =
-      adh?.whatsapp ??
-      adh?.wsp ??
-      adh?.celular ??
-      adh?.telefono ??
-      null;
-
-    // 4) Guardar en contexto
-    setUserData({
-      ...userDoc,
-      dni,
-      _afiliado: {
-        adherente: esAdherente,
-        activo: esActivo,
-        motivo,                 // 👈 guardamos motivo (no más 'observaciones')
-        whatsapp: wspFromAdh ?? null,
-        _source: "nuevoAfiliado+adherentes",
-        ...(af ?? {}),
-      },
-    });
-
-    // 5) Ir al Home
-    router.navigate("/home");
-    setDniNumber("");
-  } catch (error: any) {
-    Alert.alert("Error", String(error?.message || error));
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handleDniChange = (text: string) => {
     setDniNumber(text);
@@ -285,10 +286,13 @@ export default function SignInApp() {
                 <TouchableOpacity
                   style={styles.btnWhatsApp}
                   activeOpacity={1}
-                  onPress={() => openWspNumber("https://wa.me/5493832437803")}
+                  onPress={() => openWspNumber("https://wa.me/5493834539754")}
                 >
                   <Text style={{ fontSize: 18 }}>Soporte Técnico</Text>
-                  <Image style={{ width: 30, height: 30 }} source={require("../assets/logos/whatsapp.png")} />
+                  <Image
+                    style={{ width: 30, height: 30 }}
+                    source={require("../assets/logos/whatsapp.png")}
+                  />
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -308,7 +312,9 @@ export default function SignInApp() {
                   style={styles.radioBtn}
                   onPress={() => openSocialMedia("https://streaming.gostreaming.com.ar:10982/stream")}
                 >
-                  <Text style={{ fontSize: 18, fontWeight: "bold", marginRight: 10 }}>PLAY FM 106.5</Text>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", marginRight: 10 }}>
+                    PLAY FM 106.5
+                  </Text>
                   <FontAwesome6 name="radio" size={24} color="black" />
                 </TouchableOpacity>
               </ImageBackground>
