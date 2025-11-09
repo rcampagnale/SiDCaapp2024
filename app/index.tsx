@@ -26,6 +26,7 @@ import {
   getDocs,
   doc,
   getDoc,
+  getDocFromServer, // 👈 agregado: fuerza lectura desde servidor
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 
@@ -62,6 +63,31 @@ const getByDni = async (colRef: any, dni: string) => {
   return null;
 };
 
+/** =========================
+ *  🔧 HELPERS ROBUSTOS
+ *  ========================= */
+const toInt = (v: any) => {
+  const m = String(v ?? "").match(/\d+/);
+  return m ? parseInt(m[0], 10) : 0;
+};
+
+const readRemoteConfig = async (db: any) => {
+  try {
+    // 1) Primero /app (coincide con tu screenshot)
+    let s = await getDocFromServer(doc(db, "app"));
+    if (s.exists()) return s.data();
+    // 2) Fallback a /config/app
+    s = await getDocFromServer(doc(db, "config", "app"));
+    if (s.exists()) return s.data();
+  } catch (_) {
+    let s = await getDoc(doc(db, "app"));
+    if (s.exists()) return s.data();
+    s = await getDoc(doc(db, "config", "app"));
+    if (s.exists()) return s.data();
+  }
+  return {};
+};
+
 export default function SignInApp() {
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -79,7 +105,10 @@ export default function SignInApp() {
         }
         return false;
       };
-      const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      const sub = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
       return () => sub.remove();
     }, [])
   );
@@ -104,32 +133,48 @@ export default function SignInApp() {
     }
   };
 
+  /** =========================
+   *  🔄 checkUpdate (mejorado)
+   *  ========================= */
   const checkUpdate = async () => {
     try {
-      const snap = await getDoc(doc(db, "config", "app"));
-      if (!snap.exists()) return;
+      // Considerar "release" si package coincide o si hay versionCode válido (>0).
+      const isRelease =
+        Platform.OS === "android" &&
+        (Application?.applicationId === "com.jakiro12.one" ||
+          toInt(Application?.nativeBuildVersion) > 0);
+      if (!isRelease) return;
 
-      const { latestAndroidVersionCode, forceUpdate, message } = snap.data() as {
-        latestAndroidVersionCode?: number | string;
-        forceUpdate?: boolean;
-        message?: string;
-      };
+      const data: any = await readRemoteConfig(db);
+      const latest = toInt(data?.latestAndroidVersionCode); // Firestore
+      const current = toInt(Application?.nativeBuildVersion); // versionCode real
 
-      const current = Number(Application.nativeBuildVersion ?? 0);
-      const latest = Number(latestAndroidVersionCode ?? 0);
+      // DEBUG (opcional): ver en el dispositivo qué está leyendo
+      console.log(
+        "UPDATE CHECK → current:",
+        current,
+        "latest:",
+        latest,
+        "force:",
+        !!data?.forceUpdate
+      );
 
-      if (Number.isFinite(latest) && latest > current) {
+      if (latest > 0 && current > 0 && latest > current) {
         Alert.alert(
           "Actualización disponible",
-          message || "Tenés una actualización disponible.",
+          data?.message || "Tenés una actualización disponible.",
           [
-            ...(forceUpdate ? [] : [{ text: "Más tarde", style: "cancel" as const }]),
+            ...(data?.forceUpdate
+              ? []
+              : [{ text: "Más tarde", style: "cancel" as const }]),
             { text: "Actualizar ahora", onPress: goToStore },
           ],
-          { cancelable: !forceUpdate }
+          { cancelable: !data?.forceUpdate }
         );
       }
-    } catch {}
+    } catch (e) {
+      console.log("checkUpdate error", e);
+    }
   };
 
   useEffect(() => {
@@ -189,10 +234,12 @@ export default function SignInApp() {
         _afiliado: {
           adherente: esAdherente,
           activo: esActivo,
-          motivo,                 // ← del doc en "adherentes"
+          motivo, // ← del doc en "adherentes"
           whatsapp: wspFromAdh ?? null,
-          _source: af ? "nuevoAfiliado+usuarios+adherentes" : "usuarios+adherentes",
-          ...(af ?? {}),          // conserva otros campos de nuevoAfiliado si existen
+          _source: af
+            ? "nuevoAfiliado+usuarios+adherentes"
+            : "usuarios+adherentes",
+          ...(af ?? {}), // conserva otros campos de nuevoAfiliado si existen
         },
       });
 
@@ -211,12 +258,18 @@ export default function SignInApp() {
   };
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
-      setKeyboardVisible(true);
-    });
-    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardVisible(false);
-    });
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
@@ -229,7 +282,11 @@ export default function SignInApp() {
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent={false} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#ffffff"
+        translucent={false}
+      />
       <ScrollView
         style={{ height: "100%", backgroundColor: "#091d24" }}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -257,11 +314,17 @@ export default function SignInApp() {
                 onChangeText={handleDniChange}
                 keyboardType="numeric"
               />
-              <TouchableOpacity style={styles.btnGetIn} activeOpacity={1} onPress={findUser}>
+              <TouchableOpacity
+                style={styles.btnGetIn}
+                activeOpacity={1}
+                onPress={findUser}
+              >
                 {loading ? (
                   <ActivityIndicator size="large" color="#ffffff" />
                 ) : (
-                  <Text style={{ fontSize: 20, fontWeight: "500" }}>INGRESAR</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500" }}>
+                    INGRESAR
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -274,10 +337,14 @@ export default function SignInApp() {
               <TouchableOpacity
                 style={styles.btnAfiliate}
                 activeOpacity={1}
-                onPress={() => router.navigate("/form-register/create-new-user")}
+                onPress={() =>
+                  router.navigate("/form-register/create-new-user")
+                }
                 disabled={loading}
               >
-                <Text style={{ fontSize: 20, fontWeight: "500" }}>AFILIARSE</Text>
+                <Text style={{ fontSize: 20, fontWeight: "500" }}>
+                  AFILIARSE
+                </Text>
               </TouchableOpacity>
             </ImageBackground>
 
@@ -305,14 +372,26 @@ export default function SignInApp() {
                 resizeMode="cover"
                 style={styles.viewRadio}
               >
-                <Text style={{ fontSize: 20, color: "#ffffff", fontWeight: "600" }}>
+                <Text
+                  style={{ fontSize: 20, color: "#ffffff", fontWeight: "600" }}
+                >
                   Escuchar Radio SiDCa
                 </Text>
                 <TouchableOpacity
                   style={styles.radioBtn}
-                  onPress={() => openSocialMedia("https://streaming.gostreaming.com.ar:10982/stream")}
+                  onPress={() =>
+                    openSocialMedia(
+                      "https://streaming.gostreaming.com.ar:10982/stream"
+                    )
+                  }
                 >
-                  <Text style={{ fontSize: 18, fontWeight: "bold", marginRight: 10 }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      marginRight: 10,
+                    }}
+                  >
                     PLAY FM 106.5
                   </Text>
                   <FontAwesome6 name="radio" size={24} color="black" />
@@ -320,7 +399,9 @@ export default function SignInApp() {
               </ImageBackground>
 
               <View style={{ alignItems: "center", marginVertical: 10 }}>
-                <Text style={{ fontSize: 20, color: "#ffffff", fontWeight: "500" }}>
+                <Text
+                  style={{ fontSize: 20, color: "#ffffff", fontWeight: "500" }}
+                >
                   ¡Síguenos en nuestras Redes Sociales!
                 </Text>
               </View>
@@ -332,30 +413,56 @@ export default function SignInApp() {
               >
                 <TouchableOpacity
                   style={styles.mediasBtns}
-                  onPress={() => openSocialMedia("https://youtube.com/@sidcacatamarca2424?si=dQTZ6oWZQLSizYLN")}
+                  onPress={() =>
+                    openSocialMedia(
+                      "https://youtube.com/@sidcacatamarca2424?si=dQTZ6oWZQLSizYLN"
+                    )
+                  }
                 >
-                  <Image style={{ width: "100%", height: "100%" }} source={require("../assets/logos/youtube.png")} />
+                  <Image
+                    style={{ width: "100%", height: "100%" }}
+                    source={require("../assets/logos/youtube.png")}
+                  />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.mediasBtns}
-                  onPress={() => openSocialMedia("https://www.facebook.com/profile.php?id=100058046356234")}
+                  onPress={() =>
+                    openSocialMedia(
+                      "https://www.facebook.com/profile.php?id=100058046356234"
+                    )
+                  }
                 >
-                  <Image style={{ width: "100%", height: "100%" }} source={require("../assets/logos/facebook1.png")} />
+                  <Image
+                    style={{ width: "100%", height: "100%" }}
+                    source={require("../assets/logos/facebook1.png")}
+                  />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.mediasBtns}
-                  onPress={() => openSocialMedia("https://www.sidcagremio.com.ar")}
+                  onPress={() =>
+                    openSocialMedia("https://www.sidcagremio.com.ar")
+                  }
                 >
-                  <Image style={{ width: "122%", height: "122%" }} source={require("../assets/logos/cromo1.png")} />
+                  <Image
+                    style={{ width: "122%", height: "122%" }}
+                    source={require("../assets/logos/cromo1.png")}
+                  />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.mediasBtns}
-                  onPress={() => openSocialMedia("https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl")}
+                  onPress={() =>
+                    openSocialMedia(
+                      "https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl"
+                    )
+                  }
                 >
-                  <Image style={{ width: "100%", height: "100%" }} source={require("../assets/logos/instagram.png")} />
+                  <Image
+                    style={{ width: "100%", height: "100%" }}
+                    source={require("../assets/logos/instagram.png")}
+                  />
                 </TouchableOpacity>
               </ImageBackground>
             </>

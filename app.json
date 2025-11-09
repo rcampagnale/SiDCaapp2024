@@ -2,7 +2,7 @@
   "expo": {
     "name": "SiDCa - Tu Sindicato",
     "slug": "sidca",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/logos/logo-05.png",
     "scheme": "sidca",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.jakiro12.one",
-      "versionCode": 14,
+      "versionCode": 17,
       "adaptiveIcon": {
         "foregroundImage": "./assets/apk.png",
         "backgroundColor": "#ffffff"
