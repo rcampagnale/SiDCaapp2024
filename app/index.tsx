@@ -15,7 +15,7 @@ import {
   Alert,
 } from "react-native";
 import styles from "../styles/signin-styles/sign-in-styles";
-import { useEffect, useState, useContext, useCallback } from "react";
+import { useEffect, useState, useContext, useCallback, useRef } from "react";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import {
@@ -26,7 +26,7 @@ import {
   getDocs,
   doc,
   getDoc,
-  getDocFromServer, // 👈 agregado: fuerza lectura desde servidor
+  getDocFromServer,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 
@@ -40,7 +40,11 @@ try {
 import { SidcaContext } from "./_layout";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
-// 🔧 Helper: normalizar "si/no", true/false, "1"/"0"
+/* =========================
+ * Helpers
+ * ========================= */
+
+// Normalizar "si/no", true/false, "1"/"0"
 const toBool = (v: any): boolean => {
   if (typeof v === "boolean") return v;
   if (typeof v === "number") return v === 1;
@@ -51,7 +55,7 @@ const toBool = (v: any): boolean => {
   return false;
 };
 
-// 🔎 Helper: busca por DNI en string y number
+// Buscar DNI en string y number
 const getByDni = async (colRef: any, dni: string) => {
   let qs = await getDocs(query(colRef, where("dni", "==", dni)));
   if (!qs.empty) return qs.docs[0].data();
@@ -63,39 +67,42 @@ const getByDni = async (colRef: any, dni: string) => {
   return null;
 };
 
-/** =========================
- *  🔧 HELPERS ROBUSTOS
- *  ========================= */
+// Entero robusto
 const toInt = (v: any) => {
   const m = String(v ?? "").match(/\d+/);
   return m ? parseInt(m[0], 10) : 0;
 };
 
+// Leer SOLO desde /config/app (doc válido) + LOGS
 const readRemoteConfig = async (db: any) => {
+  const ref = doc(db, "config", "app");
   try {
-    // 1) Primero /app (coincide con tu screenshot)
-    let s = await getDocFromServer(doc(db, "app"));
-    if (s.exists()) return s.data();
-    // 2) Fallback a /config/app
-    s = await getDocFromServer(doc(db, "config", "app"));
-    if (s.exists()) return s.data();
-  } catch (_) {
-    let s = await getDoc(doc(db, "app"));
-    if (s.exists()) return s.data();
-    s = await getDoc(doc(db, "config", "app"));
-    if (s.exists()) return s.data();
+    console.log("[UpdateCheck] Leyendo /config/app desde el servidor…");
+    const s = await getDocFromServer(ref);
+    const data = s.exists() ? s.data() : {};
+    console.log("[UpdateCheck] getDocFromServer OK. Data:", data);
+    return data;
+  } catch (err: any) {
+    console.log("[UpdateCheck] Fallback a getDoc (cache/local). Motivo:", err?.message || err);
+    const s = await getDoc(ref);
+    const data = s.exists() ? s.data() : {};
+    console.log("[UpdateCheck] getDoc OK. Data:", data);
+    return data;
   }
-  return {};
 };
+
+
 
 export default function SignInApp() {
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [dniNumber, setDniNumber] = useState<string>("");
-  const statusBarHeight: number | undefined = StatusBar.currentHeight;
   const { setUserData } = useContext(SidcaContext);
 
-  // Al estar en esta pantalla (index), el botón atrás cierra la app.
+  // Evitar mostrar múltiples alerts en la misma sesión
+  const alreadyPromptedRef = useRef(false);
+
+  // Botón atrás cierra la app en esta pantalla
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
@@ -105,10 +112,7 @@ export default function SignInApp() {
         }
         return false;
       };
-      const sub = BackHandler.addEventListener(
-        "hardwareBackPress",
-        onBackPress
-      );
+      const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
       return () => sub.remove();
     }, [])
   );
@@ -120,7 +124,7 @@ export default function SignInApp() {
   const db = getFirestore(firebaseconn);
   const usuariosCollection = collection(db, "usuarios");
 
-  // ---- Actualización: abrir Play Store y chequear versión remota (Firestore config/app) ----
+  // Abrir Play Store
   const goToStore = async () => {
     const pkg = Application.applicationId ?? "com.jakiro12.one";
     const marketUrl = `market://details?id=${pkg}`;
@@ -133,56 +137,139 @@ export default function SignInApp() {
     }
   };
 
-  /** =========================
-   *  🔄 checkUpdate (mejorado)
-   *  ========================= */
-  const checkUpdate = async () => {
-    try {
-      // Considerar "release" si package coincide o si hay versionCode válido (>0).
-      const isRelease =
-        Platform.OS === "android" &&
-        (Application?.applicationId === "com.jakiro12.one" ||
-          toInt(Application?.nativeBuildVersion) > 0);
-      if (!isRelease) return;
+  /* =========================
+ * Actualización de app (simple + forceUpdate)
+ * Regla:
+ *  - NO mostrar si current >= latest y forceUpdate=false
+ *  - Mostrar si current < latest
+ *  - Mostrar obligatorio si forceUpdate=true
+ * ========================= */
 
-      const data: any = await readRemoteConfig(db);
-      const latest = toInt(data?.latestAndroidVersionCode); // Firestore
-      const current = toInt(Application?.nativeBuildVersion); // versionCode real
+// 👉 Ajustá este valor para cada build que generes
+const HARDCODED_VERSION_CODE = 17; // Debe coincidir con android.versionCode de tu app
 
-      // DEBUG (opcional): ver en el dispositivo qué está leyendo
+// Helper: intenta leer de expo-application, si no, usa el hardcode
+const getCurrentVersionCode = () => {
+  const fromNative = toInt(Application?.nativeBuildVersion);
+  if (fromNative > 0) return fromNative;
+  return HARDCODED_VERSION_CODE;
+};
+
+const checkUpdate = async () => {
+  try {
+    console.log("[UpdateCheck] Iniciando checkUpdate…");
+
+    const current = getCurrentVersionCode();
+
+    console.log("[UpdateCheck] Snapshot:", {
+      os: Platform.OS,
+      appId: Application?.applicationId,
+      nativeBuildVersion: Application?.nativeBuildVersion,
+      current,
+      alreadyPrompted: alreadyPromptedRef.current,
+    });
+
+    // Solo Android
+    if (Platform.OS !== "android") {
+      console.log("[UpdateCheck] Saliendo: no es Android.");
+      return;
+    }
+
+    if (current <= 0) {
+      console.log("[UpdateCheck] Saliendo: current inválido.", { current });
+      return;
+    }
+
+    if (alreadyPromptedRef.current) {
+      console.log("[UpdateCheck] Saliendo: ya se mostró el alert en esta sesión.");
+      return;
+    }
+
+    console.log("[UpdateCheck] current (versionCode instalado):", current);
+
+    // 🔹 Usa SOLO estos 3 campos en /config/app
+    const data: any = await readRemoteConfig(db);
+    const latest = toInt(data?.latestAndroidVersionCode);
+    const force = !!data?.forceUpdate;
+    const msg =
+      (typeof data?.message === "string" && data?.message.trim()) ||
+      "Hay una actualización disponible en Play Store.";
+
+    console.log("[UpdateCheck] Remote config normalizado:", {
+      latestAndroidVersionCode: latest,
+      forceUpdate: force,
+      message: msg,
+    });
+
+    if (!force && (latest <= 0 || current <= 0)) {
       console.log(
-        "UPDATE CHECK → current:",
-        current,
-        "latest:",
-        latest,
-        "force:",
-        !!data?.forceUpdate
+        "[UpdateCheck] Saliendo: latest o current inválidos y forceUpdate=false.",
+        { current, latest }
+      );
+      return;
+    }
+
+    console.log("[UpdateCheck] Comparaciones:", {
+      "current<latest": current < latest,
+      "current>=latest": current >= latest,
+      forceUpdate: force,
+    });
+
+    // Regla: mostrar si hay versión nueva (current < latest) o si es obligatorio
+    if (force || current < latest) {
+      alreadyPromptedRef.current = true;
+
+      const title = force
+        ? "Actualización obligatoria"
+        : "Actualización disponible";
+      const currentLabel = String(current);
+      const latestLabel = latest > 0 ? String(latest) : "—";
+      const body =
+        `Versión instalada: ${currentLabel}\n` +
+        `Versión publicada: ${latestLabel}\n` +
+        (force
+          ? "Debés actualizar para continuar."
+          : "Te recomendamos actualizar para obtener mejoras y correcciones.");
+
+      console.log(
+        "[UpdateCheck] Mostrando ALERT. Motivo:",
+        force ? "forceUpdate=true" : "current<latest",
+        { current, latest }
       );
 
-      if (latest > 0 && current > 0 && latest > current) {
-        Alert.alert(
-          "Actualización disponible",
-          data?.message || "Tenés una actualización disponible.",
-          [
-            ...(data?.forceUpdate
-              ? []
-              : [{ text: "Más tarde", style: "cancel" as const }]),
-            { text: "Actualizar ahora", onPress: goToStore },
-          ],
-          { cancelable: !data?.forceUpdate }
-        );
-      }
-    } catch (e) {
-      console.log("checkUpdate error", e);
+      Alert.alert(
+        title,
+        `${msg}\n\n${body}`,
+        force
+          ? [{ text: "Abrir Play Store", onPress: goToStore }]
+          : [
+              { text: "Más tarde", style: "cancel" },
+              { text: "Abrir Play Store", onPress: goToStore },
+            ],
+        { cancelable: !force }
+      );
+    } else {
+      console.log(
+        "[UpdateCheck] Sin alert: current >= latest y forceUpdate=false.",
+        { current, latest }
+      );
     }
-  };
+  } catch (e: any) {
+    console.log("[UpdateCheck] ERROR en checkUpdate:", e?.message || e);
+  }
+};
+
+
+
+
 
   useEffect(() => {
     checkUpdate();
   }, []);
 
-  // -------------------------------------------------------------------------------------------
-
+  /* =========================
+   * Login por DNI
+   * ========================= */
   const findUser = async () => {
     const dni = (dniNumber || "").trim();
     if (!dni) {
@@ -192,18 +279,17 @@ export default function SignInApp() {
 
     setLoading(true);
     try {
-      // 1) Usuario base (datos generales y posible fallback de flags)
       const userDoc = await getByDni(usuariosCollection, dni);
       if (!userDoc) {
         Alert.alert("DNI no encontrado", "Verificá el número ingresado.");
         return;
       }
 
-      // 2) Flags canónicos: nuevoAfiliado (si existe)
+      // nuevoAfiliado
       const nuevoAfiliadoCol = collection(db, "nuevoAfiliado");
-      const af = await getByDni(nuevoAfiliadoCol, dni); // puede ser null
+      const af = await getByDni(nuevoAfiliadoCol, dni);
 
-      // 3) Resolver adherente/activo priorizando nuevoAfiliado y luego usuarios
+      // Resolver adherente/activo priorizando nuevoAfiliado y luego usuarios
       const adherenteRaw =
         (af?.adherente !== undefined ? af?.adherente : undefined) ??
         userDoc?.adherente ??
@@ -217,33 +303,31 @@ export default function SignInApp() {
         false;
 
       const esAdherente = toBool(adherenteRaw);
-      // Si es adherente pero no tenemos flag de activo, por seguridad asumimos INACTIVO (false).
       const esActivo = esAdherente ? toBool(activoRaw ?? false) : true;
 
-      // 4) Extras: motivo (y opcional wsp) desde "adherentes"
+      // Extras desde "adherentes"
       const adherentesCol = collection(db, "adherentes");
-      const adh = await getByDni(adherentesCol, dni); // puede ser null
+      const adh = await getByDni(adherentesCol, dni);
       const motivo = adh?.motivo ?? null;
       const wspFromAdh =
         adh?.whatsapp ?? adh?.wsp ?? adh?.celular ?? adh?.telefono ?? null;
 
-      // 5) Guardar en contexto (Home/ModalAlerta usan estos campos)
+      // Guardar en contexto
       setUserData({
         ...userDoc,
         dni,
         _afiliado: {
           adherente: esAdherente,
           activo: esActivo,
-          motivo, // ← del doc en "adherentes"
+          motivo,
           whatsapp: wspFromAdh ?? null,
           _source: af
             ? "nuevoAfiliado+usuarios+adherentes"
             : "usuarios+adherentes",
-          ...(af ?? {}), // conserva otros campos de nuevoAfiliado si existen
+          ...(af ?? {}),
         },
       });
 
-      // 6) Ir al Home (si es adherente inactivo, el Modal bloquea el menú)
       router.navigate("/home");
       setDniNumber("");
     } catch (error: any) {
@@ -253,22 +337,14 @@ export default function SignInApp() {
     }
   };
 
-  const handleDniChange = (text: string) => {
-    setDniNumber(text);
-  };
+  const handleDniChange = (text: string) => setDniNumber(text);
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      () => {
-        setKeyboardVisible(true);
-      }
+    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () =>
+      setKeyboardVisible(true)
     );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => {
-        setKeyboardVisible(false);
-      }
+    const keyboardDidHideListener = Keyboard.addListener("keyboardDidHide", () =>
+      setKeyboardVisible(false)
     );
     return () => {
       keyboardDidShowListener.remove();
@@ -276,37 +352,17 @@ export default function SignInApp() {
     };
   }, []);
 
-  const openWspNumber = (urlMedia: string) => {
-    Linking.openURL(urlMedia);
-  };
+  const openWspNumber = (urlMedia: string) => Linking.openURL(urlMedia);
 
   return (
     <>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#ffffff"
-        translucent={false}
-      />
-      <ScrollView
-        style={{ height: "100%", backgroundColor: "#091d24" }}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent={false} />
+      <ScrollView style={{ height: "100%", backgroundColor: "#091d24" }} contentContainerStyle={{ flexGrow: 1 }}>
         <View style={styles.container}>
-          <View
-            style={[
-              styles.viewGetData,
-              { height: isKeyboardVisible ? "100%" : "60%" },
-            ]}
-          >
-            <ImageBackground
-              source={require("../assets/logos/logo-01.png")}
-              resizeMode="contain"
-              style={styles.logoSignin}
-            />
+          <View style={[styles.viewGetData, { height: isKeyboardVisible ? "100%" : "60%" }]}>
+            <ImageBackground source={require("../assets/logos/logo-01.png")} resizeMode="contain" style={styles.logoSignin} />
             <View style={styles.formContainer}>
-              <Text style={{ fontSize: 20, color: "#ffffff" }}>
-                Ingresar con tu DNI de Afiliado
-              </Text>
+              <Text style={{ fontSize: 20, color: "#ffffff" }}>Ingresar con tu DNI de Afiliado</Text>
               <TextInput
                 style={styles.inputForm}
                 placeholder="D.N.I."
@@ -314,37 +370,23 @@ export default function SignInApp() {
                 onChangeText={handleDniChange}
                 keyboardType="numeric"
               />
-              <TouchableOpacity
-                style={styles.btnGetIn}
-                activeOpacity={1}
-                onPress={findUser}
-              >
+              <TouchableOpacity style={styles.btnGetIn} activeOpacity={1} onPress={findUser}>
                 {loading ? (
                   <ActivityIndicator size="large" color="#ffffff" />
                 ) : (
-                  <Text style={{ fontSize: 20, fontWeight: "500" }}>
-                    INGRESAR
-                  </Text>
+                  <Text style={{ fontSize: 20, fontWeight: "500" }}>INGRESAR</Text>
                 )}
               </TouchableOpacity>
             </View>
 
-            <ImageBackground
-              style={styles.viewAfiliate}
-              source={require("../assets/signinFotos/afiliate.png")}
-              resizeMode="cover"
-            >
+            <ImageBackground style={styles.viewAfiliate} source={require("../assets/signinFotos/afiliate.png")} resizeMode="cover">
               <TouchableOpacity
                 style={styles.btnAfiliate}
                 activeOpacity={1}
-                onPress={() =>
-                  router.navigate("/form-register/create-new-user")
-                }
+                onPress={() => router.navigate("/form-register/create-new-user")}
                 disabled={loading}
               >
-                <Text style={{ fontSize: 20, fontWeight: "500" }}>
-                  AFILIARSE
-                </Text>
+                <Text style={{ fontSize: 20, fontWeight: "500" }}>AFILIARSE</Text>
               </TouchableOpacity>
             </ImageBackground>
 
@@ -356,10 +398,7 @@ export default function SignInApp() {
                   onPress={() => openWspNumber("https://wa.me/5493834539754")}
                 >
                   <Text style={{ fontSize: 18 }}>Soporte Técnico</Text>
-                  <Image
-                    style={{ width: 30, height: 30 }}
-                    source={require("../assets/logos/whatsapp.png")}
-                  />
+                  <Image style={{ width: 30, height: 30 }} source={require("../assets/logos/whatsapp.png")} />
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -367,102 +406,47 @@ export default function SignInApp() {
 
           {isKeyboardVisible === false ? (
             <>
-              <ImageBackground
-                source={require("../assets/signinFotos/radio_1.png")}
-                resizeMode="cover"
-                style={styles.viewRadio}
-              >
-                <Text
-                  style={{ fontSize: 20, color: "#ffffff", fontWeight: "600" }}
-                >
-                  Escuchar Radio SiDCa
-                </Text>
+              <ImageBackground source={require("../assets/signinFotos/radio_1.png")} resizeMode="cover" style={styles.viewRadio}>
+                <Text style={{ fontSize: 20, color: "#ffffff", fontWeight: "600" }}>Escuchar Radio SiDCa</Text>
                 <TouchableOpacity
                   style={styles.radioBtn}
-                  onPress={() =>
-                    openSocialMedia(
-                      "https://streaming.gostreaming.com.ar:10982/stream"
-                    )
-                  }
+                  onPress={() => openSocialMedia("https://streaming.gostreaming.com.ar:10982/stream")}
                 >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: "bold",
-                      marginRight: 10,
-                    }}
-                  >
-                    PLAY FM 106.5
-                  </Text>
+                  <Text style={{ fontSize: 18, fontWeight: "bold", marginRight: 10 }}>PLAY FM 106.5</Text>
                   <FontAwesome6 name="radio" size={24} color="black" />
                 </TouchableOpacity>
               </ImageBackground>
 
               <View style={{ alignItems: "center", marginVertical: 10 }}>
-                <Text
-                  style={{ fontSize: 20, color: "#ffffff", fontWeight: "500" }}
-                >
+                <Text style={{ fontSize: 20, color: "#ffffff", fontWeight: "500" }}>
                   ¡Síguenos en nuestras Redes Sociales!
                 </Text>
               </View>
 
-              <ImageBackground
-                source={require("../assets/signinFotos/redes.png")}
-                resizeMode="cover"
-                style={styles.viewShowMedias}
-              >
+              <ImageBackground source={require("../assets/signinFotos/redes.png")} resizeMode="cover" style={styles.viewShowMedias}>
                 <TouchableOpacity
                   style={styles.mediasBtns}
-                  onPress={() =>
-                    openSocialMedia(
-                      "https://youtube.com/@sidcacatamarca2424?si=dQTZ6oWZQLSizYLN"
-                    )
-                  }
+                  onPress={() => openSocialMedia("https://youtube.com/@sidcacatamarca2424?si=dQTZ6oWZQLSizYLN")}
                 >
-                  <Image
-                    style={{ width: "100%", height: "100%" }}
-                    source={require("../assets/logos/youtube.png")}
-                  />
+                  <Image style={{ width: "100%", height: "100%" }} source={require("../assets/logos/youtube.png")} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.mediasBtns}
-                  onPress={() =>
-                    openSocialMedia(
-                      "https://www.facebook.com/profile.php?id=100058046356234"
-                    )
-                  }
+                  onPress={() => openSocialMedia("https://www.facebook.com/profile.php?id=100058046356234")}
                 >
-                  <Image
-                    style={{ width: "100%", height: "100%" }}
-                    source={require("../assets/logos/facebook1.png")}
-                  />
+                  <Image style={{ width: "100%", height: "100%" }} source={require("../assets/logos/facebook1.png")} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.mediasBtns} onPress={() => openSocialMedia("https://www.sidcagremio.com.ar")}>
+                  <Image style={{ width: "122%", height: "122%" }} source={require("../assets/logos/cromo1.png")} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.mediasBtns}
-                  onPress={() =>
-                    openSocialMedia("https://www.sidcagremio.com.ar")
-                  }
+                  onPress={() => openSocialMedia("https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl")}
                 >
-                  <Image
-                    style={{ width: "122%", height: "122%" }}
-                    source={require("../assets/logos/cromo1.png")}
-                  />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.mediasBtns}
-                  onPress={() =>
-                    openSocialMedia(
-                      "https://www.instagram.com/sidcagremio?igsh=N2Q4aGkzN3lhbzRl"
-                    )
-                  }
-                >
-                  <Image
-                    style={{ width: "100%", height: "100%" }}
-                    source={require("../assets/logos/instagram.png")}
-                  />
+                  <Image style={{ width: "100%", height: "100%" }} source={require("../assets/logos/instagram.png")} />
                 </TouchableOpacity>
               </ImageBackground>
             </>

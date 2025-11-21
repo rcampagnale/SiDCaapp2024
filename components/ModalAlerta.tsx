@@ -69,7 +69,7 @@ Horario de atención: Lunes a Viernes 8:00–12:00 y 16:00–18:00 Hs, Días no 
   function openWspNumber(url: string): void {
     if (!url) return;
     const msg = encodeURIComponent(
-      "Estimados/as, solicito ayuda para normalizar mi situación de Afiliado Adherente y restablecer el acceso a SiDCa. Muchas gracias."
+      "Estimados/as, solicito ayuda para normalizar mi situación de Afiliado Adherente y restablecer el acceso en la app de SiDCa. Muchas gracias."
     );
     // Append text param if not present
     const hasText = /([?&])text=/.test(url);

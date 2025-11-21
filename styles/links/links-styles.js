@@ -3,7 +3,8 @@ import { StyleSheet, Dimensions } from "react-native";
 // Obtiene el ancho de la pantalla para ajustar la imagen
 const screenWidth = Dimensions.get("window").width;
 
-export default linkStyles = StyleSheet.create({
+// 👉 Declarás el objeto de estilos normalmente
+const styles = StyleSheet.create({
   // Estilos generales del contenedor
   container: {
     width: "100%",
@@ -14,17 +15,15 @@ export default linkStyles = StyleSheet.create({
     backgroundColor: "#091d24",
   },
 
-  // Estilos para el contenedor principal de la vista
   mainContainer: {
     flex: 1,
     backgroundColor: "#091d24",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 20, // Ajuste para evitar que la cámara cubra el contenido
+    paddingTop: 20,
   },
 
-  // Estilos del título principal
   title: {
     fontSize: 20,
     fontWeight: "bold",
@@ -43,18 +42,16 @@ export default linkStyles = StyleSheet.create({
     height: "auto",
   },
 
-  // Estilos para los botones
   buttonWrapper: {
-    width: "100%", // Ajusta al 100% del contenedor
+    width: "100%",
     display: "flex",
-    flexDirection: "column", // Los botones se dispondrán en columna
-    justifyContent: "space-around", // Espacio entre los botones
-    alignItems: "center", // Centra los botones horizontalmente,
+    flexDirection: "column",
+    justifyContent: "space-around",
+    alignItems: "center",
     height: 300,
     backgroundColor: "#fea200",
   },
 
-  // Estilos comunes de los botones
   button: {
     width: "95%",
     padding: 15,
@@ -70,25 +67,22 @@ export default linkStyles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // Estilos del rectángulo naranja
   orangeRectangle: {
     width: "200%",
-    minHeight: 310, // Altura mínima para el rectángulo
+    minHeight: 310,
     backgroundColor: "#fea200",
     position: "absolute",
     top: 200,
-    left: "-50%", // Centrado
+    left: "-50%",
     zIndex: 0,
   },
 
-  // Estilos de la imagen
   image: {
-    width: screenWidth, // Ajusta la imagen al ancho de la pantalla
+    width: screenWidth,
     height: 140,
-    resizeMode: "cover", // Ajuste automático de la imagen para cubrir el área sin distorsión
+    resizeMode: "cover",
   },
 
-  // Estilos del botón "Volver"
   backButton: {
     width: "100%",
     backgroundColor: "#fea200",
@@ -104,7 +98,6 @@ export default linkStyles = StyleSheet.create({
     marginLeft: 5,
   },
 
-  // Estilos de las cajas de cursos
   coursesDoneBox: {
     width: "100%",
     height: 300,
@@ -116,21 +109,21 @@ export default linkStyles = StyleSheet.create({
   },
 
   btnText: {
-    fontSize: 18, // Tamaño de fuente más grande
-    fontWeight: "bold", // Texto en negrita
-    color: "#ffffff", // Color blanco para el texto
-    textAlign: "center", // Centrado del texto
-    paddingVertical: 10, // Espaciado vertical (arriba y abajo)
-    paddingHorizontal: 15, // Espaciado horizontal (izquierda y derecha)
-    backgroundColor: "#005CFE", // Fondo azul
-    borderRadius: 5, // Bordes redondeados
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ffffff",
+    textAlign: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#005CFE",
+    borderRadius: 5,
   },
 
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo oscuro translúcido
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
 
   modalContainer: {
@@ -140,9 +133,9 @@ export default linkStyles = StyleSheet.create({
     backgroundColor: "#fea200",
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "space-between", // Ajustar para que haya espacio entre el contenido y el botón
+    justifyContent: "space-between",
     alignSelf: "center",
-    paddingBottom: 20, // Agregado padding para evitar que los botones se solapen
+    paddingBottom: 20,
   },
 
   modalTitle: {
@@ -150,20 +143,20 @@ export default linkStyles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: -8,
-    textAlign: "center", // Centramos el texto
+    textAlign: "center",
   },
 
   modalDescription: {
     fontSize: 16,
-    textAlign: "justify", // Cambié para que se alineara mejor
-    marginBottom: -8, // Ajustado para más espacio
+    textAlign: "justify",
+    marginBottom: -8,
     fontWeight: "bold",
   },
 
   modalDescription1: {
     fontSize: 16,
-    textAlign: "justify", // Cambié para que se alineara mejor
-    marginBottom: -8, // Ajustado para más espacio
+    textAlign: "justify",
+    marginBottom: -8,
     fontWeight: "bold",
   },
 
@@ -173,7 +166,7 @@ export default linkStyles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 5,
     alignItems: "center",
-    marginTop: 15, // 🔹 Agregado para bajar el botón
+    marginTop: 15,
   },
 
   closeButtonText: {
@@ -181,30 +174,29 @@ export default linkStyles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // Estilo para el contenedor del Picker
   pickerContainer: {
-    width: "60%", // Ocupa todo el ancho disponible
-    height: 50, // Ajusta la altura según el diseño
-    borderWidth: 1, // Borde del Picker
-    borderColor: "#ccc", // Color del borde
-    borderRadius: 5, // Bordes redondeados
-    backgroundColor: "#fff", // Fondo blanco
-    marginBottom: -1, // Espacio inferior
-    paddingHorizontal: -1, // Espaciado horizontal interno
+    width: "60%",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    backgroundColor: "#fff",
+    marginBottom: -1,
+    paddingHorizontal: -1,
   },
 
   rowContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 1, // Aumenté el espaciado entre las filas
+    marginBottom: 1,
     width: "100%",
-    justifyContent: "space-between", // Asegura que los elementos se distribuyan correctamente
+    justifyContent: "space-between",
   },
 
   titulodeopciones: {
     fontSize: 16,
     fontWeight: "bold",
-    marginRight: 1, // Espacio entre el texto y el sueldo
+    marginRight: 1,
     flex: 1,
   },
 
@@ -217,24 +209,24 @@ export default linkStyles = StyleSheet.create({
     borderRadius: 5,
     textAlign: "center",
     width: "60%",
-    alignSelf: "center", // Centra el sueldo en su contenedor
+    alignSelf: "center",
   },
 
   separator: {
-    height: 2, // Alto de la línea
-    backgroundColor: "black", // Color de la línea
-    width: "100%", // Ocupa todo el ancho disponible
-    marginVertical: 10, // Ajustado para un espaciado adecuado
+    height: 2,
+    backgroundColor: "black",
+    width: "100%",
+    marginVertical: 10,
   },
 
   buttonText1: {
     fontSize: 16,
-    color: "#fff", // Cambiar el color del texto
-    backgroundColor: "#007bff", // Fondo azul
+    color: "#fff",
+    backgroundColor: "#007bff",
     padding: 5,
     borderRadius: 5,
     textAlign: "center",
-    marginRight: 52, // Espacio entre el texto y el sueldo
+    marginRight: 52,
   },
 
   input: {
@@ -251,7 +243,7 @@ export default linkStyles = StyleSheet.create({
   },
 
   simularButton: {
-    backgroundColor: "#007bff", // Azul fuerte
+    backgroundColor: "#007bff",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -278,7 +270,7 @@ export default linkStyles = StyleSheet.create({
 
   buttonText2: {
     fontSize: 15,
-    color: "#0034ab", // Cambiar el color del texto
+    color: "#0034ab",
     fontWeight: "bold",
   },
 
@@ -286,29 +278,29 @@ export default linkStyles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "bold",
     textAlign: "justify",
-    marginRight: 1, // Espacio entre el texto y el sueldo
+    marginRight: 1,
     flex: 1,
   },
 
   simuladorTexto: {
     fontSize: 14,
-    color: "black", // Para que sea más suave y diferenciable del contenido principal
+    color: "black",
     fontWeight: "bold",
     marginTop: 15,
     textAlign: "justify",
   },
-  
+
   helpMessage: {
-    color: 'black', // Color del texto
-    fontSize: 14, // Tamaño de la fuente
-    fontFamily: 'Roboto', // Fuente legible
-    marginLeft: 8, // Separa el texto del ícono
-    lineHeight: 18, // Control de altura de línea
-    fontWeight: "bold", // Negrita
-    flex: 1, // Hace que el texto ocupe el espacio disponible
-    textAlign: 'justify', // Justifica el texto
+    color: "black",
+    fontSize: 14,
+    fontFamily: "Roboto",
+    marginLeft: 8,
+    lineHeight: 18,
+    fontWeight: "bold",
+    flex: 1,
+    textAlign: "justify",
   },
-  
-  
 });
 
+// 👇 Exportás el objeto de estilos ya declarado
+export default styles;

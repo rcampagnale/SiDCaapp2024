@@ -439,7 +439,7 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
                       <AntDesign name="warning" size={30} color="black" />
 
                       <Text style={styles.helpMessage}>
-                        Valor Hs Cátedra Nivel Secundario:{"\n"}{" "}
+                        Valor Hs Cátedra Nivel Secundario: ${"\n"}{" "}
                         {valor || "Cargando..."}
                       </Text>
                     </View>
@@ -458,9 +458,9 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
 
                       <Text style={styles.helpMessage}>
                         Valor de Horas Cátedra Nivel Superior:
-                        {"\n"}*Hs Cátedra Cuatrimestral: {"\n"}{" "}
+                        {"\n"}*Hs Cátedra Cuatrimestral: $ {"\n"}{" "}
                         {cuatrimestral || "Cargando..."} {"\n"}*Hs Cátedra
-                        Anual:{"\n"}
+                        Anual:$ {"\n"}
                         {anual || "Cargando..."}
                       </Text>
                     </View>
@@ -851,8 +851,8 @@ const SimuladorSueldo = ({ modalVisible, setModalVisible }) => {
               <Text style={styles.simuladorTexto}>
                 Advertencia: Este simulador proporciona una estimación
                 aproximada del sueldo docente, y puede no reflejar el sueldo
-                real en su totalidad. Factores como la Bonificación Incentivo a
-                la Asistencia Docente (BIAD) u otros descuentos aplicables no
+                real en su totalidad. Factores como Transporte/Conectividad, Bonificación Extraordinarias Docentes
+                u otros descuentos aplicables no
                 están considerados en este cálculo. El sindicato no se
                 responsabiliza por errores en los cálculos ni por el uso de los
                 resultados obtenidos.
