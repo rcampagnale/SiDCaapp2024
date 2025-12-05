@@ -27,6 +27,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SidcaContext } from "../_layout"; // ajustá la ruta si es distinta
 import ModalAlerta from "@/components/ModalAlerta";
 
+// ⬇️ importa el ChatbotModal (ajustá la ruta según tu proyecto)
+import ChatbotModal from "../chatmodal/chatmodal";
+
 // Helper: normalizar valores "si/no", true/false, "1"/"0"
 const toBool = (v: any): boolean => {
   if (typeof v === "boolean") return v;
@@ -52,8 +55,6 @@ export default function HomePage() {
   );
 
   // ⬇️ Trae usuario del contexto y calcula adherente/estado
-  // ⬇️ Trae usuario del contexto y calcula adherente/estado (con defaults seguros)
-
   const { userData, setUserData } = useContext(SidcaContext) as any;
 
   const adherente = toBool(userData?._afiliado?.adherente ?? false);
@@ -352,15 +353,15 @@ export default function HomePage() {
 
       {/* 🔒 Modal bloqueante si adherente inactivo */}
       <ModalAlerta
-  visible={showBlocker}
-  onSalir={handleSalir}
-  // whatsapp: si no llega desde Firestore, el propio modal tiene default 3834539754
-  whatsapp={userData?._afiliado?.whatsapp ?? undefined}
-  motivo={userData?._afiliado?.motivo ?? null}   // 👈 ahora este campo
-/>
+        visible={showBlocker}
+        onSalir={handleSalir}
+        // whatsapp: si no llega desde Firestore, el propio modal tiene default 3834539754
+        whatsapp={userData?._afiliado?.whatsapp ?? undefined}
+        motivo={userData?._afiliado?.motivo ?? null}
+      />
 
-
-      {/*<ChatbotModal />*/}
+      {/* <ChatbotModal />*/}
+      
     </View>
   );
 }

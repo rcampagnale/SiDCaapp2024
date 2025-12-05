@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   messageBubble: {
-    maxWidth: "100%", 
+    maxWidth: "100%",
     padding: 12,
     borderRadius: 12,
   },
@@ -82,7 +82,6 @@ const styles = StyleSheet.create({
     color: "#333",
     textAlign: "justify",
     lineHeight: 22,
-    
   },
   inputContainer: {
     flexDirection: "row",
@@ -147,14 +146,14 @@ const styles = StyleSheet.create({
   userText: {
     textAlign: "right",
   },
-  
+
   modalPreguntasOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
-  
+
   modalPreguntasContainer: {
     backgroundColor: "#F0F0F0",
     padding: 20,
@@ -162,27 +161,26 @@ const styles = StyleSheet.create({
     width: "100%",
     maxHeight: "80%",
   },
-  
+
   modalPreguntasTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
-    
   },
-  
+
   modalPreguntaItem: {
     paddingVertical: 8,
     borderBottomColor: "#ccc",
     borderBottomWidth: 2,
   },
-  
+
   modalPreguntaTexto: {
     fontSize: 16,
     color: "#007AFF",
     textAlign: "justify",
   },
-  
+
   modalCloseButton: {
     marginTop: 15,
     alignSelf: "center",
@@ -191,12 +189,45 @@ const styles = StyleSheet.create({
     backgroundColor: "#007AFF",
     borderRadius: 5,
   },
-  
+
   modalCloseText: {
     color: "#fff",
     fontWeight: "bold",
   },
-  
+
+  // 🆕 Cuadro de "Grabando..." dentro del input
+  recordingBanner: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+    marginRight: 10,
+  },
+  recordingText: {
+    fontSize: 14,
+    color: "#D32F2F",
+    flexShrink: 1,
+  },
+    consultingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 6,
+    paddingHorizontal: 10,
+  },
+  consultingText: {
+    marginLeft: 8,
+    fontSize: 13,
+    color: "#555",
+    textAlign: "center",
+    flexShrink: 1,
+  },
+
 });
 
 export default styles;
