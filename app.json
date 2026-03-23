@@ -14,12 +14,16 @@
     },
     "android": {
       "package": "com.jakiro12.one",
-      "versionCode": 17,
+      "versionCode": 19,
       "adaptiveIcon": {
         "foregroundImage": "./assets/apk.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": ["CAMERA"],
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",

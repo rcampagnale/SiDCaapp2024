@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Text,
   View,
@@ -18,7 +18,11 @@ import {
   doc,
   runTransaction,
   serverTimestamp,
-  setDoc,
+  getDocs,
+  getDoc,
+  query,
+  where,
+  limit,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { regexRegister } from "../../src/utils/regex";
@@ -30,7 +34,7 @@ interface NewUserTypes {
   dni: string;
   email: string;
   celular: string;
-  tituloGrado: string; // obligatorio
+  tituloGrado: string;
   departamento: string;
   establecimientos: string;
   descuento: string;
@@ -65,12 +69,15 @@ const formatFecha = (d: Date) => {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 };
 
-// Helper para limpiar entradas de texto
 const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
 
 export default function CreateNewUser() {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+
+  // ✅ anti doble submit inmediato
+  const submittingRef = useRef(false);
+
   const [newUser, setNewUser] = useState<NewUserTypes>({
     nombre: "",
     apellido: "",
@@ -85,15 +92,15 @@ export default function CreateNewUser() {
   });
 
   const db = getFirestore(firebaseconn);
-  const usuariosRef = collection(db, "usuarios");
-  const nuevoAfiliadoRef = collection(db, "nuevoAfiliado");
 
   const handleNewUserData = (key: keyof NewUserTypes, value: string) => {
     setNewUser((prev) => ({ ...prev, [key]: value }));
   };
 
   const onSubmitForm = async () => {
-    // 1) Normalizar antes de validar
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
     const normalized = {
       nombre: normalize(newUser.nombre),
       apellido: normalize(newUser.apellido),
@@ -107,10 +114,8 @@ export default function CreateNewUser() {
       fecha: newUser.fecha,
     };
 
-    // Reflejar en UI los textos ya limpios
     setNewUser((prev) => ({ ...prev, ...normalized }));
 
-    // 2) Validaciones explícitas (evita falsos negativos por espacios)
     if (
       !normalized.nombre ||
       !normalized.apellido ||
@@ -121,6 +126,7 @@ export default function CreateNewUser() {
       !normalized.departamento ||
       !normalized.establecimientos
     ) {
+      submittingRef.current = false;
       return Alert.alert("SiDCa", "Debe completar todos los campos obligatorios.");
     }
 
@@ -128,19 +134,42 @@ export default function CreateNewUser() {
       !regexRegister.names.test(normalized.nombre) ||
       !regexRegister.names.test(normalized.apellido)
     ) {
+      submittingRef.current = false;
       return Alert.alert("SiDCa", "Nombre o apellido no válido");
     }
 
     if (!regexRegister.dni.test(normalized.dni)) {
+      submittingRef.current = false;
       return Alert.alert("SiDCa", "DNI no válido");
     }
+
+    const dniKey = normalized.dni;
 
     try {
       setLoading(true);
 
-      const dniKey = normalized.dni;
+      /**
+       * ✅ Pre-chequeo (para bases viejas):
+       * 1) usuarios donde dni == dniKey (detecta IDs auto + IDs = DNI)
+       * 2) usuarios/{dniKey} (por si existiera un doc viejo sin campo dni)
+       * 3) lock usuarios_dni/{dniKey} (si ya fue registrado con el nuevo esquema)
+       */
+      const qUsuariosPorDni = query(
+        collection(db, "usuarios"),
+        where("dni", "==", dniKey),
+        limit(1)
+      );
 
-      // Payload base
+      const [snapUsuariosPorDni, snapUsuarioById, snapLock] = await Promise.all([
+        getDocs(qUsuariosPorDni),
+        getDoc(doc(db, "usuarios", dniKey)), // legacy
+        getDoc(doc(db, "usuarios_dni", dniKey)), // lock
+      ]);
+
+      if (!snapUsuariosPorDni.empty || snapUsuarioById.exists() || snapLock.exists()) {
+        throw new Error("DNI_EXISTE");
+      }
+
       const payloadBase = {
         ...normalized,
         dni: dniKey,
@@ -148,43 +177,47 @@ export default function CreateNewUser() {
       };
 
       await runTransaction(db, async (tx) => {
-        // 1) Chequear existencia del usuario activo por ID = DNI
-        const usuarioRef = doc(db, "usuarios", dniKey);
-        const usuarioSnap = await tx.get(usuarioRef);
+        // ✅ Lock único por DNI (garantiza NO duplicados)
+        const lockRef = doc(db, "usuarios_dni", dniKey);
+        const lockSnap = await tx.get(lockRef);
+        if (lockSnap.exists()) throw new Error("DNI_EXISTE");
 
-        if (usuarioSnap.exists()) {
-          throw new Error("DNI_EXISTE");
-        }
-
-        // 2) Obtener siguiente nroAfiliacion (contador por DNI según tu lógica actual)
-        const counterRef = doc(db, "nuevoAfiliado", `${dniKey}_counter`);
+        // ✅ contador (persiste aunque borres usuarios)
+        const counterRef = doc(db, "nuevoAfiliado_counters", dniKey);
         const counterSnap = await tx.get(counterRef);
 
-        let nroAfiliacion = 1;
+        const last =
+          counterSnap.exists() && typeof counterSnap.data()?.last === "number"
+            ? counterSnap.data()!.last
+            : 0;
+
+        const nroAfiliacion = last + 1;
+
         if (!counterSnap.exists()) {
-          tx.set(counterRef, {
-            last: 1,
-            updatedAt: serverTimestamp(),
-          });
+          tx.set(counterRef, { last: nroAfiliacion, updatedAt: serverTimestamp() });
         } else {
-          const last =
-            typeof counterSnap.data()?.last === "number"
-              ? counterSnap.data()!.last
-              : 0;
-          nroAfiliacion = last + 1;
-          tx.update(counterRef, {
-            last: nroAfiliacion,
-            updatedAt: serverTimestamp(),
-          });
+          tx.update(counterRef, { last: nroAfiliacion, updatedAt: serverTimestamp() });
         }
 
-        // 3) Crear usuario activo (usuarios/{dni})
-        tx.set(usuarioRef, payloadBase);
+        // ✅ usuario con ID AUTO
+        const usuarioAutoRef = doc(collection(db, "usuarios"));
+        tx.set(usuarioAutoRef, {
+          ...payloadBase,
+          usuarioId: usuarioAutoRef.id,
+        });
 
-        // 4) Registrar evento de afiliación (nuevoAfiliado con auto-ID)
+        // ✅ grabar lock (reserva el DNI y apunta al usuarioId)
+        tx.set(lockRef, {
+          dni: dniKey,
+          usuarioId: usuarioAutoRef.id,
+          createdAt: serverTimestamp(),
+        });
+
+        // ✅ evento/historial con ID AUTO
         const eventoRef = doc(collection(db, "nuevoAfiliado"));
         tx.set(eventoRef, {
           ...payloadBase,
+          usuarioId: usuarioAutoRef.id,
           nroAfiliacion,
         });
       });
@@ -193,7 +226,6 @@ export default function CreateNewUser() {
         { text: "OK", onPress: () => router.navigate("/") },
       ]);
 
-      // Limpiar formulario
       setNewUser({
         nombre: "",
         apellido: "",
@@ -208,34 +240,21 @@ export default function CreateNewUser() {
       });
     } catch (error: any) {
       if (error?.message === "DNI_EXISTE") {
-        Alert.alert(
-          "SiDCa",
-          "Ya existe un afiliado con este DNI. Contacta con el administrador."
-        );
+        Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
       } else {
         console.error("Error al afiliar usuario: ", error);
-        Alert.alert(
-          "SiDCa",
-          "Hubo un problema al procesar tu solicitud. Intenta nuevamente."
-        );
+        Alert.alert("SiDCa", "Hubo un problema al procesar tu solicitud.");
       }
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
-  };
-
-  const selectDepartment = (department: string) => {
-    handleNewUserData("departamento", department);
-    setModalVisible(false);
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#091d24" }}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#ffffff"
-        translucent={false}
-      />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent={false} />
+
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
@@ -246,12 +265,10 @@ export default function CreateNewUser() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         overScrollMode="never"
-       showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.viewInformation}>
-          <Text
-            style={{ fontSize: 22, fontWeight: "600", alignSelf: "center" }}
-          >
+          <Text style={{ fontSize: 22, fontWeight: "600", alignSelf: "center" }}>
             Beneficios para Afiliados:
           </Text>
           <Text> ASESORAMIENTO LEGAL, PREVISIONAL Y SINDICAL</Text>
@@ -266,28 +283,19 @@ export default function CreateNewUser() {
 
         <View style={styles.viewFormContainer}>
           <Text style={{ color: "#ffffff", fontWeight: "bold", width: "95%" }}>
-            Al afiliarse, ACEPTA que se descontarán cuotas y servicios sociales
-            de su Salario.
+            Al afiliarse, ACEPTA que se descontarán cuotas y servicios sociales de su Salario.
           </Text>
 
           {/* Nombre */}
           <View style={styles.inputContainer}>
-            <Text
-              style={{
-                color: "#ffffff",
-                alignSelf: "flex-start",
-                fontSize: 18,
-              }}
-            >
+            <Text style={{ color: "#ffffff", alignSelf: "flex-start", fontSize: 18 }}>
               Nombre
             </Text>
             <TextInput
               style={styles.inputForm}
               value={newUser.nombre}
               onChangeText={(v) => handleNewUserData("nombre", v)}
-              onBlur={() =>
-                handleNewUserData("nombre", normalize(newUser.nombre))
-              }
+              onBlur={() => handleNewUserData("nombre", normalize(newUser.nombre))}
               autoCapitalize="words"
               autoCorrect={false}
               returnKeyType="next"
@@ -296,22 +304,14 @@ export default function CreateNewUser() {
 
           {/* Apellido */}
           <View style={styles.inputContainer}>
-            <Text
-              style={{
-                color: "#ffffff",
-                alignSelf: "flex-start",
-                fontSize: 18,
-              }}
-            >
+            <Text style={{ color: "#ffffff", alignSelf: "flex-start", fontSize: 18 }}>
               Apellido
             </Text>
             <TextInput
               style={styles.inputForm}
               value={newUser.apellido}
               onChangeText={(v) => handleNewUserData("apellido", v)}
-              onBlur={() =>
-                handleNewUserData("apellido", normalize(newUser.apellido))
-              }
+              onBlur={() => handleNewUserData("apellido", normalize(newUser.apellido))}
               autoCapitalize="words"
               autoCorrect={false}
               returnKeyType="next"
@@ -320,21 +320,13 @@ export default function CreateNewUser() {
 
           {/* DNI */}
           <View style={styles.inputContainer}>
-            <Text
-              style={{
-                color: "#ffffff",
-                alignSelf: "flex-start",
-                fontSize: 18,
-              }}
-            >
+            <Text style={{ color: "#ffffff", alignSelf: "flex-start", fontSize: 18 }}>
               DNI
             </Text>
             <TextInput
               style={styles.inputForm}
               value={newUser.dni}
-              onChangeText={(v) =>
-                handleNewUserData("dni", v.replace(/\D/g, ""))
-              }
+              onChangeText={(v) => handleNewUserData("dni", v.replace(/\D/g, ""))}
               keyboardType="numeric"
               maxLength={9}
               returnKeyType="next"
@@ -343,13 +335,7 @@ export default function CreateNewUser() {
 
           {/* Email */}
           <View style={styles.inputContainer}>
-            <Text
-              style={{
-                color: "#ffffff",
-                alignSelf: "flex-start",
-                fontSize: 18,
-              }}
-            >
+            <Text style={{ color: "#ffffff", alignSelf: "flex-start", fontSize: 18 }}>
               Email
             </Text>
             <TextInput
@@ -366,72 +352,42 @@ export default function CreateNewUser() {
 
           {/* Celular */}
           <View style={styles.inputContainer}>
-            <Text
-              style={{
-                color: "#ffffff",
-                alignSelf: "flex-start",
-                fontSize: 18,
-              }}
-            >
+            <Text style={{ color: "#ffffff", alignSelf: "flex-start", fontSize: 18 }}>
               Celular
             </Text>
             <TextInput
               style={styles.inputForm}
               value={newUser.celular}
-              onChangeText={(v) =>
-                handleNewUserData("celular", v.replace(/[^\d+]/g, ""))
-              }
-              onBlur={() =>
-                handleNewUserData("celular", newUser.celular.trim())
-              }
+              onChangeText={(v) => handleNewUserData("celular", v.replace(/[^\d+]/g, ""))}
+              onBlur={() => handleNewUserData("celular", newUser.celular.trim())}
               keyboardType="phone-pad"
               autoCorrect={false}
               returnKeyType="next"
             />
           </View>
 
-          {/* Título de grado (obligatorio) */}
+          {/* Título */}
           <View style={styles.inputContainer}>
-            <Text
-              style={{
-                color: "#ffffff",
-                alignSelf: "flex-start",
-                fontSize: 18,
-              }}
-            >
+            <Text style={{ color: "#ffffff", alignSelf: "flex-start", fontSize: 18 }}>
               Título de grado (nombre de la carrera)
             </Text>
             <TextInput
               style={styles.inputForm}
               value={newUser.tituloGrado}
               onChangeText={(v) => handleNewUserData("tituloGrado", v)}
-              onBlur={() =>
-                handleNewUserData(
-                  "tituloGrado",
-                  normalize(newUser.tituloGrado)
-                )
-              }
+              onBlur={() => handleNewUserData("tituloGrado", normalize(newUser.tituloGrado))}
               autoCapitalize="sentences"
               autoCorrect
               returnKeyType="next"
             />
           </View>
 
-          {/* Departamento (domicilio real) */}
+          {/* Departamento */}
           <View style={styles.inputContainer}>
-            <Text
-              style={{
-                color: "#ffffff",
-                alignSelf: "flex-start",
-                fontSize: 18,
-              }}
-            >
+            <Text style={{ color: "#ffffff", alignSelf: "flex-start", fontSize: 18 }}>
               Departamento (domicilio real)
             </Text>
-            <TouchableOpacity
-              onPress={() => setModalVisible(true)}
-              style={{ width: "100%", borderRadius: 5 }}
-            >
+            <TouchableOpacity onPress={() => setModalVisible(true)} style={{ width: "100%", borderRadius: 5 }}>
               <TextInput
                 style={{
                   width: "100%",
@@ -451,25 +407,14 @@ export default function CreateNewUser() {
 
           {/* Establecimientos */}
           <View style={styles.inputContainer}>
-            <Text
-              style={{
-                color: "#ffffff",
-                alignSelf: "flex-start",
-                fontSize: 18,
-              }}
-            >
+            <Text style={{ color: "#ffffff", alignSelf: "flex-start", fontSize: 18 }}>
               Establecimientos
             </Text>
             <TextInput
               style={styles.inputForm}
               value={newUser.establecimientos}
               onChangeText={(v) => handleNewUserData("establecimientos", v)}
-              onBlur={() =>
-                handleNewUserData(
-                  "establecimientos",
-                  normalize(newUser.establecimientos)
-                )
-              }
+              onBlur={() => handleNewUserData("establecimientos", normalize(newUser.establecimientos))}
               autoCapitalize="sentences"
               autoCorrect
               returnKeyType="done"
@@ -490,7 +435,7 @@ export default function CreateNewUser() {
           </TouchableOpacity>
         </View>
 
-        {/* Modal de departamentos */}
+        {/* Modal departamentos */}
         <Modal
           animationType="slide"
           transparent
