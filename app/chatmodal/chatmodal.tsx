@@ -1,5 +1,10 @@
-// app/chatmodal/chatmodal.tsx
-import React, { useState, useContext, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import {
   View,
   Text,
@@ -12,11 +17,13 @@ import {
   Platform,
   ActivityIndicator,
   Keyboard,
-  NativeSyntheticEvent,
-  NativeTouchEvent,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
 
 import { SidcaContext } from "../_layout";
 import styles from "@/styles/chatmodal/chatmodal";
@@ -28,27 +35,81 @@ import { loadJsonFolderFromStorageUrl } from "../../components/chatbot/chatbotSt
 
 import {
   normalizarContenido,
-  resolverConsultaEspecial,
-  resolverConsultaGenericaLicencias,
+  resolverConsultaLocalNormativa,
   buscarInteligente,
-  RegistroNormativa,
+  type RegistroNormativa,
+  detectarDominioBackend,
+  esCoincidenciaLocalConfiable,
 } from "../../components/chatbot/chatbotSearch";
 
 import {
-  consultarLicenciasEnN8n,
-  construirMensajeDesdeN8n,
-} from "../../components/chatbot/n8nChatbot";
+  consultarLicenciasEnBackend,
+  construirMensajeDesdeBackend,
+  type BackendRespuestaLicencias,
+} from "../../components/chatbot/chatbotApi";
+
+import ChatbotBackendResponseCard from "../../components/chatbot/ChatbotBackendResponseCard";
 
 type Mensaje = {
   id: string;
   texto: string;
   tipo: "bot" | "usuario";
+  backendData?: BackendRespuestaLicencias | null;
+  isAudio?: boolean;
+  audioUri?: string | null;
+  audioDurationMs?: number;
+  transcript?: string;
 };
 
 const db = getFirestore(firebaseconn);
+const MIN_AUDIO_DURATION_MS = 350;
 
-// 🔊 Endpoint STT (placeholder)
-const STT_ENDPOINT = "https://tu-endpoint-stt.com/stt";
+const quitarMarkdownBasico = (texto: string) => {
+  return (texto || "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/`(.*?)`/g, "$1")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
+const obtenerFuenteFormal = (dominio: string) => {
+  switch (dominio) {
+    case "licencias":
+      return "Decreto Acuerdo Nº 1092/2015 – Régimen de Licencias Docentes";
+    case "estatuto":
+      return "Ley 3122 – Estatuto del Docente Provincial";
+    case "coberturas":
+      return "Dcto. Acdo. N° 636 – Apruébase e Implementase el Nuevo Sistema de Asamblea Pública de Coberturas de Cargos y Horas Cátedras para el Personal Docente de la Provincia de Catamarca";
+    default:
+      return "";
+  }
+};
+
+const construirRespuestaLocalFinal = (textoBase: string, dominio: string) => {
+  const limpio = quitarMarkdownBasico(textoBase);
+  const fuente = obtenerFuenteFormal(dominio);
+
+  let salida = limpio;
+
+  if (fuente) {
+    salida += `\n\nFuente consultada: ${fuente}.`;
+  }
+
+  return salida.trim();
+};
+
+const esErrorDeCuota = (texto: string) => {
+  const t = String(texto || "").toLowerCase();
+  return (
+    t.includes("429") ||
+    t.includes("quota") ||
+    t.includes("insufficient_quota") ||
+    t.includes("billing") ||
+    t.includes("credit")
+  );
+};
 
 export default function ChatbotModal() {
   const { userData } = useContext(SidcaContext) as any;
@@ -62,350 +123,374 @@ export default function ChatbotModal() {
   const [messages, setMessages] = useState<Mensaje[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [contenidoUnificado, setContenidoUnificado] = useState<RegistroNormativa[]>([]);
+  const [contenidoUnificado, setContenidoUnificado] = useState<
+    RegistroNormativa[]
+  >([]);
   const [cargandoBase, setCargandoBase] = useState(false);
 
   const flatListRef = useRef<FlatList<Mensaje>>(null);
 
-  // Audio / STT
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [sttLoading, setSttLoading] = useState(false);
-  const [lockRecording, setLockRecording] = useState(false);
-  const [cancelRecordingState, setCancelRecordingState] = useState(false);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const [speechListening, setSpeechListening] = useState(false);
+  const [speechDuration, setSpeechDuration] = useState(0);
+  const [speechWorking, setSpeechWorking] = useState(false);
+
+  const transcriptRef = useRef("");
+  const audioUriRef = useRef<string | null>(null);
+  const speechStartedAtRef = useRef<number | null>(null);
+  const micPressingRef = useRef(false);
+  const stopInProgressRef = useRef(false);
+
+  const soundRef = useRef<Audio.Sound | null>(null);
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+
+  const activeRequestRef = useRef(0);
+  const modalOpenRef = useRef(false);
 
   const welcomeMessage: Mensaje = {
     id: "bienvenida",
-    texto: `Hola ${fullName} 👋\nSoy el Asistente Virtual de SiDCa.\nPodés preguntarme sobre el *Estatuto Docente provincial* o el *Régimen de Licencias*.\n\nEscribí tu consulta o usá el botón de audio 🎙️ (mantené presionado, deslizá hacia arriba para bloquear o hacia la izquierda para cancelar).`,
+    texto: `Hola ${fullName} 👋
+Soy el Asistente Virtual de SiDCa.
+Podés preguntarme sobre el Estatuto Docente provincial, el Régimen de Licencias y Coberturas.
+
+Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     tipo: "bot",
+    backendData: null,
   };
 
-  const cleanupRecording = async () => {
-    try {
-      if (recording) await recording.stopAndUnloadAsync();
-    } catch (e) {
-      console.warn("Error limpiando grabación previa", e);
-    } finally {
-      setRecording(null);
-      setIsRecording(false);
-      setRecordingDuration(0);
-      setLockRecording(false);
-      setCancelRecordingState(false);
+  const isCurrentRequest = useCallback((requestId: number) => {
+    return modalOpenRef.current && activeRequestRef.current === requestId;
+  }, []);
+
+  useSpeechRecognitionEvent("start", () => {
+    setSpeechListening(true);
+    setSpeechDuration(0);
+    speechStartedAtRef.current = Date.now();
+  });
+
+  useSpeechRecognitionEvent("end", () => {
+    setSpeechListening(false);
+  });
+
+  useSpeechRecognitionEvent("result", (event: any) => {
+    const best = event?.results?.[0]?.transcript ?? "";
+    if (best) {
+      transcriptRef.current = best;
     }
+  });
+
+  useSpeechRecognitionEvent("audioend", (event: any) => {
+    if (event?.uri) {
+      audioUriRef.current = event.uri;
+    }
+  });
+
+  useSpeechRecognitionEvent("error", (event: any) => {
+    console.log("[SpeechRecognition] error:", event?.error, event?.message);
+  });
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    if (speechListening) {
+      interval = setInterval(() => {
+        if (speechStartedAtRef.current) {
+          setSpeechDuration(Date.now() - speechStartedAtRef.current);
+        }
+      }, 200);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [speechListening]);
+
+  const cleanupSound = async () => {
+    try {
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    } catch (e) {
+      console.warn("Error limpiando sonido", e);
+    } finally {
+      setPlayingMessageId(null);
+    }
+  };
+
+  const resetSpeechState = () => {
+    transcriptRef.current = "";
+    audioUriRef.current = null;
+    speechStartedAtRef.current = null;
+    micPressingRef.current = false;
+    stopInProgressRef.current = false;
+
+    setSpeechListening(false);
+    setSpeechDuration(0);
+    setSpeechWorking(false);
+  };
+
+  const abortSpeech = () => {
+    try {
+      ExpoSpeechRecognitionModule.abort();
+    } catch {}
+    resetSpeechState();
+  };
+
+  const closeChatbot = async () => {
+    activeRequestRef.current += 1;
+    modalOpenRef.current = false;
+
+    setLoading(false);
+    setCargandoBase(false);
+    setSpeechWorking(false);
+
+    abortSpeech();
+    await cleanupSound();
+
+    setVisible(false);
+    setMessages([]);
+    setInputText("");
   };
 
   const toggleModal = async () => {
     if (!visible) {
-      console.log("[Chatbot] Abriendo modal. Limpiando mensajes y preparando bienvenida.");
+      modalOpenRef.current = true;
+      activeRequestRef.current += 1;
       setMessages([welcomeMessage]);
       setInputText("");
       setVisible(true);
     } else {
-      console.log("[Chatbot] Cerrando modal. Limpieza de grabación y estado.");
-      await cleanupRecording();
-      setVisible(false);
-      setMessages([]);
-      setInputText("");
-      setSttLoading(false);
+      await closeChatbot();
     }
   };
 
-  // Carga de base desde Firebase (se usa como respaldo local)
+  useEffect(() => {
+    return () => {
+      modalOpenRef.current = false;
+      activeRequestRef.current += 1;
+      abortSpeech();
+      cleanupSound();
+    };
+  }, []);
+
   useEffect(() => {
     const loadContenido = async () => {
       if (!visible) return;
-      if (contenidoUnificado.length > 0) {
-        console.log(
-          "[Chatbot] Base ya cargada. Registros en contenidoUnificado:",
-          contenidoUnificado.length
-        );
-        return;
-      }
+      if (contenidoUnificado.length > 0) return;
 
       try {
-        console.log("[Chatbot] Iniciando carga de contenido desde Firestore/Storage...");
         setCargandoBase(true);
 
         const provincialRef = doc(db, "Chatboot", "Provincial");
-        console.log("[Chatbot] getDoc( Chatboot/Provincial )...");
         const snap = await getDoc(provincialRef);
 
-        console.log("[Chatbot] snap.exists():", snap.exists());
         if (!snap.exists()) {
           console.warn("⚠️ No existe Chatboot/Provincial en Firestore");
-          setCargandoBase(false);
           return;
         }
 
         const data = snap.data() || {};
-        console.log("[Chatbot] Data de Firestore (Provincial):", data);
-
         const estatutoUrl = data.Estatuto_Docente as string | undefined;
         const licenciaUrl = data.Licencia_Docente as string | undefined;
 
-        console.log("[Chatbot] URLs leídas de Firestore:", {
-          estatutoUrl,
-          licenciaUrl,
-        });
-
         if (!estatutoUrl || !licenciaUrl) {
           console.warn("⚠️ Faltan URLs de Estatuto_Docente o Licencia_Docente");
-          setCargandoBase(false);
           return;
         }
 
-        console.log("[Chatbot] Cargando Estatuto y Licencias desde Storage...");
         const [estatutoJsonRaw, licenciaJsonRaw] = await Promise.all([
           loadJsonFolderFromStorageUrl(estatutoUrl),
           loadJsonFolderFromStorageUrl(licenciaUrl),
         ]);
 
-        console.log("[Chatbot] Resultado carga Storage:", {
-          estatutoTipo: Array.isArray(estatutoJsonRaw) ? "array" : typeof estatutoJsonRaw,
-          estatutoLen: Array.isArray(estatutoJsonRaw) ? estatutoJsonRaw.length : "n/a",
-          licenciaTipo: Array.isArray(licenciaJsonRaw) ? "array" : typeof licenciaJsonRaw,
-          licenciaLen: Array.isArray(licenciaJsonRaw) ? licenciaJsonRaw.length : "n/a",
-        });
-
         const estatutoJson = (estatutoJsonRaw || []).map((item: any) => ({
           ...item,
           origen: "estatuto" as const,
         }));
+
         const licenciaJson = (licenciaJsonRaw || []).map((item: any) => ({
           ...item,
           origen: "licencia" as const,
         }));
 
-        console.log("[Chatbot] estatutoJson con origen:", estatutoJson.length);
-        console.log("[Chatbot] licenciaJson con origen:", licenciaJson.length);
-
-        const unificado = [...estatutoJson, ...licenciaJson];
-        console.log("[Chatbot] contenidoUnificado total:", unificado.length);
-
-        setContenidoUnificado(unificado);
+        setContenidoUnificado([...estatutoJson, ...licenciaJson]);
       } catch (error) {
         console.error("❌ Error al cargar contenido desde Firebase:", error);
       } finally {
-        setCargandoBase(false);
-        console.log("[Chatbot] Fin carga de base. cargandoBase = false");
+        if (modalOpenRef.current) {
+          setCargandoBase(false);
+        }
       }
     };
 
     loadContenido();
   }, [visible, contenidoUnificado.length]);
 
-  // Envío de mensaje de texto
-  const handleSendMessage = async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
+  const resolverLocal = (
+    trimmed: string,
+    dominioBackend: string
+  ): Mensaje | null => {
+    if (contenidoUnificado.length <= 0) return null;
 
-    console.log("========================================");
-    console.log("[Chatbot] Nueva consulta:", trimmed);
-    console.log(
-      "[Chatbot] contenidoUnificado length al momento de consultar:",
-      contenidoUnificado.length
+    const respuestaLocal = resolverConsultaLocalNormativa(
+      trimmed,
+      contenidoUnificado
     );
 
-    const userMsg: Mensaje = {
-      id: Date.now().toString(),
-      texto: trimmed,
-      tipo: "usuario",
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setInputText("");
-    setLoading(true);
-
-    // pequeña pausa para que se vea el estado "Consultando..."
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    // 👉 0) PRIMERO intentamos responder con n8n
-    try {
-  console.log("[Chatbot] Consultando a n8n via webhook...");
-
-  // Llamamos a n8n con la pregunta ya recortada
-  const respN8n = await consultarLicenciasEnN8n(trimmed);
-
-  // Construimos el texto que verá el usuario
-  const mensajeBot = construirMensajeDesdeN8n(respN8n);
-  console.log("[Chatbot] Mensaje construido desde n8n:", mensajeBot);
-
-  if (mensajeBot && mensajeBot.trim().length > 0) {
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `n8n-${Date.now()}`,
-        texto: mensajeBot.trim(),
+    if (respuestaLocal) {
+      return {
+        id: `respuesta-local-${Date.now()}`,
+        texto: construirRespuestaLocalFinal(respuestaLocal, dominioBackend),
         tipo: "bot",
-      },
-    ]);
-
-    setLoading(false);
-    Keyboard.dismiss();
-
-    // ✅ n8n respondió bien, no seguimos con la lógica local
-    return;
-  } else {
-    console.log(
-      "[Chatbot] n8n no devolvió un mensaje útil, se usa lógica local como respaldo."
-    );
-    // acá sigue la lógica local de respaldo (no hacemos return)
-  }
-} catch (error) {
-  console.error(
-    "[Chatbot] Error al consultar n8n, se usa lógica local como respaldo:",
-    error
-  );
-  // No hacemos return: después de este bloque seguirá el fallback local
-}
-
-
-    // === 1) A partir de acá queda la lógica LOCAL previa como BACKUP ===
-
-    if (!contenidoUnificado.length) {
-      console.log(
-        "[Chatbot] contenidoUnificado vacío. Base local todavía no disponible."
-      );
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `sin-datos-${Date.now()}`,
-          texto:
-            "En este momento no puedo acceder a la base local del Estatuto y el Régimen de Licencias 📄. Probá enviar de nuevo tu consulta en unos instantes.",
-          tipo: "bot",
-        },
-      ]);
-      setLoading(false);
-      return;
+        backendData: null,
+      };
     }
 
-    // 1) Casos especiales (fallecimiento, largo tratamiento, maternidad) – respaldo local
-    const respuestaEspecial = resolverConsultaEspecial(
-      trimmed,
-      contenidoUnificado
-    );
-    console.log("[Chatbot] respuestaEspecial (fallback local):", !!respuestaEspecial);
-    if (respuestaEspecial) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `respuesta-especial-${Date.now()}`,
-          texto: respuestaEspecial,
-          tipo: "bot",
-        },
-      ]);
-      setLoading(false);
-      Keyboard.dismiss();
-      return;
-    }
-
-    // 1.b) Resolver genérico para TODAS las licencias – respaldo local
-    const respuestaGenericaLic = resolverConsultaGenericaLicencias(
-      trimmed,
-      contenidoUnificado
-    );
-    console.log(
-      "[Chatbot] respuestaGenericaLic (fallback local):",
-      !!respuestaGenericaLic
-    );
-
-    if (respuestaGenericaLic) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `respuesta-generica-lic-${Date.now()}`,
-          texto: respuestaGenericaLic,
-          tipo: "bot",
-        },
-      ]);
-      setLoading(false);
-      Keyboard.dismiss();
-      return;
-    }
-
-    // 2) Búsqueda general con Fuse (Estatuto + Licencias filtrado por tema) – respaldo local
-    const t = trimmed.toLowerCase();
     let datosFiltrados: RegistroNormativa[] = contenidoUnificado;
 
-    if (
-      t.includes("licencia") ||
-      t.includes("enfermedad") ||
-      t.includes("maternidad") ||
-      t.includes("fallecimiento") ||
-      t.includes("duelo")
-    ) {
+    if (dominioBackend === "licencias") {
       datosFiltrados = contenidoUnificado.filter(
         (item) => item.origen === "licencia"
       );
-      console.log(
-        "[Chatbot] Filtro por LICENCIAS (fallback local). Cantidad:",
-        datosFiltrados.length
-      );
-    } else if (
-      t.includes("estatuto") ||
-      t.includes("derechos") ||
-      t.includes("deberes") ||
-      t.includes("obligaciones") ||
-      t.includes("cargo") ||
-      t.includes("situación de revista") ||
-      t.includes("situacion de revista")
-    ) {
+    } else if (dominioBackend === "estatuto") {
       datosFiltrados = contenidoUnificado.filter(
         (item) => item.origen === "estatuto"
       );
-      console.log(
-        "[Chatbot] Filtro por ESTATUTO (fallback local). Cantidad:",
-        datosFiltrados.length
-      );
-    } else {
-      console.log(
-        "[Chatbot] Sin filtro específico, uso Estatuto + Licencias (fallback local). Cantidad:",
-        datosFiltrados.length
-      );
     }
 
-    const resultados = buscarInteligente(trimmed, datosFiltrados);
-    console.log(
-      "[Chatbot] Resultados buscarInteligente (fallback local):",
-      resultados.length,
-      resultados[0]
-        ? {
-            articulo: resultados[0].articulo,
-            origen: resultados[0].origen,
-            titulo: resultados[0].titulo,
-          }
-        : null
-    );
+    const resultadosLocales = buscarInteligente(trimmed, datosFiltrados);
 
-    let respuestaTexto: string;
-
-    if (resultados.length > 0) {
-      const mejor = resultados[0];
+    if (
+      resultadosLocales.length > 0 &&
+      esCoincidenciaLocalConfiable(resultadosLocales[0])
+    ) {
+      const mejor = resultadosLocales[0];
       const normativa =
         normalizarContenido(mejor) ||
         "Encontré información relacionada, pero no tengo un texto claro para mostrar.";
 
-      respuestaTexto =
-        "Te comento lo que indica la normativa sobre este tema (búsqueda local de respaldo):\n\n" +
-        normativa +
-        "\n\nSi querés, podés preguntarme algo más puntual sobre esta licencia o artículo 🙂.";
-    } else {
-      respuestaTexto =
-        "No encontré una respuesta exacta a tu consulta en la base local 🤔.\nProbá con otras palabras, por ejemplo el nombre de la licencia o el artículo del Estatuto.";
+      return {
+        id: `respuesta-local-amplia-${Date.now()}`,
+        texto: construirRespuestaLocalFinal(normativa, dominioBackend),
+        tipo: "bot",
+        backendData: null,
+      };
     }
+
+    return null;
+  };
+
+  const procesarConsulta = async (trimmed: string) => {
+    const requestId = ++activeRequestRef.current;
+    const dominioBackend = detectarDominioBackend(trimmed);
+
+    setLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 160));
+
+    if (!isCurrentRequest(requestId)) return;
+
+    try {
+      const respBackend = await consultarLicenciasEnBackend(
+        trimmed,
+        dominioBackend
+      );
+      const mensajeBot = construirMensajeDesdeBackend(respBackend);
+
+      if (!isCurrentRequest(requestId)) return;
+
+      if (respBackend.ok && mensajeBot && mensajeBot.trim().length > 0) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `backend-${Date.now()}`,
+            texto: mensajeBot.trim(),
+            tipo: "bot",
+            backendData: respBackend,
+          },
+        ]);
+        setLoading(false);
+        Keyboard.dismiss();
+        return;
+      }
+
+      const backendError = String(respBackend?.error || "");
+      const backendSinCuota = esErrorDeCuota(backendError);
+
+      if (backendSinCuota) {
+        const localMsg = resolverLocal(trimmed, dominioBackend);
+
+        if (!isCurrentRequest(requestId)) return;
+
+        if (localMsg) {
+          setMessages((prev) => [...prev, localMsg]);
+          setLoading(false);
+          Keyboard.dismiss();
+          return;
+        }
+      }
+
+      if (!isCurrentRequest(requestId)) return;
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `sin-respuesta-${Date.now()}`,
+          texto: "Servicio no disponible por el momento.",
+          tipo: "bot",
+          backendData: null,
+        },
+      ]);
+
+      setLoading(false);
+      Keyboard.dismiss();
+    } catch (error: any) {
+      if (!isCurrentRequest(requestId)) return;
+
+      const backendSinCuota = esErrorDeCuota(error?.message || "");
+
+      if (backendSinCuota) {
+        const localMsg = resolverLocal(trimmed, dominioBackend);
+
+        if (localMsg) {
+          setMessages((prev) => [...prev, localMsg]);
+          setLoading(false);
+          Keyboard.dismiss();
+          return;
+        }
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `sin-respuesta-${Date.now()}`,
+          texto: "Servicio no disponible por el momento.",
+          tipo: "bot",
+          backendData: null,
+        },
+      ]);
+
+      setLoading(false);
+      Keyboard.dismiss();
+    }
+  };
+
+  const handleSendMessage = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
 
     setMessages((prev) => [
       ...prev,
-      { id: `respuesta-${Date.now()}`, texto: respuestaTexto, tipo: "bot" },
+      {
+        id: Date.now().toString(),
+        texto: trimmed,
+        tipo: "usuario",
+        backendData: null,
+      },
     ]);
 
-    setLoading(false);
-    Keyboard.dismiss();
+    setInputText("");
+    await procesarConsulta(trimmed);
   };
-
-  // ===== Audio / STT (simulado) =====
 
   const formatMillisToTime = (millis: number) => {
     const totalSeconds = Math.floor(millis / 1000);
@@ -416,185 +501,275 @@ export default function ChatbotModal() {
       .padStart(2, "0")}`;
   };
 
-  useEffect(() => {
-    if (!recording) return;
-    recording.setOnRecordingStatusUpdate((status) => {
-      if (status.isRecording && status.durationMillis != null) {
-        setRecordingDuration(status.durationMillis);
-      }
-    });
-  }, [recording]);
-
-  const sendAudioToSttApi = async (fileUri: string): Promise<string> => {
+  const startSpeechRecognition = async () => {
     try {
-      console.log("👉 STT placeholder, fileUri:", { fileUri, STT_ENDPOINT });
-      // Cuando tengas backend real, reemplazás esto por el fetch al endpoint
-      return "enfermedad largo tratamiento"; // texto simulado
-    } catch (error) {
-      console.error("Error en STT placeholder", error);
-      return "";
-    }
-  };
-
-  const startRecording = async () => {
-    try {
-      if (isRecording) return;
-
-      if (recording) {
-        try {
-          await recording.stopAndUnloadAsync();
-        } catch (e) {
-          console.warn("Error deteniendo grabación previa en startRecording", e);
-        }
-        setRecording(null);
-      }
-
-      const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== "granted") {
-        alert("Necesito permisos de micrófono para grabar audio.");
+      if (
+        speechListening ||
+        speechWorking ||
+        loading ||
+        cargandoBase ||
+        inputText.trim().length > 0
+      ) {
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-      });
+      const available = ExpoSpeechRecognitionModule.isRecognitionAvailable();
+      if (!available) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `speech-unavailable-${Date.now()}`,
+            texto: "Servicio no disponible por el momento.",
+            tipo: "bot",
+            backendData: null,
+          },
+        ]);
+        return;
+      }
 
-      const { recording: newRecording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      const permission =
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+
+      if (!permission.granted) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `speech-permission-${Date.now()}`,
+            texto: "Servicio no disponible por el momento.",
+            tipo: "bot",
+            backendData: null,
+          },
+        ]);
+        return;
+      }
+
+      transcriptRef.current = "";
+      audioUriRef.current = null;
+      speechStartedAtRef.current = Date.now();
+      micPressingRef.current = true;
+      stopInProgressRef.current = false;
+
+      setSpeechWorking(true);
+
+      ExpoSpeechRecognitionModule.start({
+        lang: "es-AR",
+        interimResults: true,
+        continuous: false,
+        maxAlternatives: 1,
+        requiresOnDeviceRecognition:
+          ExpoSpeechRecognitionModule.supportsOnDeviceRecognition(),
+        recordingOptions: ExpoSpeechRecognitionModule.supportsRecording()
+          ? {
+              persist: true,
+            }
+          : undefined,
+      });
+    } catch (error) {
+      console.error("Error al iniciar reconocimiento", error);
+      resetSpeechState();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `speech-error-${Date.now()}`,
+          texto: "Servicio no disponible por el momento.",
+          tipo: "bot",
+          backendData: null,
+        },
+      ]);
+    }
+  };
+
+  const stopSpeechRecognitionAndSend = async () => {
+    try {
+      if (stopInProgressRef.current) return;
+      if (!speechListening && !speechWorking) return;
+
+      stopInProgressRef.current = true;
+
+      ExpoSpeechRecognitionModule.stop();
+      await new Promise((resolve) => setTimeout(resolve, 450));
+
+      const transcript = transcriptRef.current.trim();
+      const audioUri = audioUriRef.current;
+      const durationMs = speechDuration;
+
+      if (durationMs < MIN_AUDIO_DURATION_MS) {
+        resetSpeechState();
+        return;
+      }
+
+      const audioMessageId = `audio-user-${Date.now()}`;
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: audioMessageId,
+          texto: transcript,
+          tipo: "usuario",
+          backendData: null,
+          isAudio: !!audioUri,
+          audioUri: audioUri || null,
+          audioDurationMs: durationMs,
+          transcript: transcript || "Servicio no disponible por el momento.",
+        },
+      ]);
+
+      resetSpeechState();
+
+      if (transcript) {
+        await procesarConsulta(transcript);
+      }
+    } catch (error) {
+      console.error("Error al detener reconocimiento", error);
+      resetSpeechState();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `speech-stop-error-${Date.now()}`,
+          texto: "Servicio no disponible por el momento.",
+          tipo: "bot",
+          backendData: null,
+        },
+      ]);
+    }
+  };
+
+  const handleMicPressIn = async () => {
+    await startSpeechRecognition();
+  };
+
+  const handleMicPressOut = async () => {
+    if (!micPressingRef.current) return;
+    micPressingRef.current = false;
+    await stopSpeechRecognitionAndSend();
+  };
+
+  const toggleAudioPlayback = async (
+    messageId: string,
+    uri?: string | null
+  ) => {
+    if (!uri) return;
+
+    try {
+      if (playingMessageId === messageId && soundRef.current) {
+        await cleanupSound();
+        return;
+      }
+
+      await cleanupSound();
+
+      const { sound } = await Audio.Sound.createAsync(
+        { uri },
+        { shouldPlay: true }
       );
 
-      setRecording(newRecording);
-      setIsRecording(true);
-      setRecordingDuration(0);
-      setLockRecording(false);
-      setCancelRecordingState(false);
-    } catch (error) {
-      console.error("Error al iniciar la grabación", error);
-    }
-  };
+      soundRef.current = sound;
+      setPlayingMessageId(messageId);
 
-  const cancelCurrentRecording = async () => {
-    if (!recording || !isRecording) return;
-    setCancelRecordingState(true);
-    await cleanupRecording();
-  };
-
-  const stopRecordingAndSend = async () => {
-    try {
-      if (!recording) return;
-      setIsRecording(false);
-
-      try {
-        await recording.stopAndUnloadAsync();
-      } catch (e) {
-        console.warn("Error al detener grabación en stopRecordingAndSend", e);
-      }
-
-      const uri = recording.getURI();
-      const wasCancelled = cancelRecordingState;
-
-      setRecording(null);
-      setRecordingDuration(0);
-      setLockRecording(false);
-      setCancelRecordingState(false);
-
-      if (!uri || wasCancelled) return;
-
-      setSttLoading(true);
-      const textoReconocido = await sendAudioToSttApi(uri);
-      setSttLoading(false);
-
-      if (textoReconocido && textoReconocido.trim().length > 0) {
-        handleSendMessage(textoReconocido);
-      }
-    } catch (error) {
-      console.error("Error al detener/mandar audio", error);
-      await cleanupRecording();
-      setSttLoading(false);
-    }
-  };
-
-  const handleTouchStart = (e: NativeSyntheticEvent<NativeTouchEvent>) => {
-    if (inputText.trim().length > 0) return;
-    touchStartRef.current = {
-      x: e.nativeEvent.pageX,
-      y: e.nativeEvent.pageY,
-    };
-    startRecording();
-  };
-
-  const handleTouchMove = (e: NativeSyntheticEvent<NativeTouchEvent>) => {
-    if (!isRecording || lockRecording || cancelRecordingState) return;
-    const start = touchStartRef.current;
-    if (!start) return;
-
-    const dx = e.nativeEvent.pageX - start.x;
-    const dy = e.nativeEvent.pageY - start.y;
-
-    if (dy < -40 && !lockRecording) {
-      setLockRecording(true);
-    }
-
-    if (dx < -40 && !cancelRecordingState) {
-      setCancelRecordingState(true);
-      cancelCurrentRecording();
-    }
-  };
-
-  const handleTouchEnd = () => {
-    touchStartRef.current = null;
-    if (isRecording && !lockRecording && !cancelRecordingState) {
-      stopRecordingAndSend();
+      sound.setOnPlaybackStatusUpdate((status: any) => {
+        if (!status?.isLoaded) return;
+        if (status.didJustFinish) {
+          cleanupSound();
+        }
+      });
+    } catch {
+      await cleanupSound();
     }
   };
 
   const renderActionButton = () => {
     const hasText = inputText.trim().length > 0;
 
-    const iconName: keyof typeof Ionicons.glyphMap =
-      hasText ? "send" : lockRecording && isRecording ? "stop" : "mic";
-
-    const onPress = () => {
-      if (hasText) {
-        handleSendMessage(inputText);
-      } else if (lockRecording && isRecording) {
-        stopRecordingAndSend();
-      }
-    };
+    if (hasText) {
+      return (
+        <TouchableOpacity
+          onPress={() => handleSendMessage(inputText)}
+          activeOpacity={0.9}
+          disabled={loading || cargandoBase}
+          style={[
+            styles.audioActionButton,
+            (loading || cargandoBase) && styles.audioActionButtonDisabled,
+          ]}
+        >
+          <Ionicons size={18} name="send" color="#fff" />
+        </TouchableOpacity>
+      );
+    }
 
     return (
-      <View
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
+      <TouchableOpacity
+        onPressIn={handleMicPressIn}
+        onPressOut={handleMicPressOut}
+        activeOpacity={0.9}
+        disabled={loading || cargandoBase}
+        style={[
+          styles.audioActionButton,
+          speechListening && styles.audioActionButtonRecording,
+          (loading || cargandoBase) && styles.audioActionButtonDisabled,
+        ]}
       >
-        <TouchableOpacity
-          onPress={onPress}
-          activeOpacity={0.8}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: isRecording ? "#1DA851" : "#25D366",
-            alignItems: "center",
-            justifyContent: "center",
-            marginLeft: 8,
-          }}
-        >
-          <Ionicons size={22} name={iconName} color="#fff" />
-        </TouchableOpacity>
+        <Ionicons size={18} name="mic" color="#fff" />
+      </TouchableOpacity>
+    );
+  };
+
+  const renderWaveBars = () => {
+    const heights = [8, 12, 10, 16, 9, 14, 18, 11, 13, 17, 9, 15, 10, 14, 8];
+
+    return (
+      <View style={styles.audioWaveRow}>
+        {heights.map((h, idx) => (
+          <View key={idx} style={[styles.audioWaveBar, { height: h }]} />
+        ))}
       </View>
     );
   };
 
-  const inputPlaceholder = isRecording ? "" : "Escribí tu consulta...";
+  const renderAudioBubble = (item: Mensaje) => {
+    const isPlaying = playingMessageId === item.id;
+    const durationText = formatMillisToTime(item.audioDurationMs || 0);
+
+    return (
+      <View
+        style={[
+          styles.audioMessageBubble,
+          item.tipo === "usuario"
+            ? styles.userAudioBubble
+            : styles.botAudioBubble,
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.audioPlayButton}
+          onPress={() => toggleAudioPlayback(item.id, item.audioUri)}
+        >
+          <Ionicons
+            name={isPlaying ? "pause" : "play"}
+            size={18}
+            color={item.tipo === "usuario" ? "#fff" : "#333"}
+          />
+        </TouchableOpacity>
+
+        <View style={styles.audioCenterBlock}>
+          {renderWaveBars()}
+          <Text
+            style={[
+              styles.audioDurationText,
+              item.tipo === "usuario" && styles.audioDurationTextUser,
+            ]}
+          >
+            {durationText}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const inputPlaceholder = speechListening ? "" : "Escribí tu consulta...";
 
   return (
     <>
-      {/* FAB flotante */}
       <TouchableOpacity style={styles.fab} onPress={toggleModal}>
         <Image
           source={require("@/assets/logos/Chatboot3.png")}
@@ -603,35 +778,27 @@ export default function ChatbotModal() {
         />
       </TouchableOpacity>
 
-      <Modal visible={visible} animationType="slide" transparent>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent
+        onRequestClose={closeChatbot}
+        statusBarTranslucent
+      >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.modalContainer}
         >
           <View style={styles.modalContent}>
-            {/* Header */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 8,
-                borderBottomWidth: 0.5,
-                borderColor: "#ddd",
-              }}
-            >
-              <Image
-                source={require("@/assets/logos/Chatboot4.png")}
-                style={{ width: 32, height: 32, borderRadius: 16, marginRight: 8 }}
-              />
+            <View style={styles.chatHeaderRow}>
               <Text style={styles.header}>Asistente Virtual SiDCa</Text>
             </View>
 
-            {/* Mensajes */}
             <FlatList
               ref={flatListRef}
               data={messages}
               keyExtractor={(item) => item.id}
-              contentContainerStyle={{ paddingBottom: 90 }}
+              contentContainerStyle={styles.messagesContent}
               onContentSizeChange={() =>
                 flatListRef.current?.scrollToEnd({ animated: true })
               }
@@ -642,97 +809,92 @@ export default function ChatbotModal() {
                     item.tipo === "usuario" ? styles.userRow : styles.botRow,
                   ]}
                 >
-                  <Image
-                    source={
-                      item.tipo === "usuario"
-                        ? require("@/assets/logos/chatdocente.png")
-                        : require("@/assets/logos/Chatboot4.png")
-                    }
-                    style={styles.avatar}
-                  />
-                  <View
-                    style={[
-                      styles.messageBubble,
-                      item.tipo === "usuario"
-                        ? styles.userBubble
-                        : styles.botBubble,
-                    ]}
-                  >
-                    <Text
+                  {item.tipo === "bot" ? (
+                    <Image
+                      source={require("@/assets/logos/Chatboot4.png")}
+                      style={styles.avatar}
+                    />
+                  ) : null}
+
+                  {item.tipo === "bot" && item.backendData ? (
+                    <View style={{ width: "100%" }}>
+                      <ChatbotBackendResponseCard data={item.backendData} />
+                    </View>
+                  ) : item.isAudio ? (
+                    <View style={styles.audioWrapper}>
+                      {renderAudioBubble(item)}
+                      {item.transcript ? (
+                        <Text style={styles.audioTranscriptText}>
+                          {item.transcript}
+                        </Text>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <View
                       style={[
-                        styles.messageText,
-                        item.tipo === "usuario" && styles.userText,
+                        styles.messageBubble,
+                        item.tipo === "usuario"
+                          ? styles.userBubble
+                          : styles.botBubble,
                       ]}
                     >
-                      {item.texto}
-                    </Text>
-                  </View>
+                      <Text
+                        style={[
+                          styles.messageText,
+                          item.tipo === "usuario" && styles.userText,
+                        ]}
+                      >
+                        {item.texto}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
             />
 
-            {/* Indicador de "Consultando..." */}
-            {(loading || sttLoading || cargandoBase) && (
+            {(loading || speechWorking || cargandoBase) && (
               <View style={styles.consultingContainer}>
                 <ActivityIndicator size="small" color="#007AFF" />
                 <Text style={styles.consultingText}>
-                  Consultando, buscando la mejor respuesta...
+                  Consultando asistente IA y normativa...
                 </Text>
               </View>
             )}
 
-            {/* Input + botón */}
-            <View style={styles.inputContainer}>
-              {isRecording ? (
-                <View style={styles.recordingBanner}>
-                  <Ionicons
-                    name="recording"
-                    size={18}
-                    color="#D32F2F"
-                    style={{ marginRight: 8 }}
+            <View style={styles.footerBar}>
+              <View style={styles.inputContainer}>
+                {speechListening ? (
+                  <View style={styles.inlineRecordingPill}>
+                    <View style={styles.inlineRecordingLeft}>
+                      <View style={styles.recordingDot} />
+                      <Text style={styles.inlineRecordingText}>Escuchando...</Text>
+                    </View>
+
+                    <Text style={styles.inlineRecordingTimer}>
+                      {formatMillisToTime(speechDuration)}
+                    </Text>
+                  </View>
+                ) : (
+                  <TextInput
+                    style={styles.input}
+                    placeholder={inputPlaceholder}
+                    value={inputText}
+                    onChangeText={setInputText}
+                    onSubmitEditing={() => handleSendMessage(inputText)}
+                    editable={!speechWorking && !cargandoBase}
                   />
-                  <Text style={styles.recordingText}>
-                    {lockRecording
-                      ? `Grabando (bloqueado)... ${formatMillisToTime(
-                          recordingDuration
-                        )}  — deslizá a la izquierda para cancelar`
-                      : `Grabando... ${formatMillisToTime(
-                          recordingDuration
-                        )}  — deslizá arriba para bloquear o a la izquierda para cancelar`}
-                  </Text>
-                </View>
-              ) : (
-                <TextInput
-                  style={styles.input}
-                  placeholder={inputPlaceholder}
-                  value={inputText}
-                  onChangeText={setInputText}
-                  onSubmitEditing={() => handleSendMessage(inputText)}
-                  editable={!sttLoading && !cargandoBase}
-                />
-              )}
+                )}
 
-              {renderActionButton()}
+                {renderActionButton()}
+              </View>
+
+              <TouchableOpacity style={styles.closeButton} onPress={closeChatbot}>
+                <Text style={styles.closeText}>Cerrar</Text>
+              </TouchableOpacity>
             </View>
-
-            {/* Cerrar */}
-            <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
-              <Text style={styles.closeText}>Cerrar</Text>
-            </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </Modal>
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-

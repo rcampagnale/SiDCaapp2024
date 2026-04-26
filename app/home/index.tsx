@@ -51,7 +51,7 @@ export default function HomePage() {
       if (Platform.OS === "android") {
         StatusBar.setBackgroundColor("#ffffff"); // blanco en Android
       }
-    }, [])
+    }, []),
   );
 
   // ⬇️ Trae usuario del contexto y calcula adherente/estado
@@ -165,7 +165,7 @@ export default function HomePage() {
               activeOpacity={1}
               onPress={() =>
                 requireActivo(() =>
-                  router.navigate("/contact/contact-information")
+                  router.navigate("/contact/contact-information"),
                 )
               }
             >
@@ -221,7 +221,7 @@ export default function HomePage() {
               activeOpacity={1}
               onPress={() =>
                 requireActivo(() =>
-                  router.navigate("/sala_de_reuniones/sala_de_reuniones")
+                  router.navigate("/sala_de_reuniones/sala_de_reuniones"),
                 )
               }
             >
@@ -279,6 +279,21 @@ export default function HomePage() {
                 <FontAwesome name="legal" size={24} color="black" />
               </View>
               <Text style={{ fontSize: 18 }}>Legal</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.btnActions}
+              activeOpacity={1}
+              onPress={() =>
+                requireActivo(() =>
+                  router.navigate("/oficina-gestion/oficina-gestion"),
+                )
+              }
+            >
+              <View style={styles.logoContainer}>
+                <FontAwesome name="desktop" size={24} color="black" />
+              </View>
+
+              <Text style={{ fontSize: 18 }}>Oficina de Gestión </Text>
             </TouchableOpacity>
           </View>
         </ImageBackground>
@@ -359,9 +374,9 @@ export default function HomePage() {
         whatsapp={userData?._afiliado?.whatsapp ?? undefined}
         motivo={userData?._afiliado?.motivo ?? null}
       />
+      <ChatbotModal />
 
       {/* <ChatbotModal />*/}
-      
     </View>
   );
 }
