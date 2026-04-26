@@ -63,6 +63,8 @@ type Mensaje = {
 
 const db = getFirestore(firebaseconn);
 const MIN_AUDIO_DURATION_MS = 350;
+const SPEECH_LANGUAGES = ["es-AR", "es-ES", "es-MX", "es-US"];
+const SPEECH_TRANSCRIPT_WAIT_MS = 1800;
 
 const quitarMarkdownBasico = (texto: string) => {
   return (texto || "")
@@ -139,6 +141,8 @@ export default function ChatbotModal() {
   const speechStartedAtRef = useRef<number | null>(null);
   const micPressingRef = useRef(false);
   const stopInProgressRef = useRef(false);
+  const speechLanguageIndexRef = useRef(0);
+  const speechErrorRef = useRef<string | null>(null);
 
   const soundRef = useRef<Audio.Sound | null>(null);
   const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
@@ -172,9 +176,16 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
   });
 
   useSpeechRecognitionEvent("result", (event: any) => {
-    const best = event?.results?.[0]?.transcript ?? "";
-    if (best) {
-      transcriptRef.current = best;
+    const results = event?.results || [];
+
+    const best =
+      results?.[0]?.transcript ||
+      results?.[0]?.alternatives?.[0]?.transcript ||
+      event?.transcript ||
+      "";
+
+    if (best && String(best).trim()) {
+      transcriptRef.current = String(best).trim();
     }
   });
 
@@ -185,7 +196,12 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
   });
 
   useSpeechRecognitionEvent("error", (event: any) => {
-    console.log("[SpeechRecognition] error:", event?.error, event?.message);
+    const error = String(event?.error || "");
+    const message = String(event?.message || "");
+
+    speechErrorRef.current = `${error} ${message}`.trim();
+
+    console.log("[SpeechRecognition] error:", error, message);
   });
 
   useEffect(() => {
@@ -223,6 +239,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     speechStartedAtRef.current = null;
     micPressingRef.current = false;
     stopInProgressRef.current = false;
+    speechErrorRef.current = null;
 
     setSpeechListening(false);
     setSpeechDuration(0);
@@ -501,6 +518,22 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
       .padStart(2, "0")}`;
   };
 
+  const waitForTranscript = async (maxWaitMs = SPEECH_TRANSCRIPT_WAIT_MS) => {
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < maxWaitMs) {
+      const transcript = transcriptRef.current.trim();
+
+      if (transcript.length > 0) {
+        return transcript;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+
+    return transcriptRef.current.trim();
+  };
+
   const startSpeechRecognition = async () => {
     try {
       if (
@@ -514,12 +547,14 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
       }
 
       const available = ExpoSpeechRecognitionModule.isRecognitionAvailable();
+
       if (!available) {
         setMessages((prev) => [
           ...prev,
           {
             id: `speech-unavailable-${Date.now()}`,
-            texto: "Servicio no disponible por el momento.",
+            texto:
+              "El reconocimiento de voz no está disponible en este dispositivo. Podés escribir tu consulta manualmente.",
             tipo: "bot",
             backendData: null,
           },
@@ -535,7 +570,8 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
           ...prev,
           {
             id: `speech-permission-${Date.now()}`,
-            texto: "Servicio no disponible por el momento.",
+            texto:
+              "Para usar el audio, necesitás habilitar el permiso del micrófono.",
             tipo: "bot",
             backendData: null,
           },
@@ -545,19 +581,25 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
       transcriptRef.current = "";
       audioUriRef.current = null;
+      speechErrorRef.current = null;
       speechStartedAtRef.current = Date.now();
       micPressingRef.current = true;
       stopInProgressRef.current = false;
 
       setSpeechWorking(true);
+      setSpeechListening(true);
+      setSpeechDuration(0);
+
+      const lang = SPEECH_LANGUAGES[speechLanguageIndexRef.current] || "es-ES";
+
+      console.log("[SpeechRecognition] start lang:", lang);
 
       ExpoSpeechRecognitionModule.start({
-        lang: "es-AR",
+        lang,
         interimResults: true,
         continuous: false,
         maxAlternatives: 1,
-        requiresOnDeviceRecognition:
-          ExpoSpeechRecognitionModule.supportsOnDeviceRecognition(),
+        requiresOnDeviceRecognition: false,
         recordingOptions: ExpoSpeechRecognitionModule.supportsRecording()
           ? {
               persist: true,
@@ -572,7 +614,8 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
         ...prev,
         {
           id: `speech-error-${Date.now()}`,
-          texto: "Servicio no disponible por el momento.",
+          texto:
+            "No pude iniciar el reconocimiento de voz. Probá nuevamente o escribí tu consulta.",
           tipo: "bot",
           backendData: null,
         },
@@ -587,15 +630,63 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
       stopInProgressRef.current = true;
 
-      ExpoSpeechRecognitionModule.stop();
-      await new Promise((resolve) => setTimeout(resolve, 450));
+      try {
+        ExpoSpeechRecognitionModule.stop();
+      } catch (error) {
+        console.warn("[SpeechRecognition] stop error:", error);
+      }
 
-      const transcript = transcriptRef.current.trim();
+      const transcript = await waitForTranscript();
       const audioUri = audioUriRef.current;
-      const durationMs = speechDuration;
+      const durationMs =
+        speechStartedAtRef.current != null
+          ? Date.now() - speechStartedAtRef.current
+          : speechDuration;
 
       if (durationMs < MIN_AUDIO_DURATION_MS) {
         resetSpeechState();
+        return;
+      }
+
+      const speechError = String(speechErrorRef.current || "").toLowerCase();
+      const languageNotSupported =
+        speechError.includes("language-not-supported") ||
+        speechError.includes("language not supported");
+
+      if (!transcript && languageNotSupported) {
+        speechLanguageIndexRef.current =
+          (speechLanguageIndexRef.current + 1) % SPEECH_LANGUAGES.length;
+
+        resetSpeechState();
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `speech-lang-error-${Date.now()}`,
+            texto:
+              "No pude reconocer el audio con el idioma actual. Probá nuevamente; voy a intentar con otra configuración de español.",
+            tipo: "bot",
+            backendData: null,
+          },
+        ]);
+
+        return;
+      }
+
+      if (!transcript) {
+        resetSpeechState();
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `speech-empty-${Date.now()}`,
+            texto:
+              "No pude interpretar el audio. Probá hablar un poco más claro, mantené presionado el micrófono y soltalo al terminar.",
+            tipo: "bot",
+            backendData: null,
+          },
+        ]);
+
         return;
       }
 
@@ -611,15 +702,13 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
           isAudio: !!audioUri,
           audioUri: audioUri || null,
           audioDurationMs: durationMs,
-          transcript: transcript || "Servicio no disponible por el momento.",
+          transcript,
         },
       ]);
 
       resetSpeechState();
 
-      if (transcript) {
-        await procesarConsulta(transcript);
-      }
+      await procesarConsulta(transcript);
     } catch (error) {
       console.error("Error al detener reconocimiento", error);
       resetSpeechState();
@@ -628,7 +717,8 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
         ...prev,
         {
           id: `speech-stop-error-${Date.now()}`,
-          texto: "Servicio no disponible por el momento.",
+          texto:
+            "No pude procesar el audio. Probá nuevamente o escribí tu consulta.",
           tipo: "bot",
           backendData: null,
         },
