@@ -37,11 +37,17 @@ type DescripcionItem = {
   contenido: string;
 };
 
+type DescripcionImagen = {
+  src: string;
+  alt: string;
+};
+
 type DescripcionFormateada = {
   intro: string;
   items: DescripcionItem[];
   cierre: string;
   parrafos: string[];
+  imagenes: DescripcionImagen[];
 };
 
 const limpiarEspacios = (texto = "") => {
@@ -62,17 +68,70 @@ const decodificarEntidadesBasicas = (texto = "") => {
     .replace(/&#39;/gi, "'");
 };
 
+const normalizarUrlImagen = (src = "") => {
+  const limpia = decodificarEntidadesBasicas(String(src || "").trim());
+
+  if (!limpia) return "";
+
+  if (limpia.startsWith("http://") || limpia.startsWith("https://")) {
+    return limpia;
+  }
+
+  if (limpia.startsWith("//")) {
+    return `https:${limpia}`;
+  }
+
+  if (limpia.startsWith("/")) {
+    return `https://sidcagremio.com${limpia}`;
+  }
+
+  if (limpia.startsWith("data:image/")) {
+    return limpia;
+  }
+
+  return limpia;
+};
+
+const extraerImagenesDesdeHtml = (html = ""): DescripcionImagen[] => {
+  const imagenes: DescripcionImagen[] = [];
+  const usadas = new Set<string>();
+
+  const regexImg = /<img[^>]*src=["']([^"']+)["'][^>]*>/gi;
+
+  let match: RegExpExecArray | null;
+
+  while ((match = regexImg.exec(String(html || ""))) !== null) {
+    const tagCompleto = match[0] || "";
+    const src = normalizarUrlImagen(match[1] || "");
+
+    const altMatch = tagCompleto.match(/alt=["']([^"']*)["']/i);
+    const alt = decodificarEntidadesBasicas(altMatch?.[1] || "");
+
+    if (src && !usadas.has(src)) {
+      usadas.add(src);
+
+      imagenes.push({
+        src,
+        alt,
+      });
+    }
+  }
+
+  return imagenes;
+};
+
 const htmlATextoPlanoMovil = (html = "") => {
   return decodificarEntidadesBasicas(
     String(html || "")
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
       .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+      .replace(/<img[^>]*>/gi, " ")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<\/p>/gi, "\n\n")
       .replace(/<\/div>/gi, "\n")
       .replace(/<\/li>/gi, "\n")
       .replace(/<li[^>]*>/gi, "\n")
-      .replace(/<[^>]+>/g, " ")
+      .replace(/<[^>]+>/g, " "),
   )
     .replace(/\r/g, "")
     .replace(/\n{3,}/g, "\n\n")
@@ -106,6 +165,7 @@ const formatearTextoPlano = (texto = ""): DescripcionFormateada => {
       items: [],
       cierre: "",
       parrafos: [],
+      imagenes: [],
     };
   }
 
@@ -122,6 +182,7 @@ const formatearTextoPlano = (texto = ""): DescripcionFormateada => {
       items: [],
       cierre: "",
       parrafos: parrafos.length ? parrafos : [limpio],
+      imagenes: [],
     };
   }
 
@@ -137,12 +198,12 @@ const formatearTextoPlano = (texto = ""): DescripcionFormateada => {
       index + 1 < matches.length ? matches[index + 1].index : limpio.length;
 
     let contenido = limpiarEspacios(
-      limpio.slice(inicioContenido, finContenido)
+      limpio.slice(inicioContenido, finContenido),
     );
 
     if (index === matches.length - 1) {
       const cierreMatch = contenido.match(
-        /(Agradecemos su colaboración\.?|Muchas gracias\.?|Importante:.*)$/i
+        /(Agradecemos su colaboración\.?|Muchas gracias\.?|Importante:.*)$/i,
       );
 
       if (
@@ -168,6 +229,7 @@ const formatearTextoPlano = (texto = ""): DescripcionFormateada => {
     items,
     cierre,
     parrafos: [],
+    imagenes: [],
   };
 };
 
@@ -179,13 +241,15 @@ const formatearHtml = (html = ""): DescripcionFormateada => {
     .replace(/\son\w+='[^']*'/gi, "")
     .replace(/javascript:/gi, "");
 
+  const imagenes = extraerImagenesDesdeHtml(htmlLimpio);
+
   const listaMatch = htmlLimpio.match(/<(ol|ul)[^>]*>([\s\S]*?)<\/\1>/i);
 
   if (listaMatch?.index !== undefined) {
     const introHtml = htmlLimpio.slice(0, listaMatch.index);
     const listaHtml = listaMatch[2] || "";
     const cierreHtml = htmlLimpio.slice(
-      listaMatch.index + listaMatch[0].length
+      listaMatch.index + listaMatch[0].length,
     );
 
     const items: DescripcionItem[] = [];
@@ -213,19 +277,30 @@ const formatearHtml = (html = ""): DescripcionFormateada => {
         items,
         cierre: htmlATextoPlanoMovil(cierreHtml),
         parrafos: [],
+        imagenes,
       };
     }
   }
 
-  return formatearTextoPlano(htmlATextoPlanoMovil(htmlLimpio));
+  const descripcionPlano = formatearTextoPlano(
+    htmlATextoPlanoMovil(htmlLimpio),
+  );
+
+  return {
+    ...descripcionPlano,
+    imagenes,
+  };
 };
 
 const obtenerDescripcionFormateada = (
-  formulario: FormularioGestion
+  formulario: FormularioGestion,
 ): DescripcionFormateada => {
   const descripcionHtml = formulario?.descripcionHtml || "";
 
-  if (htmlATextoPlanoMovil(descripcionHtml)) {
+  if (
+    htmlATextoPlanoMovil(descripcionHtml) ||
+    extraerImagenesDesdeHtml(descripcionHtml).length > 0
+  ) {
     return formatearHtml(descripcionHtml);
   }
 
@@ -343,7 +418,7 @@ export default function OficinaGestion() {
 
         Alert.alert(
           "Error",
-          "No se pudieron cargar los formularios disponibles."
+          "No se pudieron cargar los formularios disponibles.",
         );
       } finally {
         setLoading(false);
@@ -354,40 +429,39 @@ export default function OficinaGestion() {
   }, []);
 
   const solicitarPermisosAndroid = async () => {
-  if (Platform.OS !== "android") return true;
+    if (Platform.OS !== "android") return true;
 
-  try {
-    const androidVersion =
-      typeof Platform.Version === "number"
-        ? Platform.Version
-        : Number(Platform.Version);
+    try {
+      const androidVersion =
+        typeof Platform.Version === "number"
+          ? Platform.Version
+          : Number(Platform.Version);
 
-    const permisosSolicitados = [
-      PermissionsAndroid.PERMISSIONS.CAMERA,
-      ...(androidVersion >= 33
-        ? [
-            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-            PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-          ]
-        : [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE]),
-    ].filter(Boolean) as Parameters<
-      typeof PermissionsAndroid.requestMultiple
-    >[0];
+      const permisosSolicitados = [
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        ...(androidVersion >= 33
+          ? [
+              PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+              PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+            ]
+          : [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE]),
+      ].filter(Boolean) as Parameters<
+        typeof PermissionsAndroid.requestMultiple
+      >[0];
 
-    const resultados = await PermissionsAndroid.requestMultiple(
-      permisosSolicitados
-    );
+      const resultados =
+        await PermissionsAndroid.requestMultiple(permisosSolicitados);
 
-    const camaraOk =
-      resultados[PermissionsAndroid.PERMISSIONS.CAMERA] ===
-      PermissionsAndroid.RESULTS.GRANTED;
+      const camaraOk =
+        resultados[PermissionsAndroid.PERMISSIONS.CAMERA] ===
+        PermissionsAndroid.RESULTS.GRANTED;
 
-    return camaraOk;
-  } catch (error) {
-    console.error("Error solicitando permisos:", error);
-    return true;
-  }
-};
+      return camaraOk;
+    } catch (error) {
+      console.error("Error solicitando permisos:", error);
+      return true;
+    }
+  };
 
   const formulariosDisponibles = useMemo(() => {
     return formularios
@@ -464,6 +538,32 @@ export default function OficinaGestion() {
     );
   };
 
+  const renderImagenesFormulario = (
+    formulario: FormularioGestion,
+    imagenes: DescripcionImagen[],
+  ) => {
+    if (!imagenes || imagenes.length === 0) return null;
+
+    return (
+      <View style={styles.formImagesContainer}>
+        {imagenes.map((imagen, index) => (
+          <Image
+            key={`${formulario.id}-imagen-${index}`}
+            source={{ uri: imagen.src }}
+            style={styles.formImage}
+            resizeMode="contain"
+            onError={(error) => {
+              console.log("Error cargando imagen del formulario:", {
+                url: imagen.src,
+                error: error.nativeEvent,
+              });
+            }}
+          />
+        ))}
+      </View>
+    );
+  };
+
   const renderDescripcionFormulario = (formulario: FormularioGestion) => {
     const descripcion = obtenerDescripcionFormateada(formulario);
 
@@ -471,7 +571,8 @@ export default function OficinaGestion() {
       !descripcion.intro &&
       descripcion.items.length === 0 &&
       !descripcion.cierre &&
-      descripcion.parrafos.length === 0
+      descripcion.parrafos.length === 0 &&
+      descripcion.imagenes.length === 0
     ) {
       return (
         <View style={styles.descriptionContainerCard}>
@@ -495,13 +596,9 @@ export default function OficinaGestion() {
                 key={`${formulario.id}-${item.letra}`}
                 style={styles.descriptionListRow}
               >
-                <Text style={styles.descriptionListMarker}>
-                  {item.letra})
-                </Text>
+                <Text style={styles.descriptionListMarker}>{item.letra})</Text>
 
-                <Text style={styles.descriptionListText}>
-                  {item.contenido}
-                </Text>
+                <Text style={styles.descriptionListText}>{item.contenido}</Text>
               </View>
             ))}
           </View>
@@ -509,6 +606,8 @@ export default function OficinaGestion() {
           {!!descripcion.cierre && (
             <Text style={styles.cardDescriptionText}>{descripcion.cierre}</Text>
           )}
+
+          {renderImagenesFormulario(formulario, descripcion.imagenes)}
         </View>
       );
     }
@@ -523,6 +622,8 @@ export default function OficinaGestion() {
             {parrafo}
           </Text>
         ))}
+
+        {renderImagenesFormulario(formulario, descripcion.imagenes)}
       </View>
     );
   };
@@ -629,9 +730,7 @@ export default function OficinaGestion() {
               <View style={styles.webLoader}>
                 <ActivityIndicator size="large" color="#005CFE" />
 
-                <Text style={styles.webLoaderText}>
-                  Cargando formulario...
-                </Text>
+                <Text style={styles.webLoaderText}>Cargando formulario...</Text>
               </View>
             )}
 
@@ -702,7 +801,7 @@ export default function OficinaGestion() {
                   } catch (error) {
                     console.log(
                       "Mensaje WebView no procesado:",
-                      event.nativeEvent.data
+                      event.nativeEvent.data,
                     );
                   }
                 }}
@@ -741,7 +840,7 @@ export default function OficinaGestion() {
                   setWebLoading(false);
                   setWebError(
                     nativeEvent?.description ||
-                      "El formulario no respondió correctamente."
+                      "El formulario no respondió correctamente.",
                   );
                 }}
                 onHttpError={(syntheticEvent) => {
@@ -751,7 +850,7 @@ export default function OficinaGestion() {
 
                   setWebLoading(false);
                   setWebError(
-                    `Error HTTP ${nativeEvent.statusCode}. Verifique la conexión.`
+                    `Error HTTP ${nativeEvent.statusCode}. Verifique la conexión.`,
                   );
                 }}
               />

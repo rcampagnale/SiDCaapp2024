@@ -321,4 +321,18 @@ export default StyleSheet.create({
     fontSize: 15,
     fontWeight: "bold",
   },
+ 
+  formImagesContainer: {
+  width: "100%",
+  alignItems: "center",
+  marginTop: 12,
+  marginBottom: 8,
+},
+
+formImage: {
+  width: "58%",
+  aspectRatio: 9 / 16,
+  borderRadius: 12,
+  backgroundColor: "transparent",
+},
 });
