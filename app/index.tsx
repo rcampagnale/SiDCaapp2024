@@ -168,7 +168,7 @@ export default function SignInApp() {
    * ========================= */
 
   // 👉 Ajustá este valor para cada build que generes
-  const HARDCODED_VERSION_CODE = 19; // Debe coincidir con android.versionCode de tu app
+  const HARDCODED_VERSION_CODE = 20; // Debe coincidir con android.versionCode de tu app
 
   // Helper: intenta leer de expo-application, si no, usa el hardcode
   const getCurrentVersionCode = () => {

@@ -30,6 +30,12 @@ type FormularioGestion = {
   activo?: boolean;
   publicado?: boolean;
   createdAt?: any;
+
+  // Flags usados por la web para formularios de solo consulta por DNI
+  soloConsultaDni?: boolean;
+  modoSoloConsultaDni?: boolean;
+  bloquearCargaRespuestas?: boolean;
+  requiereValidacionDni?: boolean;
 };
 
 type DescripcionItem = {
@@ -336,6 +342,14 @@ const obtenerPathDesdeUrl = (url = "") => {
   return "";
 };
 
+const formularioSoloConsultaDni = (formulario: FormularioGestion) => {
+  return Boolean(
+    formulario?.soloConsultaDni ||
+    formulario?.modoSoloConsultaDni ||
+    formulario?.bloquearCargaRespuestas,
+  );
+};
+
 export default function OficinaGestion() {
   const statusBarHeight = StatusBar.currentHeight || 0;
   const db = getFirestore(firebaseconn);
@@ -637,9 +651,9 @@ export default function OficinaGestion() {
 
         <View style={styles.viewInformation}>
           <Text style={styles.text}>
-            Desde este espacio podrás completar formularios institucionales,
-            presentar documentación y realizar trámites habilitados por el
-            Sindicato de Docentes de Catamarca.
+            Desde este espacio podrás completar formularios Institucionales,
+            presentar documentación y consultar información sobre trámites
+            habilitados por el Sindicato de Docentes de Catamarca.
           </Text>
         </View>
 
@@ -674,13 +688,17 @@ export default function OficinaGestion() {
               const cantidadCampos =
                 formulario?.cantidadCampos || formulario?.campos?.length || 0;
 
+              const soloConsulta = formularioSoloConsultaDni(formulario);
+
               return (
                 <View key={formulario.id} style={styles.formCard}>
                   <View style={styles.formHeader}>
                     <View style={styles.logoBox}>{renderLogo()}</View>
 
                     <View style={styles.badge}>
-                      <Text style={styles.badgeText}>Disponible</Text>
+                      <Text style={styles.badgeText}>
+                        {soloConsulta ? "Consulta DNI" : "Disponible"}
+                      </Text>
                     </View>
                   </View>
 
@@ -705,13 +723,17 @@ export default function OficinaGestion() {
                     onPress={() => abrirFormulario(formulario)}
                   >
                     <FontAwesome
-                      name="send-o"
+                      name={soloConsulta ? "search" : "send-o"}
                       size={16}
                       color="#ffffff"
                       style={styles.btnIcon}
                     />
 
-                    <Text style={styles.btnText}>Completar formulario</Text>
+                    <Text style={styles.btnText}>
+                      {soloConsulta
+                        ? "Consultar información"
+                        : "Completar formulario"}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               );
