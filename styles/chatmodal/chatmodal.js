@@ -66,12 +66,12 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    marginBottom: 4,
-  },
+ avatar: {
+  width: 50,
+  height: 50,
+  borderRadius: 0,
+  marginBottom: 4,
+},
 
   messageBubble: {
     maxWidth: "92%",

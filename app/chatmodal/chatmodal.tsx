@@ -17,6 +17,9 @@ import {
   Platform,
   ActivityIndicator,
   Keyboard,
+  Animated,
+  Easing,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
@@ -62,9 +65,14 @@ type Mensaje = {
 };
 
 const db = getFirestore(firebaseconn);
+
 const MIN_AUDIO_DURATION_MS = 350;
 const SPEECH_LANGUAGES = ["es-AR", "es-ES", "es-MX", "es-US"];
 const SPEECH_TRANSCRIPT_WAIT_MS = 1800;
+
+const BOT_SIZE = 110;
+const BOT_RIGHT = 2;
+const BOT_BOTTOM = 10;
 
 const quitarMarkdownBasico = (texto: string) => {
   return (texto || "")
@@ -104,6 +112,7 @@ const construirRespuestaLocalFinal = (textoBase: string, dominio: string) => {
 
 const esErrorDeCuota = (texto: string) => {
   const t = String(texto || "").toLowerCase();
+
   return (
     t.includes("429") ||
     t.includes("quota") ||
@@ -150,11 +159,157 @@ export default function ChatbotModal() {
   const activeRequestRef = useRef(0);
   const modalOpenRef = useRef(false);
 
+  const cargaContenidoRef = useRef<Promise<void> | null>(null);
+  const contenidoUnificadoRef = useRef<RegistroNormativa[]>([]);
+
+  const botRuta = useRef(new Animated.Value(0)).current;
+
+  const screenWidth = Dimensions.get("window").width;
+  const screenHeight = Dimensions.get("window").height;
+
+  const recorridoX = -(screenWidth - BOT_SIZE - BOT_RIGHT - 12);
+  const recorridoY = -(screenHeight - BOT_SIZE - BOT_BOTTOM - 115);
+
+  useEffect(() => {
+    contenidoUnificadoRef.current = contenidoUnificado;
+  }, [contenidoUnificado]);
+
+  const cargarContenidoLocal = useCallback(
+    async (mostrarLoader: boolean = false) => {
+      if (contenidoUnificadoRef.current.length > 0) return;
+
+      if (mostrarLoader) {
+        setCargandoBase(true);
+      }
+
+      if (!cargaContenidoRef.current) {
+        cargaContenidoRef.current = (async () => {
+          const provincialRef = doc(db, "Chatboot", "Provincial");
+          const snap = await getDoc(provincialRef);
+
+          if (!snap.exists()) {
+            console.warn("⚠️ No existe Chatboot/Provincial en Firestore");
+            return;
+          }
+
+          const data = snap.data() || {};
+          const estatutoUrl = data.Estatuto_Docente as string | undefined;
+          const licenciaUrl = data.Licencia_Docente as string | undefined;
+
+          if (!estatutoUrl || !licenciaUrl) {
+            console.warn(
+              "⚠️ Faltan URLs de Estatuto_Docente o Licencia_Docente",
+            );
+            return;
+          }
+
+          const [estatutoJsonRaw, licenciaJsonRaw] = await Promise.all([
+            loadJsonFolderFromStorageUrl(estatutoUrl),
+            loadJsonFolderFromStorageUrl(licenciaUrl),
+          ]);
+
+          const estatutoJson = (estatutoJsonRaw || []).map((item: any) => ({
+            ...item,
+            origen: "estatuto" as const,
+          }));
+
+          const licenciaJson = (licenciaJsonRaw || []).map((item: any) => ({
+            ...item,
+            origen: "licencia" as const,
+          }));
+
+          const unificado = [...estatutoJson, ...licenciaJson];
+
+          contenidoUnificadoRef.current = unificado;
+          setContenidoUnificado(unificado);
+        })();
+      }
+
+      try {
+        await cargaContenidoRef.current;
+      } catch (error) {
+        console.error("❌ Error al cargar contenido desde Firebase:", error);
+        cargaContenidoRef.current = null;
+      } finally {
+        if (contenidoUnificadoRef.current.length <= 0) {
+          cargaContenidoRef.current = null;
+        }
+
+        if (mostrarLoader) {
+          setCargandoBase(false);
+        }
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    cargarContenidoLocal(false);
+
+    botRuta.setValue(0);
+
+    const animacionBot = Animated.sequence([
+      Animated.delay(700),
+      Animated.timing(botRuta, {
+        toValue: 1,
+        duration: 4550,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    animacionBot.start();
+
+    return () => {
+      animacionBot.stop();
+      botRuta.stopAnimation();
+    };
+  }, [cargarContenidoLocal, botRuta, recorridoX, recorridoY]);
+
+  const botMovimientoStyle = {
+    transform: [
+      {
+        translateX: botRuta.interpolate({
+          inputRange: [0, 0.13, 0.31, 0.5, 0.66, 0.82, 1],
+          outputRange: [
+            0,
+            -40,
+            recorridoX / 2,
+            recorridoX,
+            recorridoX / 1.4,
+            -80,
+            0,
+          ],
+        }),
+      },
+      {
+        translateY: botRuta.interpolate({
+          inputRange: [0, 0.13, 0.31, 0.5, 0.66, 0.82, 1],
+          outputRange: [
+            0,
+            -140,
+            recorridoY / 2,
+            recorridoY / 1.3,
+            -120,
+            -180,
+            0,
+          ],
+        }),
+      },
+      {
+        scale: botRuta.interpolate({
+          inputRange: [0, 0.25, 0.5, 0.75, 1],
+          outputRange: [1, 1.05, 1.02, 1.05, 1],
+        }),
+      },
+    ],
+  };
+
   const welcomeMessage: Mensaje = {
     id: "bienvenida",
     texto: `Hola ${fullName} 👋
 Soy el Asistente Virtual de SiDCa.
-Podés preguntarme sobre el Estatuto Docente provincial, el Régimen de Licencias y Coberturas.
+Podés preguntarme sobre el Estatuto Docente Provincial, el Régimen de Licencias y Coberturas.
 
 Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     tipo: "bot",
@@ -276,6 +431,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
       setMessages([welcomeMessage]);
       setInputText("");
       setVisible(true);
+      cargarContenidoLocal(true);
     } else {
       await closeChatbot();
     }
@@ -291,68 +447,24 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
   }, []);
 
   useEffect(() => {
-    const loadContenido = async () => {
-      if (!visible) return;
-      if (contenidoUnificado.length > 0) return;
+    if (!visible) return;
+    if (contenidoUnificado.length > 0) return;
 
-      try {
-        setCargandoBase(true);
-
-        const provincialRef = doc(db, "Chatboot", "Provincial");
-        const snap = await getDoc(provincialRef);
-
-        if (!snap.exists()) {
-          console.warn("⚠️ No existe Chatboot/Provincial en Firestore");
-          return;
-        }
-
-        const data = snap.data() || {};
-        const estatutoUrl = data.Estatuto_Docente as string | undefined;
-        const licenciaUrl = data.Licencia_Docente as string | undefined;
-
-        if (!estatutoUrl || !licenciaUrl) {
-          console.warn("⚠️ Faltan URLs de Estatuto_Docente o Licencia_Docente");
-          return;
-        }
-
-        const [estatutoJsonRaw, licenciaJsonRaw] = await Promise.all([
-          loadJsonFolderFromStorageUrl(estatutoUrl),
-          loadJsonFolderFromStorageUrl(licenciaUrl),
-        ]);
-
-        const estatutoJson = (estatutoJsonRaw || []).map((item: any) => ({
-          ...item,
-          origen: "estatuto" as const,
-        }));
-
-        const licenciaJson = (licenciaJsonRaw || []).map((item: any) => ({
-          ...item,
-          origen: "licencia" as const,
-        }));
-
-        setContenidoUnificado([...estatutoJson, ...licenciaJson]);
-      } catch (error) {
-        console.error("❌ Error al cargar contenido desde Firebase:", error);
-      } finally {
-        if (modalOpenRef.current) {
-          setCargandoBase(false);
-        }
-      }
-    };
-
-    loadContenido();
-  }, [visible, contenidoUnificado.length]);
+    cargarContenidoLocal(true);
+  }, [visible, contenidoUnificado.length, cargarContenidoLocal]);
 
   const resolverLocal = (
     trimmed: string,
-    dominioBackend: string
+    dominioBackend: string,
   ): Mensaje | null => {
-    if (contenidoUnificado.length <= 0) return null;
+    const baseLocal =
+      contenidoUnificadoRef.current.length > 0
+        ? contenidoUnificadoRef.current
+        : contenidoUnificado;
 
-    const respuestaLocal = resolverConsultaLocalNormativa(
-      trimmed,
-      contenidoUnificado
-    );
+    if (baseLocal.length <= 0) return null;
+
+    const respuestaLocal = resolverConsultaLocalNormativa(trimmed, baseLocal);
 
     if (respuestaLocal) {
       return {
@@ -363,16 +475,12 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
       };
     }
 
-    let datosFiltrados: RegistroNormativa[] = contenidoUnificado;
+    let datosFiltrados: RegistroNormativa[] = baseLocal;
 
     if (dominioBackend === "licencias") {
-      datosFiltrados = contenidoUnificado.filter(
-        (item) => item.origen === "licencia"
-      );
+      datosFiltrados = baseLocal.filter((item) => item.origen === "licencia");
     } else if (dominioBackend === "estatuto") {
-      datosFiltrados = contenidoUnificado.filter(
-        (item) => item.origen === "estatuto"
-      );
+      datosFiltrados = baseLocal.filter((item) => item.origen === "estatuto");
     }
 
     const resultadosLocales = buscarInteligente(trimmed, datosFiltrados);
@@ -402,6 +510,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     const dominioBackend = detectarDominioBackend(trimmed);
 
     setLoading(true);
+    await cargarContenidoLocal(false);
     await new Promise((resolve) => setTimeout(resolve, 160));
 
     if (!isCurrentRequest(requestId)) return;
@@ -409,7 +518,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     try {
       const respBackend = await consultarLicenciasEnBackend(
         trimmed,
-        dominioBackend
+        dominioBackend,
       );
       const mensajeBot = construirMensajeDesdeBackend(respBackend);
 
@@ -425,6 +534,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
             backendData: respBackend,
           },
         ]);
+
         setLoading(false);
         Keyboard.dismiss();
         return;
@@ -513,6 +623,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     const totalSeconds = Math.floor(millis / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
+
     return `${minutes.toString().padStart(2, "0")}:${seconds
       .toString()
       .padStart(2, "0")}`;
@@ -732,13 +843,14 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
   const handleMicPressOut = async () => {
     if (!micPressingRef.current) return;
+
     micPressingRef.current = false;
     await stopSpeechRecognitionAndSend();
   };
 
   const toggleAudioPlayback = async (
     messageId: string,
-    uri?: string | null
+    uri?: string | null,
   ) => {
     if (!uri) return;
 
@@ -752,7 +864,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
       const { sound } = await Audio.Sound.createAsync(
         { uri },
-        { shouldPlay: true }
+        { shouldPlay: true },
       );
 
       soundRef.current = sound;
@@ -760,6 +872,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
       sound.setOnPlaybackStatusUpdate((status: any) => {
         if (!status?.isLoaded) return;
+
         if (status.didJustFinish) {
           cleanupSound();
         }
@@ -860,13 +973,39 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
   return (
     <>
-      <TouchableOpacity style={styles.fab} onPress={toggleModal}>
-        <Image
-          source={require("@/assets/logos/Chatboot3.png")}
-          style={{ width: 150, height: 150 }}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
+      <Animated.View
+        pointerEvents={visible ? "none" : "auto"}
+        style={[
+          {
+            position: "absolute",
+            right: BOT_RIGHT,
+            bottom: BOT_BOTTOM,
+            zIndex: 20,
+            elevation: 10,
+          },
+          botMovimientoStyle,
+        ]}
+      >
+        <TouchableOpacity
+          onPress={toggleModal}
+          activeOpacity={0.85}
+          style={{
+            width: BOT_SIZE,
+            height: BOT_SIZE,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Image
+            source={require("@/assets/logos/Chatboot5.png")}
+            style={{
+              width: BOT_SIZE,
+              height: BOT_SIZE,
+            }}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </Animated.View>
 
       <Modal
         visible={visible}
@@ -901,8 +1040,9 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
                 >
                   {item.tipo === "bot" ? (
                     <Image
-                      source={require("@/assets/logos/Chatboot4.png")}
+                      source={require("@/assets/logos/Chatboot5.png")}
                       style={styles.avatar}
+                      resizeMode="contain"
                     />
                   ) : null}
 
@@ -957,7 +1097,9 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
                   <View style={styles.inlineRecordingPill}>
                     <View style={styles.inlineRecordingLeft}>
                       <View style={styles.recordingDot} />
-                      <Text style={styles.inlineRecordingText}>Escuchando...</Text>
+                      <Text style={styles.inlineRecordingText}>
+                        Escuchando...
+                      </Text>
                     </View>
 
                     <Text style={styles.inlineRecordingTimer}>
@@ -978,7 +1120,10 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
                 {renderActionButton()}
               </View>
 
-              <TouchableOpacity style={styles.closeButton} onPress={closeChatbot}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={closeChatbot}
+              >
                 <Text style={styles.closeText}>Cerrar</Text>
               </TouchableOpacity>
             </View>

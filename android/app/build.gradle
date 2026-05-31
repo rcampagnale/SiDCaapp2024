@@ -92,8 +92,8 @@ android {
         applicationId 'com.jakiro12.one'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 19
-        versionName "1.0.2"
+        versionCode 20
+        versionName "1.0.3"
     }
     signingConfigs {
         debug {
