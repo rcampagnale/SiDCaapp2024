@@ -72,7 +72,7 @@ const limpiarNombreCompletoDocente = (valor) => {
   return texto
     .replace(
       /^\s*(sin apellido|s\/apellido|sin datos|no informado|no informa)\s*[,;-]\s*/i,
-      ""
+      "",
     )
     .replace(/\s+/g, " ")
     .trim();
@@ -133,7 +133,7 @@ const obtenerEstado = (asistencia) => {
     asistencia?.estado ||
       asistencia?.estadoAsistencia ||
       asistencia?.asistenciaEstado ||
-      ""
+      "",
   )
     .toLowerCase()
     .trim();
@@ -166,14 +166,14 @@ const formatearFechaActualTexto = () => {
 
 const obtenerDatosConstancia = (
   asistencia = {},
-  configuracionConstancia = {}
+  configuracionConstancia = {},
 ) => {
   const apellido = limpiarApellidoDocente(
-    asistencia.apellido || asistencia.Apellido || asistencia.apellidos
+    asistencia.apellido || asistencia.Apellido || asistencia.apellidos,
   );
 
   const nombre = limpiarNombreCompletoDocente(
-    asistencia.nombre || asistencia.Nombre || asistencia.nombres
+    asistencia.nombre || asistencia.Nombre || asistencia.nombres,
   );
 
   const nombreCompleto = limpiarNombreCompletoDocente(
@@ -182,11 +182,11 @@ const obtenerDatosConstancia = (
       asistencia.apellidoNombre ||
       asistencia.apellidoYNombre ||
       asistencia.displayName ||
-      asistencia.fullName
+      asistencia.fullName,
   );
 
   const dni = limpiarTexto(
-    asistencia.dni || asistencia.DNI || asistencia.documento
+    asistencia.dni || asistencia.DNI || asistencia.documento,
   );
 
   const cursoNombre = limpiarTexto(
@@ -199,7 +199,7 @@ const obtenerDatosConstancia = (
       asistencia.cursoTitulo ||
       asistencia.curso ||
       asistencia.capacitacion ||
-      asistencia.tituloCurso
+      asistencia.tituloCurso,
   );
 
   const resolucion = limpiarTexto(
@@ -207,7 +207,7 @@ const obtenerDatosConstancia = (
       configuracionConstancia.resolución ||
       configuracionConstancia.numeroResolucion ||
       asistencia.resolucion ||
-      asistencia.resolución
+      asistencia.resolución,
   );
 
   const diasCurso = limpiarTexto(
@@ -218,14 +218,14 @@ const obtenerDatosConstancia = (
       asistencia.diasCurso ||
       asistencia.dias ||
       asistencia.fechaCurso ||
-      asistencia.fecha
+      asistencia.fecha,
   );
 
   const fechaEmision = limpiarTexto(
     configuracionConstancia.fechaEmision ||
       configuracionConstancia.textoEmision ||
       configuracionConstancia.emision ||
-      asistencia.fechaEmision
+      asistencia.fechaEmision,
   );
 
   const docenteCompleto = armarNombreDocente({
@@ -288,7 +288,7 @@ const compartirPDF = async (fileUri) => {
   if (!disponible) {
     Alert.alert(
       "Certificado generado",
-      `El PDF fue generado correctamente.\n\nUbicación:\n${fileUri}`
+      `El PDF fue generado correctamente.\n\nUbicación:\n${fileUri}`,
     );
     return;
   }
@@ -329,7 +329,7 @@ const VistaPreviaConstancia = ({
 
   const datos = useMemo(
     () => obtenerDatosConstancia(asistencia, configuracionConstancia),
-    [asistencia, configuracionConstancia]
+    [asistencia, configuracionConstancia],
   );
 
   const previewWidth = Math.min(width - 36, 430);
@@ -476,7 +476,7 @@ const ConstanciaCapacitacionButton = ({
     if (!puedeDescargar) {
       Alert.alert(
         "Certificado no disponible",
-        "El certificado se habilita cuando la asistencia presencial tiene ingreso y salida registrados."
+        "El certificado se habilita cuando la asistencia presencial tiene ingreso y salida registrados.",
       );
       return;
     }
@@ -490,7 +490,7 @@ const ConstanciaCapacitacionButton = ({
     if (!puedeDescargar) {
       Alert.alert(
         "Certificado no disponible",
-        "El certificado se habilita cuando la asistencia presencial tiene ingreso y salida registrados."
+        "El certificado se habilita cuando la asistencia presencial tiene ingreso y salida registrados.",
       );
       return;
     }
@@ -513,17 +513,17 @@ const ConstanciaCapacitacionButton = ({
 
       setMostrarPreview(false);
     } catch (error) {
-      if (fileUriGenerado) {
-        Alert.alert(
-          "PDF generado",
-          "El certificado se generó correctamente, pero hubo un problema al abrir o compartir el archivo."
-        );
-      } else {
-        Alert.alert(
-          "Error",
-          "No se pudo generar el certificado. Verificá los datos e intentá nuevamente."
-        );
-      }
+      const mensajeError =
+        error?.message ||
+        error?.toString?.() ||
+        "Error desconocido al generar el PDF.";
+
+      Alert.alert(
+        "Error real al generar PDF",
+        mensajeError.length > 700
+          ? `${mensajeError.substring(0, 700)}...`
+          : mensajeError,
+      );
     } finally {
       setGenerando(false);
     }

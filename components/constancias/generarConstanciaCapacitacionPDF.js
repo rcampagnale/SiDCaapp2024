@@ -1,13 +1,15 @@
 import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
-import { Asset } from "expo-asset";
 import { estilosConstanciaPDF } from "./generarConstanciaCapacitacionPDF.styles";
+import { plantillaConstanciaBase64 } from "./constanciaPlantillaBase64";
 
 /**
  * generarConstanciaCapacitacionPDF.js
  *
  * Versión limpia para producción:
- * - Usa la plantilla real constancia_capacitacion.png.
+ * - Usa la plantilla real constancia_capacitacion.png convertida previamente a base64.
+ * - No intenta leer la imagen desde assets en tiempo de ejecución.
+ * - Soluciona el error de APK: Unsupported scheme for location assets_cursos_constancia_capacitacion.
  * - Usa estilos desde generarConstanciaCapacitacionPDF.styles.js.
  * - No agrega marca de agua al PDF final.
  * - No usa pdf-lib.
@@ -16,8 +18,6 @@ import { estilosConstanciaPDF } from "./generarConstanciaCapacitacionPDF.styles"
  * - Limpia valores inválidos como "Sin apellido".
  * - Sin console.log.
  */
-
-const plantillaConstanciaPDF = require("../../assets/cursos/constancia_capacitacion.png");
 
 /* ============================================================
    HELPERS GENERALES
@@ -190,7 +190,12 @@ const recolectarContenedoresPorClave = (
   claves.forEach((key) => {
     if (esObjetoPlano(value[key])) {
       salida.push(value[key]);
-      recolectarContenedoresPorClave(value[key], claves, salida, profundidad + 1);
+      recolectarContenedoresPorClave(
+        value[key],
+        claves,
+        salida,
+        profundidad + 1
+      );
     }
   });
 
@@ -379,25 +384,24 @@ const normalizarEntrada = (...rawArgs) => {
 };
 
 /* ============================================================
-   PLANTILLA COMO BASE64
+   PLANTILLA BASE64
    ============================================================ */
 
 const cargarPlantillaBase64 = async () => {
-  const asset = Asset.fromModule(plantillaConstanciaPDF);
-
-  await asset.downloadAsync();
-
-  const uri = asset.localUri || asset.uri;
-
-  if (!uri) {
-    throw new Error("No se encontró la URI local de la plantilla.");
+  if (!plantillaConstanciaBase64) {
+    throw new Error("No se encontró la plantilla base64 de la constancia.");
   }
 
-  const base64 = await FileSystem.readAsStringAsync(uri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+  if (
+    typeof plantillaConstanciaBase64 !== "string" ||
+    !plantillaConstanciaBase64.startsWith("data:image/png;base64,")
+  ) {
+    throw new Error(
+      "La plantilla base64 de la constancia no tiene un formato válido."
+    );
+  }
 
-  return `data:image/png;base64,${base64}`;
+  return plantillaConstanciaBase64;
 };
 
 /* ============================================================
@@ -449,52 +453,47 @@ const construirHtmlConstancia = ({ data, plantillaBase64 }) => {
    ============================================================ */
 
 export const generarConstanciaCapacitacionPDF = async (...args) => {
-  try {
-    const data = normalizarEntrada(...args);
+  const data = normalizarEntrada(...args);
 
-    const plantillaBase64 = await cargarPlantillaBase64();
+  const plantillaBase64 = await cargarPlantillaBase64();
 
-    const html = construirHtmlConstancia({
-      data,
-      plantillaBase64,
-    });
+  const html = construirHtmlConstancia({
+    data,
+    plantillaBase64,
+  });
 
-    const printResult = await Print.printToFileAsync({
-      html,
-      base64: false,
-    });
+  const printResult = await Print.printToFileAsync({
+    html,
+    base64: false,
+  });
 
-    if (!printResult?.uri) {
-      throw new Error("Expo Print no devolvió la URI del PDF.");
-    }
-
-    const dniSlug = slugFileName(data.dni || "sin_dni");
-    const nombreSlug = slugFileName(data.nombreCompleto || "docente");
-
-    const fileName = `constancia_${dniSlug}_${nombreSlug}.pdf`;
-
-    const baseDirectory =
-      FileSystem.documentDirectory || FileSystem.cacheDirectory;
-
-    if (!baseDirectory) {
-      throw new Error("No se encontró un directorio válido para guardar el PDF.");
-    }
-
-    const fileUri = `${baseDirectory}${fileName}`;
-
-    await FileSystem.deleteAsync(fileUri, {
-      idempotent: true,
-    });
-
-    await FileSystem.copyAsync({
-      from: printResult.uri,
-      to: fileUri,
-    });
-
-    return fileUri;
-  } catch (error) {
-    throw error;
+  if (!printResult?.uri) {
+    throw new Error("Expo Print no devolvió la URI del PDF.");
   }
+
+  const dniSlug = slugFileName(data.dni || "sin_dni");
+  const nombreSlug = slugFileName(data.nombreCompleto || "docente");
+
+  const fileName = `constancia_${dniSlug}_${nombreSlug}.pdf`;
+
+  const baseDirectory = FileSystem.documentDirectory || FileSystem.cacheDirectory;
+
+  if (!baseDirectory) {
+    throw new Error("No se encontró un directorio válido para guardar el PDF.");
+  }
+
+  const fileUri = `${baseDirectory}${fileName}`;
+
+  await FileSystem.deleteAsync(fileUri, {
+    idempotent: true,
+  });
+
+  await FileSystem.copyAsync({
+    from: printResult.uri,
+    to: fileUri,
+  });
+
+  return fileUri;
 };
 
 export default generarConstanciaCapacitacionPDF;
