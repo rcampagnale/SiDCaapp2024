@@ -6,7 +6,6 @@
     "checkJs": false,
     "noEmit": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }

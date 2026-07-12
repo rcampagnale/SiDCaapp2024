@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-export default touristStyles = StyleSheet.create({
+const touristStyles = StyleSheet.create({
   container: {
     width: "100%",
     height: "100%",
@@ -53,6 +53,28 @@ export default touristStyles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     flexDirection: "row",
+  },
+  btnReservaCasa: {
+    width: "80%",
+    minHeight: 46,
+    backgroundColor: "#005CFE",
+    borderRadius: 9,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    columnGap: 10,
+    paddingHorizontal: 14,
+  },
+  btnReservaCasaDisabled: {
+    backgroundColor: "#7A7A7A",
+    opacity: 0.8,
+  },
+  btnReservaCasaText: {
+    flexShrink: 1,
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
   },
   btnNews: {
     width: "75%",
@@ -145,3 +167,5 @@ export default touristStyles = StyleSheet.create({
     marginVertical: 10, 
   },
 });
+
+export default touristStyles;

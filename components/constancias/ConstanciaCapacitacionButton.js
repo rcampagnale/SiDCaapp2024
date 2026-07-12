@@ -310,7 +310,7 @@ const TextoSobreConstancia = ({ style, children, numberOfLines = 1 }) => {
       style={[styles.textoSobrePlantilla, style]}
       numberOfLines={numberOfLines}
       adjustsFontSizeToFit
-      minimumFontScale={0.85}
+      minimumFontScale={0.7}
     >
       {children}
     </Text>
@@ -374,7 +374,7 @@ const VistaPreviaConstancia = ({
                   DOCUMENTO NO VÁLIDO
                 </Text>
 
-                <TextoSobreConstancia style={styles.docente}>
+                <TextoSobreConstancia style={styles.docente} numberOfLines={2}>
                   {datos.docenteCompleto}
                 </TextoSobreConstancia>
 
@@ -386,11 +386,11 @@ const VistaPreviaConstancia = ({
                   {datos.cursoNombre}
                 </TextoSobreConstancia>
 
-                <TextoSobreConstancia style={styles.resolucion}>
+                <TextoSobreConstancia style={styles.resolucion} numberOfLines={2}>
                   {datos.resolucion}
                 </TextoSobreConstancia>
 
-                <TextoSobreConstancia style={styles.diasCurso}>
+                <TextoSobreConstancia style={styles.diasCurso} numberOfLines={2}>
                   {datos.diasCurso}
                 </TextoSobreConstancia>
 

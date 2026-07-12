@@ -42,7 +42,7 @@ export const estilosConstanciaPDF = `
     color: #000000;
     font-size: 16pt;
     font-weight: 700;
-    line-height: 14pt;
+    line-height: 1.15;
     white-space: nowrap;
     margin: 0;
     padding: 0;
@@ -53,9 +53,13 @@ export const estilosConstanciaPDF = `
   left: 56.2%;
   top: 28.6%;
   width: 45.7%;
-  font-size: 16pt;
   font-weight: 700;
-  line-height: 14pt;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-align: left;
+  max-height: 60pt;
+  overflow: hidden;
 }
 
   .dni {
@@ -76,46 +80,52 @@ export const estilosConstanciaPDF = `
     top: 40.7%;
     width: 89%;
     white-space: normal;
-    font-size: 16pt;
     font-weight: 700;
-    line-height: 14pt;
     text-transform: uppercase;
     text-align: left;
     background: transparent;
     overflow-wrap: break-word;
     word-break: normal;
+    max-height: 40pt;
+    overflow: hidden;
   }
 
   .resolucion {
     left: 55.8%;
     top: 45.2%;
     width: 38%;
-    font-size: 16pt;
     font-weight: 700;
-    line-height: 14pt;
     text-align: left;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    max-height: 44pt;
+    overflow: hidden;
   }
 
   .dias {
     left: 11.7%;
     top: 50.8%;
     width: 57%;
-    font-size: 16pt;
     font-weight: 700;
-    line-height: 14pt;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    max-height: 46pt;
+    overflow: hidden;
   }
 
   .emision {
     left: 5.2%;
     top: 59.2%;
     width: 72%;
-    font-size: 16pt;
     font-weight: 700;
-    line-height: 14pt;
     white-space: normal;
     background: transparent;
     text-align: left;
     overflow-wrap: break-word;
     word-break: normal;
+    max-height: 40pt;
+    overflow: hidden;
   }
 `;

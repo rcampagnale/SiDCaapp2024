@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
   Image,
   Dimensions,
   ScrollView,
-  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import styles, { cursoCardStyles } from "../../styles/asistencia/asistencia";
@@ -30,7 +29,10 @@ import {
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Device from "expo-device";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import ConstanciaCapacitacionButton from "../../components/constancias/ConstanciaCapacitacionButton";
+import { useSidcaAlert } from "../../components/SidcaAlert";
 
 const localImage = require("../../assets/logos/secretaria.png");
 
@@ -55,6 +57,34 @@ const getOrCreateAsistenciaDeviceId = async () => {
   await AsyncStorage.setItem(ASISTENCIA_DEVICE_ID_KEY, nuevoId);
 
   return nuevoId;
+};
+
+const obtenerModeloDispositivo = () => {
+  const marca = String(Device.manufacturer ?? "").trim();
+  const modelo = String(Device.modelName ?? "").trim();
+
+  if (marca && modelo && !modelo.toLowerCase().includes(marca.toLowerCase())) {
+    return `${marca} ${modelo}`;
+  }
+
+  return modelo || String(Device.deviceName ?? "").trim() || "Dispositivo desconocido";
+};
+
+const formatearFechaHoraVinculacion = (value: any) => {
+  if (!value) return "Fecha y hora no disponibles";
+
+  const fecha = typeof value?.toDate === "function" ? value.toDate() : new Date(value);
+  if (Number.isNaN(fecha.getTime())) return "Fecha y hora no disponibles";
+
+  return new Intl.DateTimeFormat("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(fecha);
 };
 
 type TipoRegistroQR = "ingreso" | "salida";
@@ -239,6 +269,23 @@ const parseFechaARToTime = (fecha: any) => {
   return Number.isNaN(t) ? 0 : t;
 };
 
+const obtenerMomentoDetalladoAsistencia = (item: any) => {
+  const valor = item?.ingreso ?? item?.ingresoFechaHora ?? item?.salida ?? item?.salidaFechaHora;
+
+  if (!valor) return 0;
+  if (typeof valor?.toDate === "function") return valor.toDate().getTime();
+
+  const t = new Date(valor).getTime();
+  return Number.isNaN(t) ? 0 : t;
+};
+
+const compararAsistenciasRecienteAViejo = (a: any, b: any) => {
+  const fechaDiff = parseFechaARToTime(b.fecha) - parseFechaARToTime(a.fecha);
+  if (fechaDiff !== 0) return fechaDiff;
+
+  return obtenerMomentoDetalladoAsistencia(b) - obtenerMomentoDetalladoAsistencia(a);
+};
+
 const obtenerValorIngreso = (data: any) => {
   return (
     data?.ingreso?.fechaHoraISO ||
@@ -331,6 +378,7 @@ const buildAttendanceRow = (data: any) => {
       : data.estadoAsistencia || "pendiente",
     deviceId: data.deviceId || data.dispositivoAsistenciaId || "",
     dispositivoValidado: data.dispositivoValidado === true,
+    sessionId: data.sessionId || "",
   };
 };
 
@@ -450,6 +498,7 @@ const CursoHabilitadoCard: React.FC<CursoCardProps> = ({
 );
 
 export default function HandleCampusTeachers() {
+  const { showAlert, AlertPortal } = useSidcaAlert();
   const { userData } = useContext(SidcaContext);
   const statusBarHeight = StatusBar.currentHeight;
   const windowHeight = Dimensions.get("window").height;
@@ -475,6 +524,17 @@ export default function HandleCampusTeachers() {
   const [tipoRegistroActivoCfg, setTipoRegistroActivoCfg] =
     useState<TipoRegistroQR>("ingreso");
 
+  // Requisito de encuentros presenciales para habilitar la asistencia virtual.
+  const [requisitoPresencialVirtual, setRequisitoPresencialVirtual] = useState<
+    "ninguno" | "alguno" | "todos" | "especificos"
+  >("ninguno");
+  const [encuentrosPresencialesRequeridos, setEncuentrosPresencialesRequeridos] =
+    useState<{ id?: string; fecha?: string; label?: string }[]>([]);
+  const [
+    cantidadEncuentrosPresencialesRequeridos,
+    setCantidadEncuentrosPresencialesRequeridos,
+  ] = useState<number>(0);
+
   // Form + estado general
   const [selectedLevel, setSelectedLevel] = useState("");
   const [currentDate, setCurrentDate] = useState<string>("");
@@ -494,6 +554,10 @@ export default function HandleCampusTeachers() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scannedOnce, setScannedOnce] = useState(false);
 
+  // Scroll automático hacia "Asistencias cargadas" al finalizar un registro.
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [historySectionY, setHistorySectionY] = useState(0);
+
   const db = getFirestore(firebaseconn);
   const asistenciaCollection = collection(db, "asistencia");
   const codCollection = collection(db, "cod");
@@ -501,7 +565,8 @@ export default function HandleCampusTeachers() {
   const toggleModal = () => setIsModalVisible(!isModalVisible);
 
   /* --------- Utilidades --------- */
-  const friendlyError = (msg: string) => Alert.alert("Asistencia", msg);
+  const friendlyError = (msg: string) =>
+    showAlert("No pudimos completar el registro", msg);
   const nowIsBetween = (sinceISO: string, untilISO: string) => {
     const now = new Date();
     const a = new Date(sinceISO);
@@ -523,6 +588,23 @@ export default function HandleCampusTeachers() {
     return { sessionParam: s, codeParam: c, tipoRegistroQR: t, versionQR: v };
   };
   const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+  const confirmarRegistroPresencial = ({
+    titular,
+  }: {
+    titular: { apellido: string; nombre: string; dni: string };
+  }) =>
+    new Promise<boolean>((resolve) => {
+      showAlert(
+        "Confirmar identidad",
+        `Vas a registrar la asistencia como ${titular.apellido}, ${titular.nombre}.\n\nPor seguridad, este celular quedará vinculado a tu cuenta y solo podrá utilizarse con tu DNI.\n\n¿Confirmás que sos el titular?`,
+        [
+          { text: "Cancelar", style: "cancel", onPress: () => resolve(false) },
+          { text: "Confirmar", onPress: () => resolve(true) },
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) },
+      );
+    });
 
   const normalizarDniText = (value: any) =>
     String(value ?? "")
@@ -678,6 +760,7 @@ export default function HandleCampusTeachers() {
     setProcesandoTexto("Validando dispositivo autorizado...");
 
     const deviceId = await getOrCreateAsistenciaDeviceId();
+    const modeloActual = obtenerModeloDispositivo();
     const afiliadoDoc = await buscarDocumentoAfiliadoPorDni(dniClean);
 
     if (!afiliadoDoc) {
@@ -690,7 +773,7 @@ export default function HandleCampusTeachers() {
 
     if (dataAfiliado.dispositivoBloqueado === true) {
       throw new Error(
-        "El dispositivo de asistencia de este DNI está bloqueado. Solicitá la revisión desde administración.",
+        `El dispositivo de asistencia de ${dataAfiliado.apellido || userData?.apellido || "Sin apellido"}, ${dataAfiliado.nombre || userData?.nombre || "Sin nombre"} está bloqueado. Solicitá la revisión desde administración.`,
       );
     }
 
@@ -700,8 +783,17 @@ export default function HandleCampusTeachers() {
     );
 
     if (otroAfiliadoConEsteDispositivo) {
+      const otroData = otroAfiliadoConEsteDispositivo.data || {};
+      const otroApellido = otroData.apellido || otroData.Apellido || "Sin apellido";
+      const otroNombre = otroData.nombre || otroData.Nombre || "Sin nombre";
+      const fechaHoraVinculacion = formatearFechaHoraVinculacion(
+        otroData.dispositivoVinculadoEn ||
+          otroData.dispositivoUltimaValidacionEn ||
+          otroData.updatedAt,
+      );
+
       throw new Error(
-        "Este celular ya está vinculado a otro DNI para registrar asistencia. Por seguridad, no se puede marcar asistencia de otro afiliado desde este dispositivo.",
+        `Este dispositivo está vinculado a ${otroApellido}, ${otroNombre}.\n\nFecha y hora de vinculación: ${fechaHoraVinculacion}.\n\nPor seguridad, no puede utilizarse para registrar la asistencia de otro afiliado. Si cambiaste de celular, solicitá el reinicio del dispositivo a la administración de SiDCa.`,
       );
     }
 
@@ -710,6 +802,12 @@ export default function HandleCampusTeachers() {
     ).trim();
 
     const fechaValidacion = new Date().toISOString();
+
+    const titularBase = {
+      apellido: dataAfiliado.apellido || dataAfiliado.Apellido || userData?.apellido || "Sin apellido",
+      nombre: dataAfiliado.nombre || dataAfiliado.Nombre || userData?.nombre || "Sin nombre",
+      dni: dniClean,
+    };
 
     if (!dispositivoGuardado) {
       setProcesandoTexto("Vinculando este celular al DNI para asistencia...");
@@ -722,6 +820,7 @@ export default function HandleCampusTeachers() {
           dispositivoVinculadoEn: fechaValidacion,
           dispositivoVinculadoDesde: "app",
           dispositivoBloqueado: false,
+          dispositivoModelo: modeloActual,
           dispositivoUltimaValidacionEn: fechaValidacion,
         },
         { merge: true },
@@ -732,20 +831,29 @@ export default function HandleCampusTeachers() {
         vinculadoAhora: true,
         afiliadoColeccion: afiliadoDoc.coleccion,
         afiliadoDocId: afiliadoDoc.id,
+        titular: titularBase,
+        dispositivoModelo: modeloActual,
+        dispositivoVinculadoEn: fechaValidacion,
       };
     }
 
     if (dispositivoGuardado !== deviceId) {
       throw new Error(
-        "No se puede registrar la asistencia. Este DNI ya está vinculado a otro dispositivo. Si cambiaste de celular, solicitá la actualización desde administración.",
+        `Tu cuenta ya está vinculada a otro dispositivo.\n\nNo podés registrar tu asistencia desde este celular. Iniciá sesión desde tu dispositivo personal.\n\nSi cambiaste de celular, solicitá el reinicio del dispositivo a la administración de SIDCA.`,
       );
     }
+
+    // Backfill de modelo/fecha para vínculos creados antes de esta funcionalidad.
+    const modeloGuardado = String(dataAfiliado.dispositivoModelo || "").trim();
+    const vinculadoEnGuardado = dataAfiliado.dispositivoVinculadoEn || fechaValidacion;
 
     await setDoc(
       afiliadoDoc.ref,
       {
         asistenciaDispositivoVinculado: true,
         dispositivoBloqueado: false,
+        dispositivoModelo: modeloGuardado || modeloActual,
+        dispositivoVinculadoEn: vinculadoEnGuardado,
         dispositivoUltimaValidacionEn: fechaValidacion,
       },
       { merge: true },
@@ -756,6 +864,9 @@ export default function HandleCampusTeachers() {
       vinculadoAhora: false,
       afiliadoColeccion: afiliadoDoc.coleccion,
       afiliadoDocId: afiliadoDoc.id,
+      titular: titularBase,
+      dispositivoModelo: modeloGuardado || modeloActual,
+      dispositivoVinculadoEn: vinculadoEnGuardado,
     };
   };
 
@@ -1158,6 +1269,15 @@ export default function HandleCampusTeachers() {
     }
   };
 
+  const scrollToHistorial = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        y: Math.max(historySectionY - 12, 0),
+        animated: true,
+      });
+    }, 150);
+  };
+
   /* --------- Fecha actual DD/MM/YYYY --------- */
   useEffect(() => {
     const d = new Date();
@@ -1188,10 +1308,11 @@ export default function HandleCampusTeachers() {
   }, [isModalVisible]);
 
   /* --------- Leer cod/asistencia (cursoTitulo, modalidad, metodo, sessionId, habilitada) --------- */
-  useEffect(() => {
-    const fetchAsistenciaConfig = async () => {
-      setLoading(true);
-      try {
+  const fetchAsistenciaConfig = async ({
+    silencioso = false,
+  }: { silencioso?: boolean } = {}) => {
+    if (!silencioso) setLoading(true);
+    try {
         const asisRef = doc(codCollection, "asistencia");
         const asisSnap = await getDoc(asisRef);
         if (asisSnap.exists()) {
@@ -1207,6 +1328,21 @@ export default function HandleCampusTeachers() {
           setSessionIdCfg(data.sessionId);
           setTipoRegistroActivoCfg(normalizarTipoRegistro(data.tipoRegistro));
           setHabilitadaCfg(!!data.habilitada);
+          setRequisitoPresencialVirtual(
+            (data.requisitoPresencialVirtual as
+              | "ninguno"
+              | "alguno"
+              | "todos"
+              | "especificos") || "ninguno",
+          );
+          setEncuentrosPresencialesRequeridos(
+            Array.isArray(data.encuentrosPresencialesRequeridos)
+              ? data.encuentrosPresencialesRequeridos
+              : [],
+          );
+          setCantidadEncuentrosPresencialesRequeridos(
+            Number(data.cantidadEncuentrosPresencialesRequeridos) || 0,
+          );
         } else {
           setSelectedCourse("");
           setSelectedCourseId("");
@@ -1215,6 +1351,9 @@ export default function HandleCampusTeachers() {
           setSessionIdCfg(undefined);
           setTipoRegistroActivoCfg("ingreso");
           setHabilitadaCfg(false);
+          setRequisitoPresencialVirtual("ninguno");
+          setEncuentrosPresencialesRequeridos([]);
+          setCantidadEncuentrosPresencialesRequeridos(0);
         }
       } catch {
         setSelectedCourse("");
@@ -1224,11 +1363,17 @@ export default function HandleCampusTeachers() {
         setSessionIdCfg(undefined);
         setTipoRegistroActivoCfg("ingreso");
         setHabilitadaCfg(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+        setRequisitoPresencialVirtual("ninguno");
+        setEncuentrosPresencialesRequeridos([]);
+        setCantidadEncuentrosPresencialesRequeridos(0);
+    } finally {
+      if (!silencioso) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAsistenciaConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isModalVisible]);
 
   /* --------- Leer constancias/certificados por curso --------- */
@@ -1291,10 +1436,15 @@ export default function HandleCampusTeachers() {
         return;
       }
 
+      if (!requisitoVirtual.cumple) {
+        friendlyError(
+          `No podés registrar asistencia virtual: te faltan encuentros presenciales obligatorios para este curso (cumpliste ${requisitoVirtual.cumplidos} de ${requisitoVirtual.total}).`,
+        );
+        return;
+      }
+
       setProcesandoTexto("Verificando datos y registrando asistencia virtual...");
       setProcesandoRegistro(true);
-
-      const validacionDispositivo = await validarDispositivoAsistencia();
 
       setProcesandoTexto("Verificando duplicados de asistencia virtual...");
 
@@ -1304,10 +1454,14 @@ export default function HandleCampusTeachers() {
           where("dni", "==", userData.dni),
           where("curso", "==", selectedCourse),
           where("fecha", "==", currentDate),
+          where("modalidad", "==", "virtual"),
         ),
       );
       if (!dupSnap.empty) {
-        friendlyError("Ya registraste asistencia para este curso hoy.");
+        showAlert(
+          "Asistencia virtual ya registrada",
+          `Tu asistencia virtual del ${currentDate} ya figura como PRESENTE para este curso. Podés comprobarla en la sección “Asistencias cargadas”.`,
+        );
         return;
       }
       await addDoc(asistenciaCollection, {
@@ -1324,17 +1478,14 @@ export default function HandleCampusTeachers() {
         modalidad: "virtual",
         asistenciaValidada: true,
         estadoAsistencia: "validada",
-        deviceId: validacionDispositivo.deviceId,
-        dispositivoAsistenciaId: validacionDispositivo.deviceId,
-        dispositivoValidado: true,
-        dispositivoVinculadoAhora: validacionDispositivo.vinculadoAhora,
-        dispositivoAfiliadoColeccion: validacionDispositivo.afiliadoColeccion,
-        dispositivoAfiliadoDocId: validacionDispositivo.afiliadoDocId,
         createdAt: serverTimestamp(),
       });
-      Alert.alert("Asistencia", "Asistencia registrada con éxito.");
       await refrescarHistorial();
-      toggleModal();
+      scrollToHistorial();
+      showAlert(
+        "¡Asistencia registrada!",
+        "Tu asistencia virtual quedó guardada correctamente.",
+      );
     } catch (error) {
       console.error("Asistencia virtual:", error);
 
@@ -1350,6 +1501,8 @@ export default function HandleCampusTeachers() {
   /* --------- Registrar asistencia PRESENCIAL (QR) --------- */
   const openScanner = async () => {
     if (procesandoRegistro) return;
+
+    await fetchAsistenciaConfig({ silencioso: true });
 
     if (!selectedLevel) {
       friendlyError("Seleccione un nivel educativo antes de continuar.");
@@ -1450,6 +1603,17 @@ export default function HandleCampusTeachers() {
 
       const validacionDispositivo = await validarDispositivoAsistencia();
 
+      setProcesandoRegistro(false);
+
+      const confirmado = await confirmarRegistroPresencial({
+        titular: validacionDispositivo.titular,
+      });
+
+      if (!confirmado) {
+        return;
+      }
+
+      setProcesandoRegistro(true);
       setProcesandoTexto(`Registrando ${tipoRegistroQR} de asistencia...`);
 
       const registroExistente = await buscarRegistroPresencialExistente({
@@ -1494,7 +1658,7 @@ export default function HandleCampusTeachers() {
 
       if (tipoRegistroQR === "ingreso") {
         if (ingresoRegistrado) {
-          Alert.alert(
+          showAlert(
             "Asistencia",
             salidaRegistrada
               ? "Tu asistencia ya tiene ingreso y salida registrados."
@@ -1525,9 +1689,9 @@ export default function HandleCampusTeachers() {
           { merge: true },
         );
 
-        Alert.alert(
-          "Asistencia",
-          "Ingreso registrado correctamente. Para validar la asistencia completa, escaneá el QR de salida al finalizar.",
+        showAlert(
+          "¡Ingreso registrado!",
+          "Guardamos tu ingreso correctamente. Al finalizar la actividad, escaneá el QR de salida para completar y validar tu asistencia.",
         );
       } else {
         if (!ingresoRegistrado) {
@@ -1538,7 +1702,7 @@ export default function HandleCampusTeachers() {
         }
 
         if (salidaRegistrada) {
-          Alert.alert(
+          showAlert(
             "Asistencia",
             "Tu salida ya fue registrada. La asistencia está validada.",
           );
@@ -1564,17 +1728,16 @@ export default function HandleCampusTeachers() {
           { merge: true },
         );
 
-        Alert.alert(
-          "Asistencia",
-          "Salida registrada correctamente. Tu asistencia quedó validada.",
+        showAlert(
+          "¡Asistencia completada!",
+          "Tu salida quedó registrada y la asistencia fue validada correctamente.",
         );
       }
 
       setProcesandoTexto("Actualizando historial de asistencia...");
       await refrescarHistorial();
+      scrollToHistorial();
     } catch (error) {
-      console.error("QR asistencia:", error);
-
       const errorMessage = error instanceof Error ? error.message : "";
 
       if (
@@ -1588,17 +1751,82 @@ export default function HandleCampusTeachers() {
       }
     } finally {
       setProcesandoRegistro(false);
+      fetchAsistenciaConfig({ silencioso: true });
     }
   };
 
   /* --------- Habilitación de botones por modalidad --------- */
+  /* --------- Requisito de encuentros presenciales para habilitar virtual --------- */
+  const formatearFechaEncuentro = (req: { fecha?: string; label?: string }) => {
+    const normalizada = normalizarFechaYYYYMMDD(req.fecha);
+    if (!normalizada) return "fecha sin definir";
+
+    const [yyyy, mm, dd] = normalizada.split("-");
+    return `${dd}/${mm}/${yyyy}`;
+  };
+
+  const evaluarRequisitoVirtual = () => {
+    if (requisitoPresencialVirtual === "ninguno") {
+      return { cumple: true, cumplidos: 0, total: 0, detalle: [] as { texto: string; cumplido: boolean }[] };
+    }
+
+    const requeridos = Array.isArray(encuentrosPresencialesRequeridos)
+      ? encuentrosPresencialesRequeridos
+      : [];
+
+    // Sin lista configurada no se puede evaluar el requisito: no se bloquea.
+    if (requeridos.length === 0) {
+      return { cumple: true, cumplidos: 0, total: 0, detalle: [] as { texto: string; cumplido: boolean }[] };
+    }
+
+    const cursoIdActual = String(selectedCourseId || "").trim();
+
+    const completadosDelCurso = attendances.filter((it) => {
+      const cursoIdItem = String(it.cursoId || "").trim();
+      return (
+        it.modalidad === "presencial" &&
+        !!cursoIdActual &&
+        cursoIdItem === cursoIdActual &&
+        it.ingresoRegistrado &&
+        it.salidaRegistrada
+      );
+    });
+
+    const detalle = requeridos.map((req) => {
+      const cumplidoItem = completadosDelCurso.some((it) => {
+        if (req.id && it.sessionId && req.id === it.sessionId) return true;
+        if (req.fecha) {
+          return (
+            normalizarFechaYYYYMMDD(req.fecha) ===
+            normalizarFechaYYYYMMDD(it.fecha)
+          );
+        }
+        return false;
+      });
+
+      return { texto: formatearFechaEncuentro(req), cumplido: cumplidoItem };
+    });
+
+    const cumplidos = detalle.filter((d) => d.cumplido).length;
+    const total = requeridos.length;
+    const cumple =
+      requisitoPresencialVirtual === "alguno"
+        ? cumplidos >= 1
+        : cumplidos >= total;
+
+    return { cumple, cumplidos, total, detalle };
+  };
+
+  const requisitoVirtual = evaluarRequisitoVirtual();
+
   const levelSelected = !!selectedLevel;
   const isVirtualActive =
     isButtonEnabled &&
     habilitadaCfg &&
     !!selectedCourse &&
     modalidad === "virtual" &&
-    levelSelected;
+    levelSelected &&
+    requisitoVirtual.cumple;
   const isPresencialQRActive =
     isButtonEnabled &&
     habilitadaCfg &&
@@ -1657,7 +1885,10 @@ export default function HandleCampusTeachers() {
               {loading ? (
                 <ActivityIndicator size="large" color="#ffffff" />
               ) : (
-                <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                <ScrollView
+                  ref={scrollViewRef}
+                  contentContainerStyle={styles.scrollViewContent}
+                >
                   {/* Datos afiliado */}
                   <View
                     style={{
@@ -1760,6 +1991,85 @@ export default function HandleCampusTeachers() {
                       Modalidad: {cap(modalidad)}
                     </Text>
 
+                    {modalidad === "virtual" &&
+                      requisitoPresencialVirtual !== "ninguno" &&
+                      requisitoVirtual.total > 0 && (
+                        <View
+                          style={[
+                            styles.requisitoPresencialCard,
+                            requisitoVirtual.cumple
+                              ? styles.requisitoPresencialCumplido
+                              : styles.requisitoPresencialPendiente,
+                          ]}
+                        >
+                          <View style={styles.requisitoPresencialHeader}>
+                            <MaterialCommunityIcons
+                              name={
+                                requisitoVirtual.cumple
+                                  ? "check-circle"
+                                  : "alert-circle"
+                              }
+                              size={27}
+                              color={
+                                requisitoVirtual.cumple ? "#166534" : "#9B1C1C"
+                              }
+                            />
+                            <Text
+                              style={[
+                                styles.requisitoPresencialTitulo,
+                                {
+                                  color: requisitoVirtual.cumple
+                                    ? "#166534"
+                                    : "#7F1D1D",
+                                },
+                              ]}
+                            >
+                              {requisitoVirtual.cumple
+                                ? "Requisito presencial cumplido"
+                                : "No cuentas con la asistencia presencial"}
+                            </Text>
+                          </View>
+
+                          <Text style={styles.requisitoPresencialMensaje}>
+                            {requisitoVirtual.cumple
+                              ? "Ya cumplís el requisito necesario para registrar la asistencia virtual."
+                              : "Para registrar la asistencia virtual, debes haber asistido previamente al encuentro presencial indicado."}
+                          </Text>
+
+                          <View style={styles.requisitoFechasContainer}>
+                            {requisitoVirtual.detalle.map((detalle, index) => (
+                              <View
+                                key={`${detalle.texto}-${index}`}
+                                style={styles.requisitoFechaRow}
+                              >
+                                <MaterialCommunityIcons
+                                  name={
+                                    detalle.cumplido
+                                      ? "calendar-check"
+                                      : "calendar-alert"
+                                  }
+                                  size={22}
+                                  color={detalle.cumplido ? "#166534" : "#9B1C1C"}
+                                />
+                                <Text style={styles.requisitoFechaTexto}>
+                                  Fecha requerida: {detalle.texto}
+                                </Text>
+                                {detalle.cumplido && (
+                                  <Text
+                                    style={[
+                                      styles.requisitoEstado,
+                                      styles.requisitoEstadoCumplido,
+                                    ]}
+                                  >
+                                    CUMPLIDO
+                                  </Text>
+                                )}
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+
                     {modalidad === "presencial" && (
                       <Text
                         style={{
@@ -1833,6 +2143,7 @@ export default function HandleCampusTeachers() {
 
                   {/* Historial */}
                   <View
+                    onLayout={(e) => setHistorySectionY(e.nativeEvent.layout.y)}
                     style={{
                       alignSelf: "stretch",
                       marginBottom: 8,
@@ -1884,12 +2195,8 @@ export default function HandleCampusTeachers() {
                         </View>
                       ) : (
                         Object.entries(
-                          attendances
-                            .sort(
-                              (a, b) =>
-                                parseFechaARToTime(b.fecha) -
-                                parseFechaARToTime(a.fecha),
-                            )
+                          [...attendances]
+                            .sort(compararAsistenciasRecienteAViejo)
                             .reduce((acc: any, item: any) => {
                               if (!acc[item.curso]) acc[item.curso] = [];
                               acc[item.curso].push(item);
@@ -2108,7 +2415,10 @@ export default function HandleCampusTeachers() {
                     styles.btnCommon,
                     { backgroundColor: "#fff", marginTop: 16 },
                   ]}
-                  onPress={() => setScanVisible(false)}
+                  onPress={() => {
+                    setScanVisible(false);
+                    fetchAsistenciaConfig({ silencioso: true });
+                  }}
                 >
                   <Text style={[styles.commonBtnText, { color: "#000" }]}>
                     Cerrar
@@ -2136,7 +2446,10 @@ export default function HandleCampusTeachers() {
               }}
             >
               <TouchableOpacity
-                onPress={() => setScanVisible(false)}
+                onPress={() => {
+                  setScanVisible(false);
+                  fetchAsistenciaConfig({ silencioso: true });
+                }}
                 style={{
                   backgroundColor: "#ffffffaa",
                   padding: 10,
@@ -2217,6 +2530,7 @@ export default function HandleCampusTeachers() {
             </View>
           </View>
         </Modal>
+        <AlertPortal />
       </View>
     </View>
   );

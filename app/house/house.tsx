@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,9 +10,36 @@ import {
 } from "react-native";
 import { AntDesign, Entypo } from "@expo/vector-icons"; // Importación de íconos
 import styles from "../../styles/tourist/tourist-styles";
+import { doc, getFirestore, onSnapshot } from "firebase/firestore";
+import { firebaseconn } from "@/constants/FirebaseConn";
+
+const RESERVA_CASA_DOCENTE_URL =
+  "https://sidcagremio.com/reserva-casa-docente";
 
 export default function HandleTeacherHouse() {
   const statusBarHeight = StatusBar.currentHeight;
+  const [reservaHabilitada, setReservaHabilitada] = useState(false);
+  const [cargandoReserva, setCargandoReserva] = useState(true);
+
+  useEffect(() => {
+    const db = getFirestore(firebaseconn);
+    const configRef = doc(db, "cod", "casaDocente");
+
+    const unsubscribe = onSnapshot(
+      configRef,
+      (snapshot) => {
+        const data = snapshot.exists() ? snapshot.data() : {};
+        setReservaHabilitada(data?.reservaHabilitada === true);
+        setCargandoReserva(false);
+      },
+      () => {
+        setReservaHabilitada(false);
+        setCargandoReserva(false);
+      },
+    );
+
+    return unsubscribe;
+  }, []);
 
   const openLink = (url: string) => {
     Linking.openURL(url);
@@ -73,9 +100,26 @@ export default function HandleTeacherHouse() {
           </ScrollView>
         </View>
         <View style={styles.viewGetInformation}>
-          <Text style={{ fontSize: 24, fontWeight: "600" }}>
-            Hace tu reserva
-          </Text>
+          <TouchableOpacity
+            style={[
+              styles.btnReservaCasa,
+              (!reservaHabilitada || cargandoReserva) &&
+                styles.btnReservaCasaDisabled,
+            ]}
+            activeOpacity={0.8}
+            disabled={!reservaHabilitada || cargandoReserva}
+            onPress={() => openLink(RESERVA_CASA_DOCENTE_URL)}
+          >
+            <AntDesign name="calendar" size={21} color="#ffffff" />
+            <Text style={styles.btnReservaCasaText}>
+              {cargandoReserva
+                ? "Consultando reservas..."
+                : reservaHabilitada
+                  ? "Hacé tu reserva"
+                  : "Reservas temporalmente deshabilitadas"}
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.btnWhatsApp}
             activeOpacity={1}

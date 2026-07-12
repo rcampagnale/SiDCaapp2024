@@ -12,7 +12,6 @@ import {
   ScrollView,
   BackHandler,
   Platform,
-  Alert,
 } from "react-native";
 import styles from "../styles/signin-styles/sign-in-styles";
 import { useEffect, useState, useContext, useCallback, useRef } from "react";
@@ -24,21 +23,16 @@ import {
   query,
   where,
   getDocs,
+  getDocsFromServer,
   doc,
   getDoc,
   getDocFromServer,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
-
-let Application: any;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  Application = require("expo-application");
-} catch {
-  Application = { applicationId: undefined, nativeBuildVersion: undefined };
-}
+import * as Application from "expo-application";
 import { SidcaContext } from "./_layout";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { useSidcaAlert } from "../components/SidcaAlert";
 
 /* =========================
  * Helpers
@@ -68,21 +62,38 @@ const toBool = (v: any): boolean => {
   return false;
 };
 
-// Buscar DNI en string y number
+// Buscar DNI en string y number.
+// Usamos getDocsFromServer (no getDocs) para forzar un viaje real al backend:
+// así, si no hay conexión, Firestore rechaza la promesa en vez de devolver
+// silenciosamente un resultado vacío que se confundiría con "DNI no encontrado".
 const getByDni = async <T extends LookupDoc = LookupDoc>(
   colRef: any,
   dni: string
 ): Promise<T | null> => {
-  let qs = await getDocs(query(colRef, where("dni", "==", dni)));
+  let qs = await getDocsFromServer(query(colRef, where("dni", "==", dni)));
   if (!qs.empty) return qs.docs[0].data() as T;
 
   const dniNum = Number(dni);
   if (!Number.isNaN(dniNum)) {
-    qs = await getDocs(query(colRef, where("dni", "==", dniNum)));
+    qs = await getDocsFromServer(query(colRef, where("dni", "==", dniNum)));
     if (!qs.empty) return qs.docs[0].data() as T;
   }
 
   return null;
+};
+
+const esErrorDeConexion = (error: any) => {
+  const codigo = String(error?.code || "").toLowerCase();
+  const mensaje = String(error?.message || error || "").toLowerCase();
+
+  return (
+    codigo.includes("unavailable") ||
+    codigo.includes("deadline-exceeded") ||
+    mensaje.includes("offline") ||
+    mensaje.includes("backend") ||
+    mensaje.includes("network") ||
+    mensaje.includes("internet")
+  );
 };
 
 // Entero robusto
@@ -113,6 +124,7 @@ const readRemoteConfig = async (db: any) => {
 };
 
 export default function SignInApp() {
+  const { showAlert, AlertPortal } = useSidcaAlert();
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [dniNumber, setDniNumber] = useState<string>("");
@@ -261,7 +273,7 @@ export default function SignInApp() {
           { current, latest }
         );
 
-        Alert.alert(
+        showAlert(
           title,
           `${msg}\n\n${body}`,
           force
@@ -293,7 +305,10 @@ export default function SignInApp() {
   const findUser = async () => {
     const dni = (dniNumber || "").trim();
     if (!dni) {
-      Alert.alert("Atención", "Ingresá un DNI válido.");
+      showAlert(
+        "Revisemos el DNI",
+        "Ingresá un número de DNI válido para continuar.",
+      );
       return;
     }
 
@@ -301,7 +316,10 @@ export default function SignInApp() {
     try {
       const userDoc = await getByDni<LookupDoc>(usuariosCollection, dni);
       if (!userDoc) {
-        Alert.alert("DNI no encontrado", "Verificá el número ingresado.");
+        showAlert(
+          "No encontramos ese DNI",
+          "Revisá el número ingresado. Si el problema continúa, comunicate con SiDCa.",
+        );
         return;
       }
 
@@ -351,7 +369,17 @@ export default function SignInApp() {
       router.navigate("/home");
       setDniNumber("");
     } catch (error: any) {
-      Alert.alert("Error", String(error?.message || error));
+      if (esErrorDeConexion(error)) {
+        showAlert(
+          "Sin conexión",
+          "No se pudo conectar con el servidor. Verificá tu conexión a internet (WiFi o datos móviles) e intentá nuevamente."
+        );
+      } else {
+        showAlert(
+          "Ocurrió un inconveniente",
+          String(error?.message || error),
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -513,6 +541,18 @@ export default function SignInApp() {
                 resizeMode="cover"
                 style={styles.viewShowMedias}
               >
+                <Text
+                  style={{
+                    position: "absolute",
+                    bottom: 4,
+                    alignSelf: "center",
+                    color: "#e5e7eb",
+                    fontSize: 11,
+                  }}
+                >
+                  v{Application.nativeApplicationVersion ?? "?"}
+                </Text>
+
                 <TouchableOpacity
                   style={styles.mediasBtns}
                   onPress={() =>
@@ -571,6 +611,7 @@ export default function SignInApp() {
           ) : null}
         </View>
       </ScrollView>
+      <AlertPortal />
     </>
   );
 }

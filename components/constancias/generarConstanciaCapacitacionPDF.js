@@ -107,6 +107,20 @@ const escapeHtml = (valor) => {
     .replace(/'/g, "&#039;");
 };
 
+const calcularFontSizePt = (
+  texto,
+  { basePt = 16, minPt = 10, maxChars = 20, charsSlope = 0.45 } = {}
+) => {
+  const longitud = textoSeguro(texto).length;
+
+  if (longitud <= maxChars) return basePt;
+
+  const excedente = longitud - maxChars;
+  const tamaño = basePt - excedente * charsSlope;
+
+  return Math.max(minPt, Math.round(tamaño * 10) / 10);
+};
+
 const slugFileName = (texto = "") =>
   textoSeguro(texto)
     .toLowerCase()
@@ -416,6 +430,27 @@ const construirHtmlConstancia = ({ data, plantillaBase64 }) => {
   const dias = escapeHtml(data.diasCurso);
   const emision = escapeHtml(data.fechaEmision);
 
+  const fontDocente = calcularFontSizePt(data.nombreCompleto, {
+    maxChars: 24,
+    minPt: 11,
+  });
+  const fontCurso = calcularFontSizePt(data.tituloCurso, {
+    maxChars: 46,
+    minPt: 11,
+  });
+  const fontResolucion = calcularFontSizePt(data.resolucion, {
+    maxChars: 20,
+    minPt: 10,
+  });
+  const fontDias = calcularFontSizePt(data.diasCurso, {
+    maxChars: 34,
+    minPt: 10,
+  });
+  const fontEmision = calcularFontSizePt(data.fechaEmision, {
+    maxChars: 50,
+    minPt: 10,
+  });
+
   return `
     <!DOCTYPE html>
     <html>
@@ -430,18 +465,18 @@ const construirHtmlConstancia = ({ data, plantillaBase64 }) => {
         <div class="page">
           <img class="template" src="${plantillaBase64}" />
 
-          <div class="dato docente">${docente}</div>
+          <div class="dato docente" style="font-size:${fontDocente}pt">${docente}</div>
           <div class="dato dni">${dni}</div>
-          <div class="dato curso">${curso}</div>
+          <div class="dato curso" style="font-size:${fontCurso}pt">${curso}</div>
 
           ${
             resolucion
-              ? `<div class="dato resolucion">${resolucion}</div>`
+              ? `<div class="dato resolucion" style="font-size:${fontResolucion}pt">${resolucion}</div>`
               : ""
           }
 
-          <div class="dato dias">${dias}</div>
-          <div class="dato emision">${emision}</div>
+          <div class="dato dias" style="font-size:${fontDias}pt">${dias}</div>
+          <div class="dato emision" style="font-size:${fontEmision}pt">${emision}</div>
         </div>
       </body>
     </html>

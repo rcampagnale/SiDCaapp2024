@@ -14,7 +14,7 @@ export default StyleSheet.create({
 
   viewTitle: {
     width: "100%",
-    minHeight: 90,
+    minHeight: 76,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 15,
@@ -23,28 +23,92 @@ export default StyleSheet.create({
   },
 
   title: {
-    fontSize: 24,
+    fontSize: 25,
     color: "#ffffff",
     fontWeight: "bold",
     textAlign: "center",
   },
 
   viewInformation: {
-    width: "100%",
-    backgroundColor: "#fea200",
+    width: "92%",
+    backgroundColor: "#FEA200",
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 14,
-    paddingBottom: 14,
-    paddingHorizontal: 10,
+    padding: 15,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#D88900",
   },
 
   text: {
-    width: "97%",
-    fontSize: 16,
-    color: "#000000",
+    width: "100%",
+    fontSize: 14,
+    color: "#263A41",
     textAlign: "justify",
-    lineHeight: 24,
+    lineHeight: 21,
+  },
+
+  shortcutCard: {
+    width: "92%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEA200",
+    borderRadius: 18,
+    padding: 16,
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: "#D88900",
+    borderLeftWidth: 5,
+    borderLeftColor: "#102B34",
+    columnGap: 14,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  shortcutIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "#091d24",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+
+  shortcutTextBox: {
+    flex: 1,
+  },
+
+  shortcutTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#102B34",
+  },
+
+  shortcutSubtitle: {
+    fontSize: 13,
+    color: "#4E3A12",
+    marginTop: 3,
+    lineHeight: 18,
+    textAlign: "justify",
+  },
+
+  shortcutChevronBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#FEA200",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   scrollArea: {
@@ -96,16 +160,18 @@ export default StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: "#d7e3e7",
-    textAlign: "center",
+    textAlign: "justify",
   },
 
   formCard: {
     width: "92%",
-    backgroundColor: "#fea200",
-    borderRadius: 14,
+    backgroundColor: "#FEA200",
+    borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#000000",
+    borderColor: "#D88900",
+    borderTopWidth: 5,
+    borderTopColor: "#102B34",
   },
 
   formHeader: {
@@ -158,7 +224,7 @@ export default StyleSheet.create({
   cardTitle: {
     fontSize: 19,
     fontWeight: "900",
-    color: "#000000",
+    color: "#102B34",
     marginBottom: 10,
     textTransform: "uppercase",
     lineHeight: 25,
@@ -227,7 +293,7 @@ export default StyleSheet.create({
   btnNews: {
     width: "100%",
     minHeight: 44,
-    borderRadius: 6,
+    borderRadius: 13,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 4,
@@ -237,7 +303,7 @@ export default StyleSheet.create({
   },
 
   btnEnabled: {
-    backgroundColor: "#005CFE",
+    backgroundColor: "#075A83",
   },
 
   btnDisabled: {
@@ -303,7 +369,7 @@ export default StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: "#4b5563",
-    textAlign: "center",
+    textAlign: "justify",
   },
 
   webErrorButton: {

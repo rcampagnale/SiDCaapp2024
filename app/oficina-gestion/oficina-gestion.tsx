@@ -14,7 +14,9 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { WebView } from "react-native-webview";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { collection, getDocs, getFirestore, query } from "firebase/firestore";
+import { router } from "expo-router";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import styles from "../../styles/oficina-gestion/oficina-gestion";
 
@@ -646,16 +648,42 @@ export default function OficinaGestion() {
     <View style={[styles.screen, { paddingTop: statusBarHeight }]}>
       <View style={styles.container}>
         <View style={styles.viewTitle}>
-          <Text style={styles.title}>Formularios disponibles</Text>
+          <Text style={styles.title}>Portal de Trámites</Text>
         </View>
 
         <View style={styles.viewInformation}>
           <Text style={styles.text}>
-            Desde este espacio podrás completar formularios Institucionales,
-            presentar documentación y consultar información sobre trámites
-            habilitados por el Sindicato de Docentes de Catamarca.
+            Desde este espacio podrás acceder a formularios institucionales,
+            presentar documentación, consultar información y realizar el
+            seguimiento de expedientes o trámites habilitados por el
+            Sindicato de Docentes de Catamarca.
           </Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.shortcutCard}
+          activeOpacity={0.85}
+          onPress={() => router.navigate("/expedientes/expedientes")}
+        >
+          <View style={styles.shortcutIconBox}>
+            <MaterialCommunityIcons
+              name="folder-search-outline"
+              size={26}
+              color="#ffffff"
+            />
+          </View>
+
+          <View style={styles.shortcutTextBox}>
+            <Text style={styles.shortcutTitle}>Gestión de Expediente</Text>
+            <Text style={styles.shortcutSubtitle}>
+              Consultá el estado de tus expedientes y trámites.
+            </Text>
+          </View>
+
+          <View style={styles.shortcutChevronBox}>
+            <FontAwesome name="chevron-right" size={14} color="#000000" />
+          </View>
+        </TouchableOpacity>
 
         <ScrollView
           style={styles.scrollArea}

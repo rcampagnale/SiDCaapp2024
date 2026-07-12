@@ -161,6 +161,72 @@ const styles = StyleSheet.create({
     marginBottom: -8,
     fontWeight: "bold",
   },
+  requisitoPresencialCard: {
+    width: "100%",
+    marginTop: 10,
+    marginBottom: 8,
+    borderRadius: 14,
+    borderWidth: 2,
+    padding: 14,
+  },
+  requisitoPresencialPendiente: {
+    backgroundColor: "#FFF1F0",
+    borderColor: "#B42318",
+  },
+  requisitoPresencialCumplido: {
+    backgroundColor: "#ECFDF3",
+    borderColor: "#16834B",
+  },
+  requisitoPresencialHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+  requisitoPresencialTitulo: {
+    flex: 1,
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: "900",
+  },
+  requisitoPresencialMensaje: {
+    marginTop: 9,
+    color: "#263A41",
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "600",
+  },
+  requisitoFechasContainer: {
+    marginTop: 11,
+    gap: 7,
+  },
+  requisitoFechaRow: {
+    minHeight: 43,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.75)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  requisitoFechaTexto: {
+    flex: 1,
+    color: "#172B33",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  requisitoEstado: {
+    overflow: "hidden",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  requisitoEstadoCumplido: {
+    color: "#FFFFFF",
+    backgroundColor: "#16834B",
+  },
 });
 
 /* === Estilos para el card "Curso habilitado" === */
