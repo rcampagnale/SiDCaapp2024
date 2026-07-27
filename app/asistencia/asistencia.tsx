@@ -9,6 +9,7 @@ import {
   Image,
   Dimensions,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import styles, { cursoCardStyles } from "../../styles/asistencia/asistencia";
@@ -30,6 +31,7 @@ import { firebaseconn } from "@/constants/FirebaseConn";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Device from "expo-device";
+import * as Application from "expo-application";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import ConstanciaCapacitacionButton from "../../components/constancias/ConstanciaCapacitacionButton";
 import { useSidcaAlert } from "../../components/SidcaAlert";
@@ -37,6 +39,7 @@ import { useSidcaAlert } from "../../components/SidcaAlert";
 const localImage = require("../../assets/logos/secretaria.png");
 
 const ASISTENCIA_DEVICE_ID_KEY = "sidca_asistencia_device_id";
+const ASISTENCIA_DEVICE_LEGACY_ID_KEY = "sidca_asistencia_device_legacy_id";
 
 const generarIdDispositivoAsistencia = () => {
   const fecha = Date.now().toString(36);
@@ -46,17 +49,76 @@ const generarIdDispositivoAsistencia = () => {
   return `sidca-device-${fecha}-${random1}${random2}`;
 };
 
-const getOrCreateAsistenciaDeviceId = async () => {
-  const guardado = await AsyncStorage.getItem(ASISTENCIA_DEVICE_ID_KEY);
+type AsistenciaDeviceIdentity = {
+  deviceId: string;
+  legacyDeviceId: string;
+  source: "android-id" | "ios-idfv" | "local-fallback";
+};
 
-  if (guardado && guardado.trim()) {
-    return guardado.trim();
+const normalizarIdNativo = (value: string) =>
+  value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const obtenerIdNativoEstable = async () => {
+  try {
+    if (Platform.OS === "android") {
+      const androidId = normalizarIdNativo(Application.getAndroidId());
+      return androidId ? `sidca-android-${androidId}` : "";
+    }
+
+    if (Platform.OS === "ios") {
+      const iosId = normalizarIdNativo(
+        (await Application.getIosIdForVendorAsync()) || "",
+      );
+      return iosId ? `sidca-ios-${iosId}` : "";
+    }
+  } catch {
+    return "";
   }
 
-  const nuevoId = generarIdDispositivoAsistencia();
-  await AsyncStorage.setItem(ASISTENCIA_DEVICE_ID_KEY, nuevoId);
+  return "";
+};
 
-  return nuevoId;
+const getAsistenciaDeviceIdentity =
+  async (): Promise<AsistenciaDeviceIdentity> => {
+    const [guardadoRaw, legacyGuardadoRaw, idNativo] = await Promise.all([
+      AsyncStorage.getItem(ASISTENCIA_DEVICE_ID_KEY),
+      AsyncStorage.getItem(ASISTENCIA_DEVICE_LEGACY_ID_KEY),
+      obtenerIdNativoEstable(),
+    ]);
+
+    const guardado = String(guardadoRaw || "").trim();
+    const legacyGuardado = String(legacyGuardadoRaw || "").trim();
+
+    if (idNativo) {
+      const legacyDeviceId =
+        guardado && guardado !== idNativo ? guardado : legacyGuardado;
+
+      if (legacyDeviceId) {
+        await AsyncStorage.setItem(
+          ASISTENCIA_DEVICE_LEGACY_ID_KEY,
+          legacyDeviceId,
+        );
+      }
+
+      await AsyncStorage.setItem(ASISTENCIA_DEVICE_ID_KEY, idNativo);
+
+      return {
+        deviceId: idNativo,
+        legacyDeviceId,
+        source: Platform.OS === "android" ? "android-id" : "ios-idfv",
+      };
+    }
+
+    const fallbackId = guardado || generarIdDispositivoAsistencia();
+    if (!guardado) {
+      await AsyncStorage.setItem(ASISTENCIA_DEVICE_ID_KEY, fallbackId);
+    }
+
+    return {
+      deviceId: fallbackId,
+      legacyDeviceId: legacyGuardado,
+      source: "local-fallback",
+    };
 };
 
 const obtenerModeloDispositivo = () => {
@@ -718,31 +780,41 @@ export default function HandleCampusTeachers() {
     return null;
   };
 
-  const buscarOtroAfiliadoPorDeviceId = async (deviceId: string, dniActual: string) => {
-    if (!deviceId) return null;
+  const buscarOtroAfiliadoPorDeviceId = async (
+    deviceIds: string[],
+    dniActual: string,
+  ) => {
+    const idsUnicos = Array.from(
+      new Set(deviceIds.map((id) => String(id || "").trim()).filter(Boolean)),
+    );
+
+    if (!idsUnicos.length) return null;
 
     for (const coleccion of coleccionesAfiliadosAsistencia) {
-      const qDevice = query(
-        collection(db, coleccion),
-        where("dispositivoAsistenciaId", "==", deviceId),
-        limit(5),
-      );
-
-      const snap = await getDocs(qDevice);
-
-      for (const documento of snap.docs) {
-        const data = documento.data() || {};
-        const dniDoc = normalizarDniText(
-          data.dni || data.DNI || data.documento || documento.id,
+      for (const deviceId of idsUnicos) {
+        const qDevice = query(
+          collection(db, coleccion),
+          where("dispositivoAsistenciaId", "==", deviceId),
+          limit(5),
         );
 
-        if (dniDoc && dniDoc !== dniActual) {
-          return {
-            ref: documento.ref,
-            data,
-            id: documento.id,
-            coleccion,
-          };
+        const snap = await getDocs(qDevice);
+
+        for (const documento of snap.docs) {
+          const data = documento.data() || {};
+          const dniDoc = normalizarDniText(
+            data.dni || data.DNI || data.documento || documento.id,
+          );
+
+          if (dniDoc && dniDoc !== dniActual) {
+            return {
+              ref: documento.ref,
+              data,
+              id: documento.id,
+              coleccion,
+              matchedDeviceId: deviceId,
+            };
+          }
         }
       }
     }
@@ -759,7 +831,8 @@ export default function HandleCampusTeachers() {
 
     setProcesandoTexto("Validando dispositivo autorizado...");
 
-    const deviceId = await getOrCreateAsistenciaDeviceId();
+    const identidadDispositivo = await getAsistenciaDeviceIdentity();
+    const { deviceId, legacyDeviceId } = identidadDispositivo;
     const modeloActual = obtenerModeloDispositivo();
     const afiliadoDoc = await buscarDocumentoAfiliadoPorDni(dniClean);
 
@@ -771,14 +844,8 @@ export default function HandleCampusTeachers() {
 
     const dataAfiliado = afiliadoDoc.data || {};
 
-    if (dataAfiliado.dispositivoBloqueado === true) {
-      throw new Error(
-        `El dispositivo de asistencia de ${dataAfiliado.apellido || userData?.apellido || "Sin apellido"}, ${dataAfiliado.nombre || userData?.nombre || "Sin nombre"} está bloqueado. Solicitá la revisión desde administración.`,
-      );
-    }
-
     const otroAfiliadoConEsteDispositivo = await buscarOtroAfiliadoPorDeviceId(
-      deviceId,
+      [deviceId, legacyDeviceId],
       dniClean,
     );
 
@@ -794,6 +861,12 @@ export default function HandleCampusTeachers() {
 
       throw new Error(
         `Este dispositivo está vinculado a ${otroApellido}, ${otroNombre}.\n\nFecha y hora de vinculación: ${fechaHoraVinculacion}.\n\nPor seguridad, no puede utilizarse para registrar la asistencia de otro afiliado. Si cambiaste de celular, solicitá el reinicio del dispositivo a la administración de SiDCa.`,
+      );
+    }
+
+    if (dataAfiliado.dispositivoBloqueado === true) {
+      throw new Error(
+        `El dispositivo de asistencia de ${dataAfiliado.apellido || userData?.apellido || "Sin apellido"}, ${dataAfiliado.nombre || userData?.nombre || "Sin nombre"} está bloqueado. Solicitá la revisión desde administración.`,
       );
     }
 
@@ -819,6 +892,7 @@ export default function HandleCampusTeachers() {
           asistenciaDispositivoVinculado: true,
           dispositivoVinculadoEn: fechaValidacion,
           dispositivoVinculadoDesde: "app",
+          dispositivoIdFuente: identidadDispositivo.source,
           dispositivoBloqueado: false,
           dispositivoModelo: modeloActual,
           dispositivoUltimaValidacionEn: fechaValidacion,
@@ -837,7 +911,11 @@ export default function HandleCampusTeachers() {
       };
     }
 
-    if (dispositivoGuardado !== deviceId) {
+    const coincideIdActual = dispositivoGuardado === deviceId;
+    const coincideIdAnterior =
+      !!legacyDeviceId && dispositivoGuardado === legacyDeviceId;
+
+    if (!coincideIdActual && !coincideIdAnterior) {
       throw new Error(
         `Tu cuenta ya está vinculada a otro dispositivo.\n\nNo podés registrar tu asistencia desde este celular. Iniciá sesión desde tu dispositivo personal.\n\nSi cambiaste de celular, solicitá el reinicio del dispositivo a la administración de SIDCA.`,
       );
@@ -855,6 +933,14 @@ export default function HandleCampusTeachers() {
         dispositivoModelo: modeloGuardado || modeloActual,
         dispositivoVinculadoEn: vinculadoEnGuardado,
         dispositivoUltimaValidacionEn: fechaValidacion,
+        dispositivoAsistenciaId: deviceId,
+        dispositivoIdFuente: identidadDispositivo.source,
+        ...(coincideIdAnterior
+          ? {
+              dispositivoAsistenciaIdAnterior: legacyDeviceId,
+              dispositivoIdMigradoEn: fechaValidacion,
+            }
+          : {}),
       },
       { merge: true },
     );
