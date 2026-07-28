@@ -35,6 +35,7 @@ import * as Application from "expo-application";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import ConstanciaCapacitacionButton from "../../components/constancias/ConstanciaCapacitacionButton";
 import { useSidcaAlert } from "../../components/SidcaAlert";
+import { normalizarNombrePersona } from "../../src/utils/personName";
 
 const localImage = require("../../assets/logos/secretaria.png");
 
@@ -562,6 +563,7 @@ const CursoHabilitadoCard: React.FC<CursoCardProps> = ({
 export default function HandleCampusTeachers() {
   const { showAlert, AlertPortal } = useSidcaAlert();
   const { userData } = useContext(SidcaContext);
+  const identidadUsuario = normalizarNombrePersona(userData);
   const statusBarHeight = StatusBar.currentHeight;
   const windowHeight = Dimensions.get("window").height;
 
@@ -657,9 +659,11 @@ export default function HandleCampusTeachers() {
     titular: { apellido: string; nombre: string; dni: string };
   }) =>
     new Promise<boolean>((resolve) => {
+      const identidadTitular = normalizarNombrePersona(titular);
+
       showAlert(
         "Confirmar identidad",
-        `Vas a registrar la asistencia como ${titular.apellido}, ${titular.nombre}.\n\nPor seguridad, este celular quedará vinculado a tu cuenta y solo podrá utilizarse con tu DNI.\n\n¿Confirmás que sos el titular?`,
+        `Vas a registrar la asistencia como ${identidadTitular.nombreCompleto}.\n\nPor seguridad, este celular quedará vinculado a tu cuenta y solo podrá utilizarse con tu DNI.\n\n¿Confirmás que sos el titular?`,
         [
           { text: "Cancelar", style: "cancel", onPress: () => resolve(false) },
           { text: "Confirmar", onPress: () => resolve(true) },
@@ -851,8 +855,7 @@ export default function HandleCampusTeachers() {
 
     if (otroAfiliadoConEsteDispositivo) {
       const otroData = otroAfiliadoConEsteDispositivo.data || {};
-      const otroApellido = otroData.apellido || otroData.Apellido || "Sin apellido";
-      const otroNombre = otroData.nombre || otroData.Nombre || "Sin nombre";
+      const identidadOtroAfiliado = normalizarNombrePersona(otroData);
       const fechaHoraVinculacion = formatearFechaHoraVinculacion(
         otroData.dispositivoVinculadoEn ||
           otroData.dispositivoUltimaValidacionEn ||
@@ -860,13 +863,18 @@ export default function HandleCampusTeachers() {
       );
 
       throw new Error(
-        `Este dispositivo está vinculado a ${otroApellido}, ${otroNombre}.\n\nFecha y hora de vinculación: ${fechaHoraVinculacion}.\n\nPor seguridad, no puede utilizarse para registrar la asistencia de otro afiliado. Si cambiaste de celular, solicitá el reinicio del dispositivo a la administración de SiDCa.`,
+        `Este dispositivo está vinculado a ${identidadOtroAfiliado.nombreCompleto}.\n\nFecha y hora de vinculación: ${fechaHoraVinculacion}.\n\nPor seguridad, no puede utilizarse para registrar la asistencia de otro afiliado. Si cambiaste de celular, solicitá el reinicio del dispositivo a la administración de SiDCa.`,
       );
     }
 
+    const identidadAfiliado = normalizarNombrePersona({
+      ...(userData || {}),
+      ...dataAfiliado,
+    });
+
     if (dataAfiliado.dispositivoBloqueado === true) {
       throw new Error(
-        `El dispositivo de asistencia de ${dataAfiliado.apellido || userData?.apellido || "Sin apellido"}, ${dataAfiliado.nombre || userData?.nombre || "Sin nombre"} está bloqueado. Solicitá la revisión desde administración.`,
+        `El dispositivo de asistencia de ${identidadAfiliado.nombreCompleto} está bloqueado. Solicitá la revisión desde administración.`,
       );
     }
 
@@ -877,8 +885,8 @@ export default function HandleCampusTeachers() {
     const fechaValidacion = new Date().toISOString();
 
     const titularBase = {
-      apellido: dataAfiliado.apellido || dataAfiliado.Apellido || userData?.apellido || "Sin apellido",
-      nombre: dataAfiliado.nombre || dataAfiliado.Nombre || userData?.nombre || "Sin nombre",
+      apellido: identidadAfiliado.apellido,
+      nombre: identidadAfiliado.nombre,
       dni: dniClean,
     };
 
@@ -1551,8 +1559,9 @@ export default function HandleCampusTeachers() {
         return;
       }
       await addDoc(asistenciaCollection, {
-        apellido: userData?.apellido || "Sin apellido",
-        nombre: userData?.nombre || "Sin nombre",
+        apellido: identidadUsuario.apellido,
+        nombre: identidadUsuario.nombre,
+        nombreCompleto: identidadUsuario.nombreCompleto,
         dni: userData?.dni || "Sin DNI",
         departamento: userData?.departamento || "Sin departamento",
         nivelEducativo: selectedLevel,
@@ -1721,8 +1730,9 @@ export default function HandleCampusTeachers() {
         sessionId,
         uid: idUser,
         dni: (dniClean || userData.dni) ?? null,
-        apellido: userData?.apellido || "Sin apellido",
-        nombre: userData?.nombre || "Sin nombre",
+        apellido: identidadUsuario.apellido,
+        nombre: identidadUsuario.nombre,
+        nombreCompleto: identidadUsuario.nombreCompleto,
         departamento: userData?.departamento || "Sin departamento",
         nivelEducativo: selectedLevel,
         curso: cursoSesion,
@@ -1987,8 +1997,7 @@ export default function HandleCampusTeachers() {
                     <View style={styles.mainInformationContainer}>
                       <Text style={{ fontSize: 18, fontWeight: "bold" }}>
                         Afiliado:{" "}
-                        {userData?.apellido ? `${userData.apellido}, ` : ""}
-                        {userData?.nombre}
+                        {identidadUsuario.nombreCompleto}
                       </Text>
                       <Text style={{ fontSize: 18, fontWeight: "bold" }}>
                         D.N.I.: {userData?.dni}
@@ -2406,11 +2415,15 @@ export default function HandleCampusTeachers() {
                                           asistencia={{
                                             ...it,
                                             apellido:
-                                              it.apellido ||
-                                              userData?.apellido ||
-                                              "",
+                                              normalizarNombrePersona({
+                                                ...userData,
+                                                ...it,
+                                              }).apellido,
                                             nombre:
-                                              it.nombre || userData?.nombre || "",
+                                              normalizarNombrePersona({
+                                                ...userData,
+                                                ...it,
+                                              }).nombre,
                                             dni: it.dni || userData?.dni || "",
                                             departamento:
                                               it.departamento ||

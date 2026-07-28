@@ -33,6 +33,7 @@ import * as Application from "expo-application";
 import { SidcaContext } from "./_layout";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useSidcaAlert } from "../components/SidcaAlert";
+import { normalizarNombrePersona } from "../src/utils/personName";
 
 /* =========================
  * Helpers
@@ -349,10 +350,14 @@ export default function SignInApp() {
       const motivo = adh?.motivo ?? null;
       const wspFromAdh =
         adh?.whatsapp ?? adh?.wsp ?? adh?.celular ?? adh?.telefono ?? null;
+      const identidadUsuario = normalizarNombrePersona(userDoc);
 
       // Guardar en contexto
       setUserData({
         ...userDoc,
+        apellido: identidadUsuario.apellido,
+        nombre: identidadUsuario.nombre,
+        nombreCompleto: identidadUsuario.nombreCompleto,
         dni,
         _afiliado: {
           adherente: esAdherente,

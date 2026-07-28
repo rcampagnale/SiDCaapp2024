@@ -94,7 +94,9 @@ const TIPO_MOVIMIENTO_ICONOS: Record<string, string> = {
 const TIPO_MOVIMIENTO_COLORES: Record<string, string> = {
   observacion: "#3B82F6",
   edicion_expediente: "#8B5CF6",
-  cambio_dependencia: "#F59E0B",
+  // Mantiene el mismo tratamiento neutro que "Creación del expediente".
+  // El naranja se pierde contra el fondo institucional del historial.
+  cambio_dependencia: "#6B7280",
   cambio_estado_sueldo: "#10B981",
   finalizacion_expediente: "#22C55E",
 };
