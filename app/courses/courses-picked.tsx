@@ -16,36 +16,69 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
-  Alert,
   StatusBar,
 } from "react-native";
 import styles from "../../styles/courses/courses-styles";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { router } from "expo-router";
+import CertificadoEmitidoButton from "../../components/certificados/CertificadoEmitidoButton";
+import { obtenerCursosConCertificado } from "../../components/certificados/certificadoApi";
+
+/** Resuelve el ID académico desde una referencia de Firestore o su path. */
+export function resolverCursoId(courseData: any, aprobacionDocId: string): string {
+  const referencia = courseData?.curso;
+  const path = typeof referencia === "string"
+    ? referencia
+    : typeof referencia?.path === "string"
+      ? referencia.path
+      : typeof referencia?.referenceValue === "string"
+        ? referencia.referenceValue
+        : "";
+
+  const segmentos = path
+    .replace(/^projects\/[^/]+\/databases\/\(default\)\/documents\//, "")
+    .split("/")
+    .filter(Boolean);
+  const indiceCursos = segmentos.indexOf("cursos");
+  if (indiceCursos >= 0 && segmentos[indiceCursos + 1]) {
+    return segmentos[segmentos.length - 1];
+  }
+
+  const cursoIdDirecto = String(courseData?.cursoId || "").trim();
+  return cursoIdDirecto || aprobacionDocId;
+}
 
 export default function CoursesTakenByMe() {
   const [courseAproved, setCourseAproved] = useState<
     {
       id: string;
+      cursoId: string;
       titulo: string;
       imagen: string;
       aprobo: boolean;
-      resolucion: string;
-      modalidad: string;
-      fecha: string;
-      dias: string;
-      cargaHoraria: string;
     }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [checkData, setCheckData] = useState(0);
+  const [cursosConCertificado, setCursosConCertificado] = useState<Set<string>>(new Set());
   const { userData } = useContext(SidcaContext);
   const analytics = getFirestore(firebaseconn);
-  const [loadingCertificadoId, setLoadingCertificadoId] = useState<
-    string | null
-  >(null);
-
   const navigation = useNavigation();
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerCursosConCertificado()
+      .then((cursoIds) => {
+        if (activo) setCursosConCertificado(cursoIds);
+      })
+      .catch(() => {
+        if (activo) setCursosConCertificado(new Set());
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   useEffect(() => {
     const seeInfo = async () => {
@@ -66,34 +99,16 @@ export default function CoursesTakenByMe() {
           );
           const cursosSnapshot = await getDocs(cursosQuery);
 
-          const mappedCourses = await Promise.all(
-            cursosSnapshot.docs.map(async (doc) => {
-              const courseData = doc.data();
-              const certificadosQuery = query(
-                collection(analytics, "certificados"),
-                where("cursoId", "==", doc.id)
-              );
-              const certificadosSnapshot = await getDocs(certificadosQuery);
-
-              if (!certificadosSnapshot.empty) {
-                const certificadoData = certificadosSnapshot.docs[0].data();
-
-                return {
-                  id: doc.id,
-                  titulo: courseData.titulo || "",
-                  imagen: certificadoData.imagen || courseData.imagen || "",
-                  aprobo: courseData.aprobo || false,
-                };
-              } else {
-                return {
-                  id: doc.id,
-                  titulo: courseData.titulo || "",
-                  imagen: courseData.imagen || "",
-                  aprobo: courseData.aprobo || false,
-                };
-              }
-            })
-          );
+          const mappedCourses = cursosSnapshot.docs.map((doc) => {
+            const courseData = doc.data();
+            return {
+              id: doc.id,
+              cursoId: resolverCursoId(courseData, doc.id),
+              titulo: courseData.titulo || "",
+              imagen: courseData.imagen || "",
+              aprobo: courseData.aprobo === true,
+            };
+          });
 
           setCourseAproved(mappedCourses);
         } else {
@@ -179,66 +194,20 @@ export default function CoursesTakenByMe() {
               </Text>
               <Image
                 source={{ uri: e.imagen }}
-                style={{ width: "80%", height: "70%" }}
+                style={{ width: "80%", height: "62%" }}
                 resizeMode="contain"
               />
               <Text style={{ fontSize: 22, fontWeight: "bold" }}>
                 {e.aprobo === true ? "Curso Aprobado" : "Curso NO Aprobado"}
               </Text>
               <View style={styles.separator1} />
-
-              {/* se urlizará el certificado digital en el futuro
-              {e.aprobo && (
-                <TouchableOpacity
-                  style={styles.viewCertificateButton}
-                  onPress={async () => {
-                    setLoadingCertificadoId(e.id);
-                    try {
-                      const certificadosQuery = query(
-                        collection(analytics, "certificados"),
-                        where("titulo", "==", e.titulo)
-                      );
-                      const snapshot = await getDocs(certificadosQuery);
-
-                      if (!snapshot.empty) {
-                        router.push({
-                          pathname: "/courses/certificados",
-                          params: {
-                            courseName: e.titulo,
-                            userName: userData.nombre,
-                            userLastName: userData.apellido,
-                            userDni: userData.dni,
-                          },
-                        });
-                      } else {
-                        Alert.alert(
-                          "Certificado Digital",
-                          "El Certificado Digital no está disponible por el momento.",
-                          [{ text: "Aceptar" }],
-                          { cancelable: false }
-                        );
-                      }
-                    } catch (error) {
-                      console.error("Error al verificar certificado:", error);
-                      Alert.alert(
-                        "Error",
-                        "Ocurrió un problema al buscar el certificado."
-                      );
-                    } finally {
-                      setLoadingCertificadoId(null);
-                    }
-                  }}
-                >
-                  {loadingCertificadoId === e.id ? (
-                    <ActivityIndicator size={30} color="#ffffff" />
-                  ) : (
-                    <Text style={{ color: "#ffffff", fontSize: 18 }}>
-                      Ver Certificado
-                    </Text>
-                  )}
-                </TouchableOpacity>
+              {e.aprobo === true && cursosConCertificado.has(e.cursoId) && (
+                <CertificadoEmitidoButton
+                  cursoId={e.cursoId}
+                  cursoTitulo={e.titulo}
+                  dni={String(userData?.dni || "")}
+                />
               )}
-                */}
             </View>
           ))
         )}

@@ -81,7 +81,7 @@ export default coursesStyles = StyleSheet.create({
   },
   coursesDoneBox: {
     width: "100%",
-    height: 500,
+    height: 540,
     backgroundColor: "#fea200",
     borderRadius: 10,
     display: "flex",

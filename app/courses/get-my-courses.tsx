@@ -1,12 +1,18 @@
 import {  StatusBar, View } from "react-native";
 import styles from '../../styles/courses/courses-styles'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CourseAviablesForMe from "./courses-aviables";
 import HandleCourses from "./options-courses";
 import CoursesTakenByMe from "./courses-picked";
+import { prefetchCursosConCertificado } from "../../components/certificados/certificadoApi";
 export default function GetCoursesOptions(){
     const [action,setAction]=useState<null | string>(null)
     const statusBarHeight = StatusBar.currentHeight;
+
+    useEffect(() => {
+        prefetchCursosConCertificado();
+    }, []);
+
     const handleSetActionType=(value:null | string)=>{
         setAction(value)
       }
