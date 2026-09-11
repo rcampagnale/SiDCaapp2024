@@ -61,10 +61,13 @@ const rutaCertificado = (cursoId: string, dni: string) =>
 export type CertificadoEmitidoResponse = {
   ok: boolean;
   emitido: boolean;
+  descargaHabilitada?: boolean;
   validacion?: {
     registrado: boolean;
     fecha?: string;
     validadoPor?: string;
+    junta?: string;
+    juntaEtiqueta?: string;
   } | null;
 };
 
@@ -74,6 +77,12 @@ export type CertificadoArchivoResponse = {
   url: string;
   filename: string;
   expiraEn: string;
+};
+
+export type CertificadoQrResponse = {
+  ok: boolean;
+  emitido: boolean;
+  qrDataUri: string;
 };
 
 export type CursosCertificadoDisponiblesResponse = {
@@ -126,6 +135,10 @@ export function consultarCertificadoEmitido(cursoId: string, dni: string) {
 
 export function obtenerPreviewCertificado(cursoId: string, dni: string) {
   return solicitarJson<CertificadoArchivoResponse>(`${rutaCertificado(cursoId, dni)}/preview`);
+}
+
+export function obtenerQrCertificado(cursoId: string, dni: string) {
+  return solicitarJson<CertificadoQrResponse>(`${rutaCertificado(cursoId, dni)}/qr`);
 }
 
 export function obtenerPdfCertificado(cursoId: string, dni: string) {
