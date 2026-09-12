@@ -33,7 +33,12 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingBottom: 30,
+            }}
+          >
             {/* Carrusel de imágenes */}
             <View style={styles.scrollContainer}>
               <ScrollView
@@ -87,31 +92,6 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
               </Text>
             </View>
 
-            {/* Botón de Aula Virtual con el mismo estilo que los botones "Ver" */}
-            <View
-              style={{
-                width: "100%",
-                height: 50,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                marginVertical: 15,
-                alignSelf: "center", // Alinea el botón en el centro de la pantalla
-              }}
-            >
-              <TouchableOpacity
-                style={styles.btnSeeInfo} // Usamos el mismo estilo que el botón "Ver"
-                onPress={() => openClassroom("https://aula.sidcagremio.com")}
-                activeOpacity={1}
-              >
-                <Text
-                  style={{ color: "#ffffff", fontSize: 20, fontWeight: 600 }}
-                >
-                  Abrir Aula Virtual
-                </Text>
-              </TouchableOpacity>
-            </View>
-
             {/* Tarjetas de cursos */}
             <ImageBackground
               style={styles.cardCourses}
@@ -161,6 +141,41 @@ export default function HandleCourses({ setActionType }: HandleOptionsCourse) {
                 <Text style={{ color: "#ffffff", fontSize: 20 }}>Ver</Text>
               </TouchableOpacity>
             </ImageBackground>
+
+            {/* Botón de Aula Virtual con el mismo estilo que los botones "Ver" */}
+            <View
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                paddingVertical: 15,
+                alignSelf: "center", // Alinea el botón en el centro de la pantalla
+              }}
+            >
+              <Text
+                style={{
+                  color: "#ffffff",
+                  fontSize: 22,
+                  fontWeight: 600,
+                  textAlign: "center",
+                  marginBottom: 10,
+                }}
+              >
+                Acceso Aula Virtual
+              </Text>
+              <TouchableOpacity
+                style={styles.btnSeeInfo} // Usamos el mismo estilo que el botón "Ver"
+                onPress={() => openClassroom("https://aula.sidcagremio.com")}
+                activeOpacity={1}
+              >
+                <Text
+                  style={{ color: "#ffffff", fontSize: 20, fontWeight: 600 }}
+                >
+                  Abrir
+                </Text>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

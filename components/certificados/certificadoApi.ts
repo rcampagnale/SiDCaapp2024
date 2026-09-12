@@ -1,3 +1,5 @@
+import * as FileSystem from "expo-file-system";
+
 const CERTIFICADOS_BACKEND_BASE_URL = (
   process.env.EXPO_PUBLIC_CHATBOT_BACKEND_URL ||
   "https://sidca-chatbot-backend-994896485736.us-central1.run.app"
@@ -64,11 +66,19 @@ export type CertificadoEmitidoResponse = {
   descargaHabilitada?: boolean;
   validacion?: {
     registrado: boolean;
-    fecha?: string;
-    validadoPor?: string;
-    junta?: string;
-    juntaEtiqueta?: string;
+    registros: RegistroValidacion[];
   } | null;
+};
+
+export type CampoValidacion = {
+  etiqueta: string;
+  valor: string;
+};
+
+export type RegistroValidacion = {
+  id: string;
+  titulo: string;
+  campos: CampoValidacion[];
 };
 
 export type CertificadoArchivoResponse = {
@@ -90,8 +100,92 @@ export type CursosCertificadoDisponiblesResponse = {
   cursoIds: string[];
 };
 
+export type CertificadoPrecargado = {
+  certificado: CertificadoEmitidoResponse;
+  previewLocalUri: string;
+};
+
 let cursosDisponiblesCache: Set<string> | null = null;
 let cursosDisponiblesPromise: Promise<Set<string>> | null = null;
+const certificadosPrecargados = new Map<string, CertificadoPrecargado>();
+const certificadosPrecargaPromises = new Map<string, Promise<CertificadoPrecargado>>();
+
+const claveCertificado = (cursoId: string, dni: string) =>
+  `${String(cursoId || "").trim()}:${String(dni || "").replace(/\D/g, "")}`;
+
+const hashClave = (valor: string) => {
+  let hash = 2166136261;
+  for (let indice = 0; indice < valor.length; indice += 1) {
+    hash ^= valor.charCodeAt(indice);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+};
+
+const nombrePreviewCache = (cursoId: string, dni: string) =>
+  `preview-certificado-${hashClave(claveCertificado(cursoId, dni))}.pdf`;
+
+async function verificarArchivoPreview(uri: string) {
+  const info = await FileSystem.getInfoAsync(uri).catch(() => ({ exists: false }));
+  return info.exists === true;
+}
+
+async function cargarCertificadoParaCache(cursoId: string, dni: string): Promise<CertificadoPrecargado> {
+  const certificado = await consultarCertificadoEmitido(cursoId, dni);
+  const respuesta = await obtenerPreviewCertificado(cursoId, dni);
+  const directorio = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+  if (!directorio) throw new Error("No hay una carpeta temporal disponible.");
+
+  const previewLocalUri = `${directorio}${nombrePreviewCache(cursoId, dni)}`;
+  if (!(await verificarArchivoPreview(previewLocalUri))) {
+    const resultado = await FileSystem.downloadAsync(respuesta.url, previewLocalUri);
+    if (!(await verificarArchivoPreview(resultado.uri))) {
+      throw new Error("El archivo de vista previa no está disponible.");
+    }
+  }
+
+  const precargado = { certificado, previewLocalUri };
+  certificadosPrecargados.set(claveCertificado(cursoId, dni), precargado);
+  return precargado;
+}
+
+export function precargarCertificado(cursoId: string, dni: string): Promise<CertificadoPrecargado> {
+  const clave = claveCertificado(cursoId, dni);
+  const enCurso = certificadosPrecargaPromises.get(clave);
+  if (enCurso) return enCurso;
+
+  const solicitud = (async () => {
+    const existente = certificadosPrecargados.get(clave);
+    if (existente && await verificarArchivoPreview(existente.previewLocalUri)) {
+      if (__DEV__) console.log("[CertificadoPrefetch] cache hit");
+      return existente;
+    }
+    if (existente) certificadosPrecargados.delete(clave);
+    return cargarCertificadoParaCache(cursoId, dni);
+  })();
+
+  const solicitudControlada = solicitud.finally(() => {
+    certificadosPrecargaPromises.delete(clave);
+  });
+  certificadosPrecargaPromises.set(clave, solicitudControlada);
+  return solicitudControlada;
+}
+
+export async function obtenerCertificadoPrecargado(
+  cursoId: string,
+  dni: string
+): Promise<CertificadoPrecargado | null> {
+  const clave = claveCertificado(cursoId, dni);
+  const existente = certificadosPrecargados.get(clave);
+  if (existente) {
+    if (await verificarArchivoPreview(existente.previewLocalUri)) return existente;
+    certificadosPrecargados.delete(clave);
+    return precargarCertificado(cursoId, dni);
+  }
+
+  const enCurso = certificadosPrecargaPromises.get(clave);
+  return enCurso ? enCurso : null;
+}
 
 async function cargarCursosConCertificado(): Promise<Set<string>> {
   const respuesta = await solicitarJson<CursosCertificadoDisponiblesResponse>(

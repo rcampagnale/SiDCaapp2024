@@ -78,9 +78,8 @@ export default StyleSheet.create({
     width: 62,
     height: 60,
     borderRadius: 6,
-    backgroundColor: "#005CFE",
-    borderWidth: 1,
-    borderColor: "#005CFE",
+    backgroundColor: "transparent",
+    borderWidth: 0,
     alignItems: "center",
     justifyContent: "flex-start",
     flexDirection: "column",
@@ -104,7 +103,7 @@ export default StyleSheet.create({
     justifyContent: "flex-start",
   },
   textoVerQr: {
-    color: "#ffffff",
+    color: "#374151",
     fontSize: 9,
     fontWeight: "700",
     lineHeight: 10,
@@ -271,9 +270,30 @@ export default StyleSheet.create({
   detalleModal: {
     width: "88%",
     maxWidth: 360,
+    maxHeight: "82%",
     backgroundColor: "#FEA200",
     borderRadius: 16,
     padding: 18,
+  },
+  detalleScroll: {
+    width: "100%",
+    maxHeight: 360,
+  },
+  detalleContenido: {
+    paddingBottom: 2,
+  },
+  detalleRegistro: {
+    width: "100%",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(17,24,39,0.18)",
+  },
+  detalleRegistroTitulo: {
+    color: "#111827",
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+    textAlign: "center",
   },
   detalleTitulo: {
     color: "#111827",

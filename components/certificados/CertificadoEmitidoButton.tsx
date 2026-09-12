@@ -5,6 +5,7 @@ import {
   Image,
   Modal,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -14,19 +15,18 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Pdf from "react-native-pdf";
 import {
   CertificadoApiError,
+  RegistroValidacion,
   consultarCertificadoEmitido,
   obtenerQrCertificado,
   obtenerPdfCertificado,
   obtenerPreviewCertificado,
+  obtenerCertificadoPrecargado,
 } from "./certificadoApi";
 import styles from "./CertificadoEmitidoButton.styles";
 
 type ValidacionCertificado = {
   registrado: boolean;
-  fecha?: string;
-  validadoPor?: string;
-  junta?: string;
-  juntaEtiqueta?: string;
+  registros: RegistroValidacion[];
 };
 
 type Props = {
@@ -38,25 +38,6 @@ type Props = {
 const nombreTemporalSeguro = (cursoId: string, prefijo: string) => {
   const seguro = String(cursoId || "curso").replace(/[^a-zA-Z0-9_-]/g, "_");
   return `${prefijo}-${seguro}.pdf`;
-};
-
-const formatearFechaValidacion = (valor: string) => {
-  const fecha = new Date(valor);
-  if (Number.isNaN(fecha.getTime())) return null;
-
-  const partes = new Intl.DateTimeFormat("es-AR", {
-    timeZone: "America/Argentina/Buenos_Aires",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(fecha);
-  const parte = (tipo: Intl.DateTimeFormatPartTypes) =>
-    partes.find((item) => item.type === tipo)?.value || "";
-
-  return `${parte("day")}/${parte("month")}/${parte("year")} a las ${parte("hour")}:${parte("minute")} hs`;
 };
 
 const errorVisible = (error: unknown, tipo: "preview" | "descarga") => {
@@ -124,6 +105,17 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
     setMostrarDetalleValidacion(false);
     setLoadingConsulta(true);
     try {
+      const precargado = await obtenerCertificadoPrecargado(cursoId, dni);
+      if (precargado) {
+        setValidacion(precargado.certificado.validacion || null);
+        setDescargaHabilitada(precargado.certificado.descargaHabilitada !== false);
+        setLoadingConsulta(false);
+        setPreviewLocalUri(precargado.previewLocalUri);
+        setMostrarPreview(true);
+        if (__DEV__) console.log("[CertificadoPreview] apertura desde cache");
+        return;
+      }
+
       const certificado = await consultarCertificadoEmitido(cursoId, dni);
       setValidacion(certificado.validacion || null);
       setDescargaHabilitada(certificado.descargaHabilitada !== false);
@@ -177,10 +169,11 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
     setPdfCargando(false);
   };
 
-  const fechaValidacion = validacion?.fecha
-    ? formatearFechaValidacion(validacion.fecha)
-    : null;
-  const certificadoValidado = validacion?.registrado === true;
+  const registrosValidacion = Array.isArray(validacion?.registros)
+    ? validacion.registros
+    : [];
+  const certificadoValidado =
+    validacion?.registrado === true && registrosValidacion.length > 0;
 
   const descargarOficial = async () => {
     if (!descargaHabilitada || loadingDescarga || !cursoId || !dni) return;
@@ -263,7 +256,7 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
                 >
                   {loadingQr ? (
                     <View style={styles.qrLoadingContainer} pointerEvents="none">
-                      <ActivityIndicator size="small" color="#ffffff" />
+                      <ActivityIndicator size="small" color="#374151" />
                     </View>
                   ) : (
                     <>
@@ -278,9 +271,9 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
                         </Text>
                       </View>
                       <MaterialCommunityIcons
-                        name="qrcode"
-                        size={30}
-                        color="#ffffff"
+                        name="qrcode-scan"
+                        size={34}
+                        color="#374151"
                         style={styles.qrIcono}
                       />
                     </>
@@ -343,12 +336,26 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
         <View style={styles.overlay}>
           <View style={styles.detalleModal}>
             <Text style={styles.detalleTitulo}>Detalle de validación</Text>
-            <Text style={styles.detalleEtiqueta}>Junta</Text>
-            <Text style={styles.detalleValor}>{validacion?.juntaEtiqueta || validacion?.junta || "No informada"}</Text>
-            <Text style={styles.detalleEtiqueta}>Usuario que realizó el registro</Text>
-            <Text style={styles.detalleValor}>{validacion?.validadoPor || "No informado"}</Text>
-            <Text style={styles.detalleEtiqueta}>Fecha y hora</Text>
-            <Text style={styles.detalleValor}>{fechaValidacion || "No informada"}</Text>
+            <ScrollView
+              style={styles.detalleScroll}
+              contentContainerStyle={styles.detalleContenido}
+            >
+              {registrosValidacion.map((registro, indice) => (
+                <View
+                  key={registro.id || `registro-${indice}`}
+                  style={styles.detalleRegistro}
+                >
+                  <Text style={styles.detalleRegistroTitulo}>{registro.titulo}</Text>
+                  {/* Los campos son deliberadamente genéricos para admitir atributos futuros. */}
+                  {registro.campos.map((campo, campoIndice) => (
+                    <View key={`${campo.etiqueta}-${campoIndice}`}>
+                      <Text style={styles.detalleEtiqueta}>{campo.etiqueta}</Text>
+                      <Text style={styles.detalleValor}>{campo.valor}</Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </ScrollView>
             <Pressable style={styles.qrCerrar} onPress={() => setMostrarDetalleValidacion(false)}>
               <Text style={styles.qrCerrarTexto}>Cerrar</Text>
             </Pressable>

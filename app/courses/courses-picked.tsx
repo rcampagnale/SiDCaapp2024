@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { SidcaContext } from "../_layout";
 import { firebaseconn } from "@/constants/FirebaseConn";
@@ -21,7 +21,10 @@ import {
 import styles from "../../styles/courses/courses-styles";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import CertificadoEmitidoButton from "../../components/certificados/CertificadoEmitidoButton";
-import { obtenerCursosConCertificado } from "../../components/certificados/certificadoApi";
+import {
+  obtenerCursosConCertificado,
+  precargarCertificado,
+} from "../../components/certificados/certificadoApi";
 
 /** Resuelve el ID académico desde una referencia de Firestore o su path. */
 export function resolverCursoId(courseData: any, aprobacionDocId: string): string {
@@ -57,23 +60,34 @@ export default function CoursesTakenByMe() {
       aprobo: boolean;
     }[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingCursos, setLoadingCursos] = useState(true);
+  const [loadingCertificados, setLoadingCertificados] = useState(true);
   const [checkData, setCheckData] = useState(0);
   const [cursosConCertificado, setCursosConCertificado] = useState<Set<string>>(new Set());
+  const inicioPantallaRef = useRef(Date.now());
   const { userData } = useContext(SidcaContext);
   const analytics = getFirestore(firebaseconn);
   const navigation = useNavigation();
 
   useEffect(() => {
     let activo = true;
+    const inicio = Date.now();
 
-    obtenerCursosConCertificado()
-      .then((cursoIds) => {
+    const cargarCertificados = async () => {
+      try {
+        const cursoIds = await obtenerCursosConCertificado();
         if (activo) setCursosConCertificado(cursoIds);
-      })
-      .catch(() => {
+      } catch {
         if (activo) setCursosConCertificado(new Set());
-      });
+      } finally {
+        if (__DEV__) {
+          console.log(`[CoursesPicked] certificados disponibles: ${Date.now() - inicio} ms`);
+        }
+        if (activo) setLoadingCertificados(false);
+      }
+    };
+
+    cargarCertificados();
 
     return () => {
       activo = false;
@@ -82,6 +96,8 @@ export default function CoursesTakenByMe() {
 
   useEffect(() => {
     const seeInfo = async () => {
+      const inicio = Date.now();
+      setLoadingCursos(true);
       try {
         if (!userData) return;
 
@@ -117,12 +133,85 @@ export default function CoursesTakenByMe() {
       } catch (error) {
         alert(`Error: ${error}`);
       } finally {
-        setLoading(false);
+        if (__DEV__) {
+          console.log(`[CoursesPicked] cursos Firestore: ${Date.now() - inicio} ms`);
+        }
+        setLoadingCursos(false);
       }
     };
 
     seeInfo();
   }, [userData]);
+
+  const loadingInicial = loadingCursos || loadingCertificados;
+
+  useEffect(() => {
+    if (!loadingInicial && __DEV__) {
+      console.log(
+        `[CoursesPicked] pantalla lista: ${Date.now() - inicioPantallaRef.current} ms`
+      );
+    }
+  }, [loadingInicial]);
+
+  useEffect(() => {
+    if (loadingCursos || loadingCertificados || !userData?.dni) return;
+
+    const cursosElegibles = courseAproved.filter(
+      (curso) => curso.aprobo === true && cursosConCertificado.has(curso.cursoId)
+    );
+    if (cursosElegibles.length === 0) return;
+
+    let cancelado = false;
+    let siguiente = 0;
+    const duraciones: number[] = [];
+
+    const trabajador = async () => {
+      while (!cancelado) {
+        const indice = siguiente;
+        siguiente += 1;
+        if (indice >= cursosElegibles.length) return;
+
+        const inicio = Date.now();
+        try {
+          await precargarCertificado(
+            cursosElegibles[indice].cursoId,
+            String(userData.dni)
+          );
+          const duracion = Date.now() - inicio;
+          duraciones.push(duracion);
+          if (__DEV__) {
+            console.log(`[CertificadoPrefetch] curso listo: ${duracion} ms`);
+          }
+        } catch {
+          // La precarga es oportunista; el botón conserva su flujo normal como fallback.
+        }
+      }
+    };
+
+    const trabajadores = Array.from(
+      { length: Math.min(2, cursosElegibles.length) },
+      () => trabajador()
+    );
+    void Promise.all(trabajadores).then(() => {
+      if (!cancelado && __DEV__ && duraciones.length > 0) {
+        const promedio = Math.round(
+          duraciones.reduce((total, duracion) => total + duracion, 0) /
+            duraciones.length
+        );
+        console.log(`[CertificadoPrefetch] promedio: ${promedio} ms`);
+      }
+    });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [
+    loadingCursos,
+    loadingCertificados,
+    courseAproved,
+    cursosConCertificado,
+    userData?.dni,
+  ]);
 
   return (
     <View style={{ height: "100%", width: "100%", backgroundColor: "#091d24" }}>
@@ -164,7 +253,7 @@ export default function CoursesTakenByMe() {
           paddingBottom: 40,
         }}
       >
-        {loading ? (
+        {loadingInicial ? (
           <ActivityIndicator size="large" color="#ffffff" />
         ) : courseAproved.length === 0 ? (
           <Text
