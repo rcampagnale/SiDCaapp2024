@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { SidcaContext } from "../_layout";
 import { firebaseconn } from "@/constants/FirebaseConn";
@@ -64,14 +64,12 @@ export default function CoursesTakenByMe() {
   const [loadingCertificados, setLoadingCertificados] = useState(true);
   const [checkData, setCheckData] = useState(0);
   const [cursosConCertificado, setCursosConCertificado] = useState<Set<string>>(new Set());
-  const inicioPantallaRef = useRef(Date.now());
   const { userData } = useContext(SidcaContext);
   const analytics = getFirestore(firebaseconn);
   const navigation = useNavigation();
 
   useEffect(() => {
     let activo = true;
-    const inicio = Date.now();
 
     const cargarCertificados = async () => {
       try {
@@ -80,9 +78,6 @@ export default function CoursesTakenByMe() {
       } catch {
         if (activo) setCursosConCertificado(new Set());
       } finally {
-        if (__DEV__) {
-          console.log(`[CoursesPicked] certificados disponibles: ${Date.now() - inicio} ms`);
-        }
         if (activo) setLoadingCertificados(false);
       }
     };
@@ -96,7 +91,6 @@ export default function CoursesTakenByMe() {
 
   useEffect(() => {
     const seeInfo = async () => {
-      const inicio = Date.now();
       setLoadingCursos(true);
       try {
         if (!userData) return;
@@ -133,9 +127,6 @@ export default function CoursesTakenByMe() {
       } catch (error) {
         alert(`Error: ${error}`);
       } finally {
-        if (__DEV__) {
-          console.log(`[CoursesPicked] cursos Firestore: ${Date.now() - inicio} ms`);
-        }
         setLoadingCursos(false);
       }
     };
@@ -144,14 +135,6 @@ export default function CoursesTakenByMe() {
   }, [userData]);
 
   const loadingInicial = loadingCursos || loadingCertificados;
-
-  useEffect(() => {
-    if (!loadingInicial && __DEV__) {
-      console.log(
-        `[CoursesPicked] pantalla lista: ${Date.now() - inicioPantallaRef.current} ms`
-      );
-    }
-  }, [loadingInicial]);
 
   useEffect(() => {
     if (loadingCursos || loadingCertificados || !userData?.dni) return;
@@ -163,7 +146,6 @@ export default function CoursesTakenByMe() {
 
     let cancelado = false;
     let siguiente = 0;
-    const duraciones: number[] = [];
 
     const trabajador = async () => {
       while (!cancelado) {
@@ -171,17 +153,11 @@ export default function CoursesTakenByMe() {
         siguiente += 1;
         if (indice >= cursosElegibles.length) return;
 
-        const inicio = Date.now();
         try {
           await precargarCertificado(
             cursosElegibles[indice].cursoId,
             String(userData.dni)
           );
-          const duracion = Date.now() - inicio;
-          duraciones.push(duracion);
-          if (__DEV__) {
-            console.log(`[CertificadoPrefetch] curso listo: ${duracion} ms`);
-          }
         } catch {
           // La precarga es oportunista; el botón conserva su flujo normal como fallback.
         }
@@ -192,15 +168,7 @@ export default function CoursesTakenByMe() {
       { length: Math.min(2, cursosElegibles.length) },
       () => trabajador()
     );
-    void Promise.all(trabajadores).then(() => {
-      if (!cancelado && __DEV__ && duraciones.length > 0) {
-        const promedio = Math.round(
-          duraciones.reduce((total, duracion) => total + duracion, 0) /
-            duraciones.length
-        );
-        console.log(`[CertificadoPrefetch] promedio: ${promedio} ms`);
-      }
-    });
+    void Promise.all(trabajadores);
 
     return () => {
       cancelado = true;

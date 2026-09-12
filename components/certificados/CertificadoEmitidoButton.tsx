@@ -105,21 +105,20 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
     setMostrarDetalleValidacion(false);
     setLoadingConsulta(true);
     try {
-      const precargado = await obtenerCertificadoPrecargado(cursoId, dni);
+      const [certificadoActual, precargado] = await Promise.all([
+        consultarCertificadoEmitido(cursoId, dni),
+        obtenerCertificadoPrecargado(cursoId, dni).catch(() => null),
+      ]);
+      setValidacion(certificadoActual.validacion || null);
+      setDescargaHabilitada(certificadoActual.descargaHabilitada !== false);
+      setLoadingConsulta(false);
+
       if (precargado) {
-        setValidacion(precargado.certificado.validacion || null);
-        setDescargaHabilitada(precargado.certificado.descargaHabilitada !== false);
-        setLoadingConsulta(false);
         setPreviewLocalUri(precargado.previewLocalUri);
         setMostrarPreview(true);
-        if (__DEV__) console.log("[CertificadoPreview] apertura desde cache");
         return;
       }
 
-      const certificado = await consultarCertificadoEmitido(cursoId, dni);
-      setValidacion(certificado.validacion || null);
-      setDescargaHabilitada(certificado.descargaHabilitada !== false);
-      setLoadingConsulta(false);
       setLoadingPreview(true);
       const respuesta = await obtenerPreviewCertificado(cursoId, dni);
       const uri = await descargarArchivo(
@@ -179,6 +178,16 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
     if (!descargaHabilitada || loadingDescarga || !cursoId || !dni) return;
     setLoadingDescarga(true);
     try {
+      const certificadoActual = await consultarCertificadoEmitido(cursoId, dni);
+      if (certificadoActual.descargaHabilitada === false) {
+        setDescargaHabilitada(false);
+        Alert.alert(
+          "Descarga no disponible",
+          "La descarga de este certificado fue deshabilitada."
+        );
+        return;
+      }
+
       const respuesta = await obtenerPdfCertificado(cursoId, dni);
       const nombre = String(respuesta.filename || nombreTemporalSeguro(cursoId, "certificado"))
         .replace(/[\\/:*?"<>|\r\n]/g, "_")

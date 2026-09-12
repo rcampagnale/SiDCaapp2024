@@ -101,7 +101,6 @@ export type CursosCertificadoDisponiblesResponse = {
 };
 
 export type CertificadoPrecargado = {
-  certificado: CertificadoEmitidoResponse;
   previewLocalUri: string;
 };
 
@@ -131,7 +130,6 @@ async function verificarArchivoPreview(uri: string) {
 }
 
 async function cargarCertificadoParaCache(cursoId: string, dni: string): Promise<CertificadoPrecargado> {
-  const certificado = await consultarCertificadoEmitido(cursoId, dni);
   const respuesta = await obtenerPreviewCertificado(cursoId, dni);
   const directorio = FileSystem.cacheDirectory || FileSystem.documentDirectory;
   if (!directorio) throw new Error("No hay una carpeta temporal disponible.");
@@ -144,7 +142,7 @@ async function cargarCertificadoParaCache(cursoId: string, dni: string): Promise
     }
   }
 
-  const precargado = { certificado, previewLocalUri };
+  const precargado = { previewLocalUri };
   certificadosPrecargados.set(claveCertificado(cursoId, dni), precargado);
   return precargado;
 }
@@ -157,7 +155,6 @@ export function precargarCertificado(cursoId: string, dni: string): Promise<Cert
   const solicitud = (async () => {
     const existente = certificadosPrecargados.get(clave);
     if (existente && await verificarArchivoPreview(existente.previewLocalUri)) {
-      if (__DEV__) console.log("[CertificadoPrefetch] cache hit");
       return existente;
     }
     if (existente) certificadosPrecargados.delete(clave);
