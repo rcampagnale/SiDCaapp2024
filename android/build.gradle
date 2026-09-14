@@ -31,6 +31,14 @@ allprojects {
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
   }
+
+  // react-native-pdf 6.7.7 usa pdfiumandroid 1.0.24.
+  // Se fuerza 1.0.32 porque incorpora soporte para páginas de memoria de 16 KB.
+  configurations.configureEach {
+    resolutionStrategy {
+      force 'io.legere:pdfiumandroid:1.0.32'
+    }
+  }
 }
 
 apply plugin: "expo-root-project"
