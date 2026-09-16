@@ -26,7 +26,9 @@ import {
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { regexRegister } from "../../src/utils/regex";
+import { normalizarDni } from "../../src/utils/dni";
 import { router } from "expo-router";
+import { useSidcaAlert } from "../../components/SidcaAlert";
 
 interface NewUserTypes {
   nombre: string;
@@ -71,7 +73,37 @@ const formatFecha = (d: Date) => {
 
 const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
 
+const REAFILIACION_BACKEND_BASE_URL = (
+  process.env.EXPO_PUBLIC_CHATBOT_BACKEND_URL ||
+  "https://sidca-chatbot-backend-994896485736.us-central1.run.app"
+).replace(/\/$/, "");
+
+const solicitarReafiliacion = async (payload: Record<string, string>) => {
+  const respuesta = await fetch(
+    `${REAFILIACION_BACKEND_BASE_URL}/api/reafiliaciones/solicitar`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+  const datos = await respuesta.json().catch(() => ({}));
+
+  if (!respuesta.ok) {
+    throw Object.assign(
+      new Error(String(datos?.error || "No se pudo procesar la solicitud.")),
+      { code: String(datos?.code || ""), status: respuesta.status },
+    );
+  }
+
+  return datos;
+};
+
 export default function CreateNewUser() {
+  const { showAlert, AlertPortal } = useSidcaAlert();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -104,7 +136,7 @@ export default function CreateNewUser() {
     const normalized = {
       nombre: normalize(newUser.nombre),
       apellido: normalize(newUser.apellido),
-      dni: newUser.dni.trim(),
+      dni: normalizarDni(newUser.dni),
       email: newUser.email.trim(),
       celular: newUser.celular.trim(),
       tituloGrado: normalize(newUser.tituloGrado),
@@ -166,8 +198,34 @@ export default function CreateNewUser() {
         getDoc(doc(db, "usuarios_dni", dniKey)), // lock
       ]);
 
-      if (!snapUsuariosPorDni.empty || snapUsuarioById.exists() || snapLock.exists()) {
+      if (snapLock.exists()) {
         throw new Error("DNI_EXISTE");
+      }
+
+      const existeUsuario = !snapUsuariosPorDni.empty || snapUsuarioById.exists();
+      if (existeUsuario) {
+        const resultado = await solicitarReafiliacion({
+          dni: dniKey,
+          nombre: normalized.nombre,
+          apellido: normalized.apellido,
+          email: normalized.email,
+          celular: normalized.celular,
+          tituloGrado: normalized.tituloGrado,
+          departamento: normalized.departamento,
+          establecimientos: normalized.establecimientos,
+          descuento: normalized.descuento,
+        });
+
+        if (resultado?.code === "REAFILIACION_CREADA") {
+          showAlert(
+            "Solicitud enviada",
+            "Detectamos que anteriormente registrabas una afiliación a SiDCa.\n\nTu nueva solicitud de afiliación será analizada por la Comisión del Sindicato.\n\nUna vez evaluada, se te informará el resultado.",
+            [{ text: "ACEPTAR", onPress: () => router.navigate("/") }],
+          );
+          return;
+        }
+
+        throw new Error("No se pudo procesar la solicitud de reafiliación.");
       }
 
       const payloadBase = {
@@ -239,7 +297,27 @@ export default function CreateNewUser() {
         fecha: formatFecha(new Date()),
       });
     } catch (error: any) {
-      if (error?.message === "DNI_EXISTE") {
+      if (error?.code === "REAFILIACION_PENDIENTE") {
+        showAlert(
+          "Solicitud en revisión",
+          "Ya contamos con una solicitud de reafiliación pendiente para este DNI.\n\nLa Comisión del Sindicato la evaluará y se te informará el resultado.",
+          [{ text: "ACEPTAR" }],
+        );
+      } else if (error?.code === "AFILIADO_ACTIVO") {
+        Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
+      } else if (
+        error?.code === "DNI_USUARIOS_DUPLICADOS" ||
+        error?.code === "ESTADO_AFILIACION_INCONSISTENTE"
+      ) {
+        Alert.alert(
+          "No pudimos validar tu situación de afiliación",
+          "Comunicate con SiDCa para continuar.",
+        );
+      } else if (error?.code === "AFILIADO_NO_ENCONTRADO") {
+        Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
+      } else if (error?.status && error?.status !== 0) {
+        Alert.alert("SiDCa", "Hubo un problema al procesar tu solicitud.");
+      } else if (error?.message === "DNI_EXISTE") {
         Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
       } else {
         console.error("Error al afiliar usuario: ", error);
@@ -480,6 +558,7 @@ export default function CreateNewUser() {
           </View>
         </Modal>
       </ScrollView>
+      <AlertPortal />
     </View>
   );
 }

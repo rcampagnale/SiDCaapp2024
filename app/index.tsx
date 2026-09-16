@@ -34,6 +34,7 @@ import { SidcaContext } from "./_layout";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useSidcaAlert } from "../components/SidcaAlert";
 import { normalizarNombrePersona } from "../src/utils/personName";
+import { normalizarDni } from "../src/utils/dni";
 
 /* =========================
  * Helpers
@@ -44,6 +45,8 @@ type LookupDoc = {
   adherente?: boolean | string | number;
   activo?: boolean | string | number;
   estado?: boolean | string | number;
+  afiliadoActivo?: boolean;
+  estadoAfiliacion?: string;
   motivo?: string | null;
   whatsapp?: string | number | null;
   wsp?: string | number | null;
@@ -62,6 +65,9 @@ const toBool = (v: any): boolean => {
   }
   return false;
 };
+
+const normalizarEstadoAfiliacion = (v: unknown): string =>
+  String(v ?? "").trim().toLowerCase();
 
 // Buscar DNI en string y number.
 // Usamos getDocsFromServer (no getDocs) para forzar un viaje real al backend:
@@ -320,6 +326,62 @@ export default function SignInApp() {
         showAlert(
           "No encontramos ese DNI",
           "Revisá el número ingresado. Si el problema continúa, comunicate con SiDCa.",
+        );
+        return;
+      }
+
+      // Guard sindical: una baja explícita tiene prioridad y no debe
+      // convertirse en acceso sólo por la ausencia de una representación
+      // operativa. Los usuarios legacy sin estos campos continúan igual.
+      const estadoAfiliacion = normalizarEstadoAfiliacion(
+        userDoc.estadoAfiliacion,
+      );
+      const bloqueoSindical =
+        userDoc.afiliadoActivo === false ||
+        estadoAfiliacion === "baja" ||
+        estadoAfiliacion === "inactivo";
+
+      if (bloqueoSindical) {
+        const dniNormalizado = normalizarDni(dni);
+        const counterSnap = await getDocFromServer(
+          doc(db, "nuevoAfiliado_counters", dniNormalizado),
+        );
+        const counter = counterSnap.exists() ? counterSnap.data() : null;
+        const estadoReafiliacion = normalizarEstadoAfiliacion(
+          counter?.estadoReafiliacion,
+        );
+
+        if (estadoReafiliacion === "pendiente") {
+          showAlert(
+            "Solicitud de reafiliación en revisión",
+            "Tu solicitud de reafiliación está siendo analizada por la Comisión del Sindicato.\n\nUna vez evaluada, se te informará el resultado.",
+            [{ text: "ACEPTAR" }],
+          );
+          return;
+        }
+
+        if (estadoReafiliacion === "rechazada") {
+          showAlert(
+            "Solicitud de reafiliación",
+            "Tu solicitud de reafiliación no fue aprobada.\n\nPara más información, comunicate con SiDCa.",
+            [{ text: "ACEPTAR" }],
+          );
+          return;
+        }
+
+        if (estadoReafiliacion === "aprobada") {
+          showAlert(
+            "No pudimos validar tu situación de afiliación",
+            "Comunicate con SiDCa para continuar.",
+            [{ text: "ACEPTAR" }],
+          );
+          return;
+        }
+
+        showAlert(
+          "Afiliación no activa",
+          "Tu afiliación a SiDCa no se encuentra activa.\n\nSi deseas volver a afiliarte, podés realizar una nueva solicitud desde REGISTRARSE.",
+          [{ text: "ACEPTAR" }],
         );
         return;
       }

@@ -57,6 +57,12 @@ export default function HomePage() {
   // ⬇️ Trae usuario del contexto y calcula adherente/estado
   const { userData, setUserData } = useContext(SidcaContext) as any;
 
+  React.useEffect(() => {
+    if (!userData) router.replace("/");
+  }, [userData]);
+
+  if (!userData) return null;
+
   const adherente = toBool(userData?._afiliado?.adherente ?? false);
   // si es adherente: mirar _afiliado.activo; si no es adherente: activo=true
   const activo = adherente
