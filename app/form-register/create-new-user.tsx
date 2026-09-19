@@ -18,11 +18,6 @@ import {
   doc,
   runTransaction,
   serverTimestamp,
-  getDocs,
-  getDoc,
-  query,
-  where,
-  limit,
 } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { regexRegister } from "../../src/utils/regex";
@@ -73,24 +68,40 @@ const formatFecha = (d: Date) => {
 
 const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
 
-const REAFILIACION_BACKEND_BASE_URL = (
-  process.env.EXPO_PUBLIC_CHATBOT_BACKEND_URL ||
-  "https://sidca-chatbot-backend-994896485736.us-central1.run.app"
-).replace(/\/$/, "");
+const REAFILIACION_BACKEND_BASE_URL =
+  "https://sidca-chatbot-backend-994896485736.us-central1.run.app";
 
 const solicitarReafiliacion = async (payload: Record<string, string>) => {
-  const respuesta = await fetch(
-    `${REAFILIACION_BACKEND_BASE_URL}/api/reafiliaciones/solicitar`,
-    {
+  const url = `${REAFILIACION_BACKEND_BASE_URL}/api/reafiliaciones/solicitar`;
+
+  console.log("[REAFILIACION] BASE URL:", REAFILIACION_BACKEND_BASE_URL);
+  console.log("[REAFILIACION] URL:", url);
+  console.log("[REAFILIACION] DNI:", payload.dni);
+
+  let respuesta: Response;
+  try {
+    respuesta = await fetch(url, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    },
-  );
+    });
+  } catch (error: any) {
+    console.error("[REAFILIACION] FETCH ERROR:", error);
+    console.error("[REAFILIACION] ERROR NAME:", error?.name);
+    console.error("[REAFILIACION] ERROR MESSAGE:", error?.message);
+    throw error;
+  }
+
+  console.log("[REAFILIACION] STATUS:", respuesta.status);
+  console.log("[REAFILIACION] OK:", respuesta.ok);
+
   const datos = await respuesta.json().catch(() => ({}));
+
+  console.log("[REAFILIACION] RESPONSE CODE:", datos?.code || "");
+  console.log("[REAFILIACION] RESPONSE OK:", datos?.ok);
 
   if (!respuesta.ok) {
     throw Object.assign(
@@ -180,41 +191,20 @@ export default function CreateNewUser() {
     try {
       setLoading(true);
 
-      /**
-       * ✅ Pre-chequeo (para bases viejas):
-       * 1) usuarios donde dni == dniKey (detecta IDs auto + IDs = DNI)
-       * 2) usuarios/{dniKey} (por si existiera un doc viejo sin campo dni)
-       * 3) lock usuarios_dni/{dniKey} (si ya fue registrado con el nuevo esquema)
-       */
-      const qUsuariosPorDni = query(
-        collection(db, "usuarios"),
-        where("dni", "==", dniKey),
-        limit(1)
-      );
+      const payloadReafiliacion = {
+        dni: dniKey,
+        nombre: normalized.nombre,
+        apellido: normalized.apellido,
+        email: normalized.email,
+        celular: normalized.celular,
+        tituloGrado: normalized.tituloGrado,
+        departamento: normalized.departamento,
+        establecimientos: normalized.establecimientos,
+        descuento: normalized.descuento,
+      };
 
-      const [snapUsuariosPorDni, snapUsuarioById, snapLock] = await Promise.all([
-        getDocs(qUsuariosPorDni),
-        getDoc(doc(db, "usuarios", dniKey)), // legacy
-        getDoc(doc(db, "usuarios_dni", dniKey)), // lock
-      ]);
-
-      if (snapLock.exists()) {
-        throw new Error("DNI_EXISTE");
-      }
-
-      const existeUsuario = !snapUsuariosPorDni.empty || snapUsuarioById.exists();
-      if (existeUsuario) {
-        const resultado = await solicitarReafiliacion({
-          dni: dniKey,
-          nombre: normalized.nombre,
-          apellido: normalized.apellido,
-          email: normalized.email,
-          celular: normalized.celular,
-          tituloGrado: normalized.tituloGrado,
-          departamento: normalized.departamento,
-          establecimientos: normalized.establecimientos,
-          descuento: normalized.descuento,
-        });
+      try {
+        const resultado = await solicitarReafiliacion(payloadReafiliacion);
 
         if (resultado?.code === "REAFILIACION_CREADA") {
           showAlert(
@@ -226,6 +216,10 @@ export default function CreateNewUser() {
         }
 
         throw new Error("No se pudo procesar la solicitud de reafiliación.");
+      } catch (error: any) {
+        // El backend es la autoridad para clasificar el DNI. Sólo este código
+        // habilita continuar con la transacción de una afiliación nueva.
+        if (error?.code !== "AFILIADO_NO_ENCONTRADO") throw error;
       }
 
       const payloadBase = {
@@ -297,6 +291,12 @@ export default function CreateNewUser() {
         fecha: formatFecha(new Date()),
       });
     } catch (error: any) {
+      console.error("[REGISTRO] ERROR COMPLETO:", error);
+      console.error("[REGISTRO] NAME:", error?.name);
+      console.error("[REGISTRO] CODE:", error?.code);
+      console.error("[REGISTRO] STATUS:", error?.status);
+      console.error("[REGISTRO] MESSAGE:", error?.message);
+
       if (error?.code === "REAFILIACION_PENDIENTE") {
         showAlert(
           "Solicitud en revisión",
@@ -313,8 +313,15 @@ export default function CreateNewUser() {
           "No pudimos validar tu situación de afiliación",
           "Comunicate con SiDCa para continuar.",
         );
-      } else if (error?.code === "AFILIADO_NO_ENCONTRADO") {
-        Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
+      } else if (
+        error?.name === "TypeError" &&
+        /network request failed|failed to fetch/i.test(String(error?.message || ""))
+      ) {
+        showAlert(
+          "Sin conexión",
+          "No pudimos conectarnos con SiDCa. Verificá tu conexión a Internet e intentá nuevamente.",
+          [{ text: "ACEPTAR" }],
+        );
       } else if (error?.status && error?.status !== 0) {
         Alert.alert("SiDCa", "Hubo un problema al procesar tu solicitud.");
       } else if (error?.message === "DNI_EXISTE") {
