@@ -274,9 +274,16 @@ export default function CreateNewUser() {
         });
       });
 
-      Alert.alert("SiDCa", "Afiliado exitosamente", [
-        { text: "OK", onPress: () => router.navigate("/") },
-      ]);
+      showAlert(
+        "Afiliación realizada",
+        "Tu afiliación a SiDCa fue registrada correctamente.",
+        [
+          {
+            text: "ACEPTAR",
+            onPress: () => router.navigate("/"),
+          },
+        ],
+      );
 
       setNewUser({
         nombre: "",
