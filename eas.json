@@ -18,7 +18,6 @@
       },
       "env": {
         "EXPO_PUBLIC_MESSAGE": "994896485736",
-        "EXPO_PUBLIC_FIREBASE": "AIzaSyCKVN2aRi6Vr-J3zAkRu77eKMMk45GpFkg",
         "EXPO_PUBLIC_APP_ID": "1:994896485736:web:2fc72eeba21554f1e3cadd",
         "EXPO_PUBLIC_MEASUREMENT": "G-NRSRJMRW0Q"
       }
@@ -30,7 +29,6 @@
       },
       "env": {
         "EXPO_PUBLIC_MESSAGE": "994896485736",
-        "EXPO_PUBLIC_FIREBASE": "AIzaSyCKVN2aRi6Vr-J3zAkRu77eKMMk45GpFkg",
         "EXPO_PUBLIC_APP_ID": "1:994896485736:web:2fc72eeba21554f1e3cadd",
         "EXPO_PUBLIC_MEASUREMENT": "G-NRSRJMRW0Q"
       }
