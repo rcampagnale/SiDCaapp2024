@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -32,9 +32,48 @@ export default function HandleCampusTeachers() {
 
   const [dataPredio, setDataPredio] = useState<any[]>([]);
   const [dataCasa, setDataCasa] = useState<any[]>([]);
+  const [prefetchedImages, setPrefetchedImages] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const prefetchedOrInFlight = useRef<Set<string>>(new Set());
 
   const analytics = getFirestore(firebaseconn);
   const data = collection(analytics, "novedades");
+
+  const prefetchConvenioImages = async (items: any[]) => {
+    const urls = [
+      ...new Set(
+        items
+          .map((item) => (typeof item?.imagen === "string" ? item.imagen.trim() : ""))
+          .filter(Boolean),
+      ),
+    ].filter((url) => !prefetchedOrInFlight.current.has(url));
+
+    urls.forEach((url) => prefetchedOrInFlight.current.add(url));
+    if (urls.length === 0) return;
+
+    const results = await Promise.allSettled(
+      urls.map(async (url) => ({ url, ok: await Image.prefetch(url) })),
+    );
+    const successful = new Set<string>();
+
+    results.forEach((result, index) => {
+      const url = urls[index];
+      if (result.status === "fulfilled" && result.value.ok) {
+        successful.add(url);
+      } else {
+        prefetchedOrInFlight.current.delete(url);
+      }
+    });
+
+    if (successful.size > 0) {
+      setPrefetchedImages((previous) => {
+        const next = new Set(previous);
+        successful.forEach((url) => next.add(url));
+        return next;
+      });
+    }
+  };
 
   const openOtherData = (urlMedia: string) => {
     Linking.openURL(urlMedia);
@@ -48,36 +87,61 @@ export default function HandleCampusTeachers() {
     setIsModalVisible2(!isModalVisible2);
   };
 
-  const handleOpenModal1 = async () => {
-    setLoading1(true);
+  useEffect(() => {
+    let mounted = true;
+
+    const loadConvenios = () => {
+      const comercioPromise = getDocs(
+        query(data, where("categoria", "==", "convenio_comercio")),
+      )
+        .then((res) => {
+          const dataList = res.docs.map((doc) => ({
+            ...doc.data(),
+            id: doc.id,
+          }));
+          if (mounted) setDataPredio(dataList);
+          prefetchConvenioImages(dataList);
+        })
+        .catch((error) => {
+          console.error("Error al precargar convenios de comercio:", error);
+        })
+        .finally(() => {
+          if (mounted) setLoading1(false);
+        });
+
+      const hotelesPromise = getDocs(
+        query(data, where("categoria", "==", "convenio_hoteles")),
+      )
+        .then((res) => {
+          const dataList = res.docs.map((doc) => ({
+            ...doc.data(),
+            id: doc.id,
+          }));
+          if (mounted) setDataCasa(dataList);
+          prefetchConvenioImages(dataList);
+        })
+        .catch((error) => {
+          console.error("Error al precargar convenios de hoteles:", error);
+        })
+        .finally(() => {
+          if (mounted) setLoading2(false);
+        });
+
+      void Promise.all([comercioPromise, hotelesPromise]);
+    };
+
+    loadConvenios();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleOpenModal1 = () => {
     setIsModalVisible1(true);
-    try {
-      const filteredData = query(data, where("categoria", "==", "convenio_comercio"));
-      const res = await getDocs(filteredData);
-      const dataList = res.docs.map((doc) => doc.data());
-      setDataPredio(dataList);
-    } catch (error) {
-      console.error("Error al cargar datos de predio:", error);
-      alert(`Error: ${error}`);
-    } finally {
-      setLoading1(false);
-    }
   };
 
-  const handleOpenModal2 = async () => {
-    setLoading2(true);
+  const handleOpenModal2 = () => {
     setIsModalVisible2(true);
-    try {
-      const filteredData = query(data, where("categoria", "==", "convenio_hoteles"));
-      const res = await getDocs(filteredData);
-      const dataList = res.docs.map((doc) => doc.data());
-      setDataCasa(dataList);
-    } catch (error) {
-      console.error("Error al cargar datos de casa:", error);
-      alert(`Error: ${error}`);
-    } finally {
-      setLoading2(false);
-    }
   };
 
   return (
@@ -165,12 +229,13 @@ export default function HandleCampusTeachers() {
             </Text>
           </TouchableOpacity>
         </View>
-        <ModalComponent
+          <ModalComponent
           isModalVisible={isModalVisible1}
           toggleModal={toggleModal1}
           category="convenio_comercio"
           loading={loading1}
           data={dataPredio}
+          prefetchedImages={prefetchedImages}
           title="Lista de Comercios Adheridos"
         />
 
@@ -180,6 +245,7 @@ export default function HandleCampusTeachers() {
           category="casa"
           loading={loading2}
           data={dataCasa}
+          prefetchedImages={prefetchedImages}
           title="Convenio Interprovincial Hoteleros"
         />
       </View>

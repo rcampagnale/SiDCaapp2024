@@ -101,6 +101,38 @@ const convenioStyles = StyleSheet.create({
     textAlign: "center",
   },
 
+  departmentScope: {
+    marginTop: 8,
+  },
+
+  departmentScopeLabel: {
+    color: "#000000",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 6,
+  },
+
+  departmentChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+
+  departmentChip: {
+    backgroundColor: "#fff1c7",
+    borderColor: "#c77d00",
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+
+  departmentChipText: {
+    color: "#09232B",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
   modalItem: {
     paddingVertical: 10,
     width: "auto",
@@ -134,6 +166,64 @@ const convenioStyles = StyleSheet.create({
     height: 300, // Tamaño ajustado de la imagen
     marginBottom: 15,
     alignSelf: "center",
+  },
+
+  remoteImageContainer: {
+    width: "100%",
+    height: 300,
+    marginBottom: 15,
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "#fea200",
+    position: "relative",
+    alignSelf: "center",
+  },
+
+  remoteImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  remoteImageLoader: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(254, 162, 0, 0.82)",
+  },
+
+  remoteImageLoaderText: {
+    marginTop: 8,
+    color: "#09232B",
+    fontSize: 13,
+    textAlign: "center",
+  },
+
+  remoteImageFallback: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    backgroundColor: "#fea200",
+  },
+
+  remoteImageFallbackIcon: {
+    color: "#09232B",
+    fontSize: 28,
+    marginBottom: 6,
+  },
+
+  remoteImageFallbackText: {
+    color: "#09232B",
+    fontSize: 14,
+    textAlign: "center",
   },
 
   textAbout: {
