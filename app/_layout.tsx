@@ -5,6 +5,10 @@ import React, { useEffect, useRef } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
 import { registerPushTokenForUser } from "../services/pushNotifications";
+import {
+  handlePushNotificationResponse,
+  processPendingPushNotification,
+} from "../services/pushNotificationNavigation";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,6 +29,7 @@ export const SidcaContext = React.createContext<SidcaContextType>({
 export default function RootLayout() {
   const [userData, setUserData] = React.useState<UserData>(null);
   const pushRegistrationAttemptedFor = useRef<string | null>(null);
+  const userDataRef = useRef<UserData>(null);
 
   useEffect(() => {
     const hideSplash = async () => {
@@ -35,12 +40,31 @@ export default function RootLayout() {
 
   useEffect(() => {
     const receivedSubscription = Notifications.addNotificationReceivedListener(() => {});
-    const responseSubscription = Notifications.addNotificationResponseReceivedListener(() => {});
+    const responseSubscription =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        void handlePushNotificationResponse(
+          response,
+          Boolean(userDataRef.current),
+        );
+      });
+
+    let mounted = true;
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!mounted || !response) return;
+      void handlePushNotificationResponse(response, Boolean(userDataRef.current));
+    });
+
     return () => {
+      mounted = false;
       receivedSubscription.remove();
       responseSubscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    userDataRef.current = userData;
+    processPendingPushNotification(Boolean(userData));
+  }, [userData]);
 
   useEffect(() => {
     const usuarioId = String(

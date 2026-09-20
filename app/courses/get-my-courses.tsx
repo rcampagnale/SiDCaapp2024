@@ -1,12 +1,23 @@
 import {  StatusBar, View } from "react-native";
 import styles from '../../styles/courses/courses-styles'
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import CourseAviablesForMe from "./courses-aviables";
 import HandleCourses from "./options-courses";
 import CoursesTakenByMe from "./courses-picked";
 import { prefetchCursosConCertificado } from "../../components/certificados/certificadoApi";
 export default function GetCoursesOptions(){
-    const [action,setAction]=useState<null | string>(null)
+    const { action: actionParam } = useLocalSearchParams<{
+        action?: string | string[];
+    }>();
+    const initialActionRef = useRef(
+        Array.isArray(actionParam) ? actionParam[0] : actionParam,
+    );
+    const initialAction =
+        initialActionRef.current === "verify" || initialActionRef.current === "see"
+            ? initialActionRef.current
+            : null;
+    const [action,setAction]=useState<null | string>(initialAction)
     const statusBarHeight = StatusBar.currentHeight;
 
     useEffect(() => {
