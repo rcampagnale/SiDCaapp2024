@@ -1,10 +1,30 @@
 import { router } from "expo-router";
 import * as Linking from "expo-linking";
+import {
+  getActiveNewsModal,
+  saveActiveNewsModal,
+} from "./pushNewsModalStorage";
 
 type PushNotificationData = {
   type?: unknown;
   url?: unknown;
   courseId?: unknown;
+  title?: unknown;
+  titulo?: unknown;
+  description?: unknown;
+  descripcion?: unknown;
+  image?: unknown;
+  imagen?: unknown;
+  link?: unknown;
+  newsId?: unknown;
+};
+
+export type PushNewsModalData = {
+  title: string;
+  description: string;
+  image?: string;
+  url?: string;
+  newsId?: string;
 };
 
 type PushNotificationResponseLike = {
@@ -28,10 +48,20 @@ type InternalPushType =
 
 type PendingNotificationAction = {
   type: InternalPushType;
+} | {
+  type: "news_modal";
+  newsData: PushNewsModalData;
+};
+
+type PushNavigationContext = {
+  hasAuthenticatedUser: boolean;
+  isHome: boolean;
+  setPushNewsModal: (newsData: PushNewsModalData) => void;
 };
 
 const processedNotificationIds = new Set<string>();
 let pendingNotificationAction: PendingNotificationAction | null = null;
+let newsModalShownThisSession = false;
 
 const normalizeType = (value: unknown): string =>
   String(value || "").trim().toLowerCase();
@@ -61,6 +91,21 @@ const isInternalPushType = (type: string): type is InternalPushType =>
   type === "tourism" ||
   type === "agreements" ||
   type === "office_management";
+
+const firstString = (...values: unknown[]): string => {
+  const value = values.find(
+    (candidate) => typeof candidate === "string" && candidate.trim(),
+  );
+  return typeof value === "string" ? value.trim() : "";
+};
+
+const normalizeNewsData = (data: PushNotificationData): PushNewsModalData => ({
+  title: firstString(data.title, data.titulo),
+  description: firstString(data.description, data.descripcion),
+  image: firstString(data.image, data.imagen) || undefined,
+  url: firstString(data.url, data.link) || undefined,
+  newsId: firstString(data.newsId) || undefined,
+});
 
 const openInternalDestination = (type: InternalPushType) => {
   switch (type) {
@@ -108,9 +153,20 @@ const openExternalUrl = async (value: unknown) => {
   }
 };
 
+const openHomeWithNews = (
+  newsData: PushNewsModalData,
+  context: PushNavigationContext,
+) => {
+  newsModalShownThisSession = true;
+  context.setPushNewsModal(newsData);
+  if (!context.isHome) {
+    router.replace("/home");
+  }
+};
+
 const dispatchNotificationData = async (
   data: PushNotificationData,
-  hasAuthenticatedUser: boolean,
+  context: PushNavigationContext,
 ) => {
   const type = normalizeType(data.type);
 
@@ -121,13 +177,33 @@ const dispatchNotificationData = async (
     case "external_url":
       await openExternalUrl(data.url);
       return;
+    case "news_modal": {
+      const newsData = normalizeNewsData(data);
+      if (
+        !newsData.title &&
+        !newsData.description &&
+        !newsData.image &&
+        !newsData.url &&
+        !newsData.newsId
+      ) {
+        return;
+      }
+      await saveActiveNewsModal(newsData);
+      if (!context.hasAuthenticatedUser) {
+        pendingNotificationAction = { type: "news_modal", newsData };
+        console.log("[PushNavigation] pending until login");
+        return;
+      }
+      openHomeWithNews(newsData, context);
+      return;
+    }
     default:
       break;
   }
 
   if (!isInternalPushType(type)) return;
 
-  if (!hasAuthenticatedUser) {
+  if (!context.hasAuthenticatedUser) {
     pendingNotificationAction = { type };
     console.log("[PushNavigation] pending until login");
     return;
@@ -139,21 +215,43 @@ const dispatchNotificationData = async (
 /** Procesa una respuesta sólo cuando el usuario toca la notificación. */
 export const handlePushNotificationResponse = async (
   response: PushNotificationResponseLike,
-  hasAuthenticatedUser: boolean,
+  context: PushNavigationContext,
 ) => {
   const data = getResponseData(response);
   const responseKey = getResponseKey(response, data);
   if (processedNotificationIds.has(responseKey)) return;
   processedNotificationIds.add(responseKey);
 
-  await dispatchNotificationData(data, hasAuthenticatedUser);
+  await dispatchNotificationData(data, context);
 };
 
 /** Reintenta una acción interna que quedó pendiente hasta completar el login. */
-export const processPendingPushNotification = (hasAuthenticatedUser: boolean) => {
-  if (!hasAuthenticatedUser || !pendingNotificationAction) return;
+export const processPendingPushNotification = (context: PushNavigationContext) => {
+  if (!context.hasAuthenticatedUser || !pendingNotificationAction) return;
 
   const pending = pendingNotificationAction;
   pendingNotificationAction = null;
+  if (pending.type === "news_modal") {
+    openHomeWithNews(pending.newsData, context);
+    return;
+  }
   openInternalDestination(pending.type);
+};
+
+/** Recupera la última novedad activa una sola vez durante esta sesión. */
+export const restoreActiveNewsModalForSession = async (
+  setPushNewsModal: (newsData: PushNewsModalData) => void,
+) => {
+  if (newsModalShownThisSession) return;
+
+  const newsData = await getActiveNewsModal();
+  if (!newsData || newsModalShownThisSession) return;
+
+  newsModalShownThisSession = true;
+  setPushNewsModal(newsData);
+};
+
+/** Reinicia sólo la protección en memoria al cerrar sesión. */
+export const resetNewsModalSession = () => {
+  newsModalShownThisSession = false;
 };

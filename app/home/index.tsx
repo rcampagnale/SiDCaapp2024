@@ -26,6 +26,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // ⬇️ importa tu contexto y el modal
 import { SidcaContext } from "../_layout"; // ajustá la ruta si es distinta
 import ModalAlerta from "@/components/ModalAlerta";
+import PushNewsModal from "../../components/push/PushNewsModal";
+import {
+  resetNewsModalSession,
+  restoreActiveNewsModalForSession,
+} from "../../services/pushNotificationNavigation";
 
 // ⬇️ importa el ChatbotModal (ajustá la ruta según tu proyecto)
 import ChatbotModal from "../chatmodal/chatmodal";
@@ -55,11 +60,21 @@ export default function HomePage() {
   );
 
   // ⬇️ Trae usuario del contexto y calcula adherente/estado
-  const { userData, setUserData } = useContext(SidcaContext) as any;
+  const {
+    userData,
+    setUserData,
+    pushNewsModal,
+    setPushNewsModal,
+  } = useContext(SidcaContext) as any;
 
   React.useEffect(() => {
     if (!userData) router.replace("/");
   }, [userData]);
+
+  React.useEffect(() => {
+    if (!userData) return;
+    void restoreActiveNewsModalForSession(setPushNewsModal);
+  }, [userData, setPushNewsModal]);
 
   if (!userData) return null;
 
@@ -75,6 +90,8 @@ export default function HomePage() {
     try {
       await AsyncStorage.removeItem("sidca_user");
     } catch {}
+    resetNewsModalSession();
+    setPushNewsModal(null);
     setUserData(null);
     router.replace("/"); // vuelve al login
   };
@@ -379,6 +396,11 @@ export default function HomePage() {
         // whatsapp: si no llega desde Firestore, el propio modal tiene default 3834539754
         whatsapp={userData?._afiliado?.whatsapp ?? undefined}
         motivo={userData?._afiliado?.motivo ?? null}
+      />
+
+      <PushNewsModal
+        news={pushNewsModal}
+        onClose={() => setPushNewsModal(null)}
       />
       
 

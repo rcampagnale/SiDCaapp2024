@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import React, { useEffect, useRef } from "react";
@@ -7,6 +7,7 @@ import * as Notifications from "expo-notifications";
 import { registerPushTokenForUser } from "../services/pushNotifications";
 import {
   handlePushNotificationResponse,
+  PushNewsModalData,
   processPendingPushNotification,
 } from "../services/pushNotificationNavigation";
 
@@ -18,18 +19,29 @@ type UserData = Record<string, any> | null;
 type SidcaContextType = {
   userData: UserData;
   setUserData: React.Dispatch<React.SetStateAction<UserData>>;
+  pushNewsModal: PushNewsModalData | null;
+  setPushNewsModal: React.Dispatch<
+    React.SetStateAction<PushNewsModalData | null>
+  >;
 };
 
 // Context con valor por defecto seguro
 export const SidcaContext = React.createContext<SidcaContextType>({
   userData: null,
   setUserData: () => {},
+  pushNewsModal: null,
+  setPushNewsModal: () => {},
 });
 
 export default function RootLayout() {
   const [userData, setUserData] = React.useState<UserData>(null);
+  const [pushNewsModal, setPushNewsModal] =
+    React.useState<PushNewsModalData | null>(null);
   const pushRegistrationAttemptedFor = useRef<string | null>(null);
   const userDataRef = useRef<UserData>(null);
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
 
   useEffect(() => {
     const hideSplash = async () => {
@@ -44,14 +56,22 @@ export default function RootLayout() {
       Notifications.addNotificationResponseReceivedListener((response) => {
         void handlePushNotificationResponse(
           response,
-          Boolean(userDataRef.current),
+          {
+            hasAuthenticatedUser: Boolean(userDataRef.current),
+            isHome: pathnameRef.current === "/home",
+            setPushNewsModal,
+          },
         );
       });
 
     let mounted = true;
     void Notifications.getLastNotificationResponseAsync().then((response) => {
       if (!mounted || !response) return;
-      void handlePushNotificationResponse(response, Boolean(userDataRef.current));
+      void handlePushNotificationResponse(response, {
+        hasAuthenticatedUser: Boolean(userDataRef.current),
+        isHome: pathnameRef.current === "/home",
+        setPushNewsModal,
+      });
     });
 
     return () => {
@@ -63,7 +83,11 @@ export default function RootLayout() {
 
   useEffect(() => {
     userDataRef.current = userData;
-    processPendingPushNotification(Boolean(userData));
+    processPendingPushNotification({
+      hasAuthenticatedUser: Boolean(userData),
+      isHome: pathnameRef.current === "/home",
+      setPushNewsModal,
+    });
   }, [userData]);
 
   useEffect(() => {
@@ -78,7 +102,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <SidcaContext.Provider value={{ userData, setUserData }}>
+      <SidcaContext.Provider
+        value={{
+          userData,
+          setUserData,
+          pushNewsModal,
+          setPushNewsModal,
+        }}
+      >
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
