@@ -38,9 +38,9 @@ export default function PushNewsModal({ news, onClose }: PushNewsModalProps) {
     setImageFailed(false);
   }, [news?.image]);
 
-  const cardWidth = Math.min(screenWidth * 0.92, 520);
+  const cardWidth = Math.min(screenWidth * 0.94, 520);
   const imageHeight = Math.min(
-    Math.max(cardWidth * 0.55, 120),
+    Math.max(cardWidth * 0.42, 100),
     screenHeight * 0.28,
   );
 
@@ -81,7 +81,7 @@ export default function PushNewsModal({ news, onClose }: PushNewsModalProps) {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator
           >
-            <Text style={styles.title}>{news?.title || "Novedad"}</Text>
+            <Text style={[styles.title, { fontSize: screenWidth < 380 ? 22 : 25 }]}>{news?.title || "Novedad"}</Text>
 
             {news?.image && !imageFailed ? (
               <Image
@@ -120,14 +120,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 12,
     paddingVertical: 32,
     backgroundColor: "rgba(0, 0, 0, 0.62)",
   },
   card: {
-    width: "98%",
+    width: "94%",
     maxWidth: 520,
-    maxHeight: "88%",
+    maxHeight: "86%",
     borderRadius: 18,
     backgroundColor: "#FEA200",
     overflow: "hidden",
@@ -159,8 +159,8 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: "center",
-    paddingHorizontal: 22,
-    paddingBottom: 22,
+    paddingHorizontal: 20,
+    paddingBottom: 36,
   },
   eyebrow: {
     color: "#091d24",
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "#091d24",
-    fontSize: 22,
+    fontSize: 25,
     fontWeight: "800",
     textAlign: "center",
     marginBottom: 14,
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     color: "#091d24",
     fontSize: 17,
     lineHeight: 24,
-    textAlign: "justify",
+    textAlign: "left",
   },
   actions: {
     width: "100%",

@@ -1,4 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  limit,
+  query,
+  where,
+} from "firebase/firestore";
+import { firebaseconn } from "../constants/FirebaseConn";
 import type { PushNewsModalData } from "./pushNotificationNavigation";
 
 export const SIDCA_ACTIVE_NEWS_MODAL_KEY = "sidca_active_news_modal";
@@ -38,5 +47,49 @@ export const clearActiveNewsModal = async () => {
     await AsyncStorage.removeItem(SIDCA_ACTIVE_NEWS_MODAL_KEY);
   } catch {
     // Preparado para una futura desactivación remota.
+  }
+};
+
+const normalizeCentralModal = (value: Record<string, unknown>): PushNewsModalData | null => {
+  const titulo = typeof value.titulo === "string" ? value.titulo.trim() : "";
+  const descripcion = typeof value.descripcion === "string" ? value.descripcion.trim() : "";
+  const imagen = typeof value.imagen === "string" ? value.imagen.trim() : "";
+  const link = typeof value.link === "string" ? value.link.trim() : "";
+  const newsId = typeof value.newsId === "string" ? value.newsId.trim() : "";
+
+  if (!titulo && !descripcion && !imagen && !link) return null;
+  return {
+    title: titulo,
+    description: descripcion,
+    image: imagen || undefined,
+    url: link || undefined,
+    newsId: newsId || undefined,
+  };
+};
+
+export type CentralNewsModalResult =
+  | { status: "active"; news: PushNewsModalData }
+  | { status: "empty" }
+  | { status: "error"; error: unknown };
+
+export const getCentralActiveNewsModal = async (): Promise<CentralNewsModalResult> => {
+  try {
+    const db = getFirestore(firebaseconn);
+    const activeQuery = query(
+      collection(db, "modal_informativos"),
+      where("estado", "==", "activo"),
+      limit(1),
+    );
+    const snapshot = await getDocs(activeQuery);
+    if (snapshot.empty) return { status: "empty" };
+
+    const documentSnapshot = snapshot.docs[0];
+    const news = normalizeCentralModal({
+      ...documentSnapshot.data(),
+      newsId: documentSnapshot.id,
+    });
+    return news ? { status: "active", news } : { status: "empty" };
+  } catch (error) {
+    return { status: "error", error };
   }
 };

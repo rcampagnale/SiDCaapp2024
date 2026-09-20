@@ -1,6 +1,8 @@
 import { router } from "expo-router";
 import * as Linking from "expo-linking";
 import {
+  clearActiveNewsModal,
+  getCentralActiveNewsModal,
   getActiveNewsModal,
   saveActiveNewsModal,
 } from "./pushNewsModalStorage";
@@ -240,15 +242,33 @@ export const processPendingPushNotification = (context: PushNavigationContext) =
 
 /** Recupera la última novedad activa una sola vez durante esta sesión. */
 export const restoreActiveNewsModalForSession = async (
-  setPushNewsModal: (newsData: PushNewsModalData) => void,
+  setPushNewsModal: (newsData: PushNewsModalData | null) => void,
 ) => {
-  if (newsModalShownThisSession) return;
+  const central = await getCentralActiveNewsModal();
+  if (central.status === "error") {
+    // Una falla de red no invalida la copia local.
+    const cached = await getActiveNewsModal();
+    if (cached && !newsModalShownThisSession) {
+      newsModalShownThisSession = true;
+      setPushNewsModal(cached);
+    }
+    return;
+  }
 
-  const newsData = await getActiveNewsModal();
-  if (!newsData || newsModalShownThisSession) return;
+  if (central.status === "empty") {
+    await clearActiveNewsModal();
+    newsModalShownThisSession = false;
+    setPushNewsModal(null);
+    return;
+  }
 
-  newsModalShownThisSession = true;
-  setPushNewsModal(newsData);
+  const cached = await getActiveNewsModal();
+  const cambioDeModal = cached?.newsId !== central.news.newsId;
+  await saveActiveNewsModal(central.news);
+  if (!newsModalShownThisSession || cambioDeModal) {
+    newsModalShownThisSession = true;
+    setPushNewsModal(central.news);
+  }
 };
 
 /** Reinicia sólo la protección en memoria al cerrar sesión. */

@@ -71,10 +71,13 @@ export default function HomePage() {
     if (!userData) router.replace("/");
   }, [userData]);
 
-  React.useEffect(() => {
-    if (!userData) return;
-    void restoreActiveNewsModalForSession(setPushNewsModal);
-  }, [userData, setPushNewsModal]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!userData) return undefined;
+      void restoreActiveNewsModalForSession(setPushNewsModal);
+      return undefined;
+    }, [userData, setPushNewsModal]),
+  );
 
   if (!userData) return null;
 
