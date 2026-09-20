@@ -35,3 +35,6 @@ android/app/.cxx/
 
 expo-env.d.ts
 # @end expo-cli
+# Firebase Android local config
+google-services.json
+android/app/google-services.json
