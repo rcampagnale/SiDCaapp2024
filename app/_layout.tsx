@@ -1,8 +1,10 @@
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import * as Notifications from "expo-notifications";
+import { registerPushTokenForUser } from "../services/pushNotifications";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,6 +24,7 @@ export const SidcaContext = React.createContext<SidcaContextType>({
 
 export default function RootLayout() {
   const [userData, setUserData] = React.useState<UserData>(null);
+  const pushRegistrationAttemptedFor = useRef<string | null>(null);
 
   useEffect(() => {
     const hideSplash = async () => {
@@ -29,6 +32,25 @@ export default function RootLayout() {
     };
     hideSplash();
   }, []);
+
+  useEffect(() => {
+    const receivedSubscription = Notifications.addNotificationReceivedListener(() => {});
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(() => {});
+    return () => {
+      receivedSubscription.remove();
+      responseSubscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    const usuarioId = String(
+      userData?.usuarioId || userData?._docId || "",
+    ).trim();
+    if (!usuarioId || pushRegistrationAttemptedFor.current === usuarioId) return;
+
+    pushRegistrationAttemptedFor.current = usuarioId;
+    void registerPushTokenForUser(usuarioId);
+  }, [userData?.usuarioId, userData?._docId]);
 
   return (
     <SafeAreaProvider>

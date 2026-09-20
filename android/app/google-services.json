@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "994896485736",
+    "project_id": "sidca-a33f0",
+    "storage_bucket": "sidca-a33f0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994896485736:android:6a1be3c2454b3eafe3cadd",
+        "android_client_info": {
+          "package_name": "com.jakiro12.one"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1obR4MMmIu8eGWJiCjOUgJXBq_ZjLdnU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994896485736:android:1865abb4526f4f80e3cadd",
+        "android_client_info": {
+          "package_name": "com.sidca"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1obR4MMmIu8eGWJiCjOUgJXBq_ZjLdnU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
