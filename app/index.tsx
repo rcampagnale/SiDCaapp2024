@@ -75,15 +75,26 @@ const normalizarEstadoAfiliacion = (v: unknown): string =>
 // silenciosamente un resultado vacío que se confundiría con "DNI no encontrado".
 const getByDni = async <T extends LookupDoc = LookupDoc>(
   colRef: any,
-  dni: string
+  dni: string,
+  includeDocId = false,
 ): Promise<T | null> => {
   let qs = await getDocsFromServer(query(colRef, where("dni", "==", dni)));
-  if (!qs.empty) return qs.docs[0].data() as T;
+  if (!qs.empty) {
+    const data = qs.docs[0].data() as T;
+    return includeDocId
+      ? (Object.assign({}, data, { _docId: qs.docs[0].id }) as unknown as T)
+      : data;
+  }
 
   const dniNum = Number(dni);
   if (!Number.isNaN(dniNum)) {
     qs = await getDocsFromServer(query(colRef, where("dni", "==", dniNum)));
-    if (!qs.empty) return qs.docs[0].data() as T;
+    if (!qs.empty) {
+      const data = qs.docs[0].data() as T;
+      return includeDocId
+        ? (Object.assign({}, data, { _docId: qs.docs[0].id }) as unknown as T)
+        : data;
+    }
   }
 
   return null;
@@ -321,7 +332,7 @@ export default function SignInApp() {
 
     setLoading(true);
     try {
-      const userDoc = await getByDni<LookupDoc>(usuariosCollection, dni);
+      const userDoc = await getByDni<LookupDoc>(usuariosCollection, dni, true);
       if (!userDoc) {
         showAlert(
           "No encontramos ese DNI",
