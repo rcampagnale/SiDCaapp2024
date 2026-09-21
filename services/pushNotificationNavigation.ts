@@ -155,6 +155,16 @@ const openExternalUrl = async (value: unknown) => {
   }
 };
 
+const isValidExternalUrl = (value: unknown): value is string => {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 const openHomeWithNews = (
   newsData: PushNewsModalData,
   context: PushNavigationContext,
@@ -171,6 +181,12 @@ const dispatchNotificationData = async (
   context: PushNavigationContext,
 ) => {
   const type = normalizeType(data.type);
+
+  // news_modal conserva su flujo propio: su link se muestra dentro del modal.
+  if (type !== "news_modal" && isValidExternalUrl(data.url)) {
+    await openExternalUrl(data.url);
+    return;
+  }
 
   switch (type) {
     case "open_app":
