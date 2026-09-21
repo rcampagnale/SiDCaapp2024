@@ -51,6 +51,10 @@ type InternalPushType =
 type PendingNotificationAction = {
   type: InternalPushType;
 } | {
+  type: "external_url";
+  originalType: string;
+  url: string;
+} | {
   type: "news_modal";
   newsData: PushNewsModalData;
 };
@@ -184,7 +188,17 @@ const dispatchNotificationData = async (
 
   // news_modal conserva su flujo propio: su link se muestra dentro del modal.
   if (type !== "news_modal" && isValidExternalUrl(data.url)) {
-    await openExternalUrl(data.url);
+    const url = data.url.trim();
+    if (!context.hasAuthenticatedUser) {
+      pendingNotificationAction = {
+        type: "external_url",
+        originalType: type,
+        url,
+      };
+      console.log("[PushNavigation] URL pending until login", { type });
+      return;
+    }
+    await openExternalUrl(url);
     return;
   }
 
@@ -243,12 +257,18 @@ export const handlePushNotificationResponse = async (
   await dispatchNotificationData(data, context);
 };
 
-/** Reintenta una acción interna que quedó pendiente hasta completar el login. */
-export const processPendingPushNotification = (context: PushNavigationContext) => {
+/** Reintenta una acción pendiente hasta completar el login. */
+export const processPendingPushNotification = async (
+  context: PushNavigationContext,
+) => {
   if (!context.hasAuthenticatedUser || !pendingNotificationAction) return;
 
   const pending = pendingNotificationAction;
   pendingNotificationAction = null;
+  if (pending.type === "external_url") {
+    await openExternalUrl(pending.url);
+    return;
+  }
   if (pending.type === "news_modal") {
     openHomeWithNews(pending.newsData, context);
     return;

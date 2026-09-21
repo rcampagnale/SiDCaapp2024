@@ -83,7 +83,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     userDataRef.current = userData;
-    processPendingPushNotification({
+    void processPendingPushNotification({
       hasAuthenticatedUser: Boolean(userData),
       isHome: pathnameRef.current === "/home",
       setPushNewsModal,
