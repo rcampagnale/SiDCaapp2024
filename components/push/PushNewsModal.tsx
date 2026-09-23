@@ -67,7 +67,7 @@ export default function PushNewsModal({ news, onClose }: PushNewsModalProps) {
         <View style={styles.card}>
           <View style={styles.header}>
             <View style={styles.accentBar} />
-            <Text style={styles.eyebrow}>SIDCA · INFORMACIÓN</Text>
+            <Text style={styles.eyebrow}>SIDCA · NOVEDADES</Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Cerrar novedad"
@@ -117,7 +117,7 @@ export default function PushNewsModal({ news, onClose }: PushNewsModalProps) {
                   style={styles.primaryButton}
                   onPress={openMore}
                 >
-                  <Text style={styles.primaryButtonText}>Ver más ↗</Text>
+                  <Text style={styles.primaryButtonText}>VER MÁS</Text>
                 </Pressable>
               ) : null}
               <Pressable
@@ -126,7 +126,7 @@ export default function PushNewsModal({ news, onClose }: PushNewsModalProps) {
                 style={styles.secondaryButton}
                 onPress={onClose}
               >
-                <Text style={styles.secondaryButtonText}>Cerrar</Text>
+                <Text style={styles.secondaryButtonText}>CERRAR</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -254,28 +254,40 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 24,
     paddingTop: 14,
+    paddingBottom: 2,
   },
   primaryButton: {
+    width: "100%",
+    minHeight: 44,
     alignItems: "center",
+    justifyContent: "center",
     borderRadius: 8,
     backgroundColor: "#005CFE",
     borderColor: "#005CFE",
     borderWidth: 1,
-    paddingVertical: 11,
+    paddingVertical: 10,
   },
   primaryButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
+    textAlign: "center",
   },
   secondaryButton: {
+    width: "100%",
+    minHeight: 44,
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "transparent",
+    borderColor: "#000000",
+    borderWidth: 1.5,
+    borderRadius: 8,
     paddingVertical: 10,
   },
   secondaryButtonText: {
-    color: "#66757C",
-    fontSize: 15,
-    fontWeight: "500",
+    color: "#17242A",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
   },
 });
