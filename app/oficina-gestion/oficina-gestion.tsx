@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   ScrollView,
   Image,
-  Alert,
   Platform,
   PermissionsAndroid,
 } from "react-native";
@@ -19,6 +18,7 @@ import { collection, getDocs, getFirestore, query } from "firebase/firestore";
 import { router } from "expo-router";
 import { firebaseconn } from "@/constants/FirebaseConn";
 import styles from "../../styles/oficina-gestion/oficina-gestion";
+import { useSidcaAlert } from "../../components/SidcaAlert";
 
 const LOGO_SINDICATO_URL = "https://sidcagremio.com/logo192.png";
 
@@ -353,6 +353,7 @@ const formularioSoloConsultaDni = (formulario: FormularioGestion) => {
 };
 
 export default function OficinaGestion() {
+  const { showAlert, AlertPortal } = useSidcaAlert();
   const statusBarHeight = StatusBar.currentHeight || 0;
   const db = getFirestore(firebaseconn);
 
@@ -432,9 +433,10 @@ export default function OficinaGestion() {
         console.error("Error al cargar formularios:", error);
         setFormularios([]);
 
-        Alert.alert(
+        showAlert(
           "Error",
           "No se pudieron cargar los formularios disponibles.",
+          [{ text: "OK" }],
         );
       } finally {
         setLoading(false);
@@ -908,6 +910,7 @@ export default function OficinaGestion() {
           </View>
         </Modal>
       </View>
+      <AlertPortal />
     </View>
   );
 }

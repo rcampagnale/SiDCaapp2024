@@ -7,14 +7,15 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import styles from "../../styles/sala_de_reuniones/sala_de_reuniones";
 import { useState, useEffect } from "react";
 import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { firebaseconn } from "@/constants/FirebaseConn";
+import { useSidcaAlert } from "../../components/SidcaAlert";
 
 export default function HandleCampusTeachers() {
+  const { showAlert, AlertPortal } = useSidcaAlert();
   const statusBarHeight = StatusBar.currentHeight;
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -38,11 +39,11 @@ export default function HandleCampusTeachers() {
           setCheckRoomLink(/^https?:\/\//i.test(url));
         } else {
           setCheckRoomLink(false);
-          Alert.alert("Aviso", "El documento 'sala' no existe en 'cuotas'.");
+          showAlert("Aviso", "El documento 'sala' no existe en 'cuotas'.", [{ text: "OK" }]);
         }
       } catch (error) {
         console.error("Error al cargar los datos:", error);
-        Alert.alert("Error", String(error));
+        showAlert("Error", String(error), [{ text: "OK" }]);
       } finally {
         setLoading(false);
       }
@@ -53,7 +54,7 @@ export default function HandleCampusTeachers() {
   const handleJoin = async () => {
     const url = (dataTravel?.link || "").trim();
     if (!/^https?:\/\//i.test(url)) {
-      Alert.alert("Enlace inválido", "No hay un enlace válido para abrir.");
+      showAlert("Enlace inválido", "No hay un enlace válido para abrir.", [{ text: "OK" }]);
       return;
     }
     try {
@@ -61,11 +62,11 @@ export default function HandleCampusTeachers() {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert("No se pudo abrir el enlace", url);
+        showAlert("No se pudo abrir el enlace", url, [{ text: "OK" }]);
       }
     } catch (e) {
       console.error(e);
-      Alert.alert("Error", "Ocurrió un error al abrir el enlace.");
+      showAlert("Error", "Ocurrió un error al abrir el enlace.", [{ text: "OK" }]);
     }
   };
 
@@ -139,6 +140,7 @@ export default function HandleCampusTeachers() {
           </TouchableOpacity>
         </View>
       </View>
+      <AlertPortal />
     </View>
   );
 }

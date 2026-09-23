@@ -6,7 +6,6 @@ import {
   StatusBar,
   Dimensions,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import {
@@ -19,11 +18,13 @@ import {
 import { firebaseconn } from "@/constants/FirebaseConn";
 import { AntDesign } from "@expo/vector-icons";
 import styles from "@/styles/courses/certificados";
+import { useSidcaAlert } from "../../components/SidcaAlert";
 
 const analytics = getFirestore(firebaseconn);
 const { width, height } = Dimensions.get("window");
 
 export default function Certificados() {
+  const { showAlert, AlertPortal } = useSidcaAlert();
   type RouteParams = {
     params: {
       courseName: string;
@@ -73,9 +74,10 @@ export default function Certificados() {
   const statusBarHeight = StatusBar.currentHeight || 0;
 
   const handlePrint = () => {
-    Alert.alert(
+    showAlert(
       "Imprimir Certificado",
-      "La opción de imprimir aún no está disponible."
+      "La opción de imprimir aún no está disponible.",
+      [{ text: "OK" }],
     );
   };
 
@@ -170,6 +172,8 @@ export default function Certificados() {
           />
         ) : null}
       </View>
+
+      <AlertPortal />
     </View>
   );
 }

@@ -16,7 +16,7 @@ export class CertificadoApiError extends Error {
 }
 
 const mensajePorEstado = (status: number, fallback: string) => {
-  if (status === 404) return "El certificado todavía no fue emitido por la administración.";
+  if (status === 404) return "El certificado todavía no fue emitido por SiDCa.";
   if (status === 409) return "Se encontró más de un certificado vigente. Comunicate con SiDCa.";
   return fallback;
 };

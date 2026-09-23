@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Modal,
   Pressable,
@@ -23,6 +22,7 @@ import {
   obtenerCertificadoPrecargado,
 } from "./certificadoApi";
 import styles from "./CertificadoEmitidoButton.styles";
+import { useSidcaAlert } from "../SidcaAlert";
 
 type ValidacionCertificado = {
   registrado: boolean;
@@ -45,7 +45,7 @@ const errorVisible = (error: unknown, tipo: "preview" | "descarga") => {
     return ["Sin conexión", "No se pudo conectar con el servidor. Verificá tu conexión a internet e intentá nuevamente."] as const;
   }
   if (error instanceof CertificadoApiError && error.status === 404) {
-    return ["Certificado no disponible", "El certificado todavía no fue emitido por la administración."] as const;
+    return ["Certificado no disponible", "El certificado todavía no fue emitido por SiDCa."] as const;
   }
   if (error instanceof CertificadoApiError && error.status === 409) {
     return ["Certificado no disponible", "Se encontró una inconsistencia en la emisión. Comunicate con SiDCa."] as const;
@@ -67,6 +67,7 @@ async function descargarArchivo(url: string, nombre: string) {
 }
 
 export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: Props) {
+  const { showAlert, AlertPortal } = useSidcaAlert();
   const [loadingConsulta, setLoadingConsulta] = useState(false);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingDescarga, setLoadingDescarga] = useState(false);
@@ -90,7 +91,7 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
       console.error(`[certificado-${tipo}]`, detalle);
     }
     const [titulo, mensaje] = errorVisible(error, tipo);
-    Alert.alert(titulo, mensaje);
+    showAlert(titulo, mensaje, [{ text: "OK" }]);
   };
 
   const abrirPreview = async () => {
@@ -158,7 +159,7 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
       setLoadingQr(false);
       setMostrarQr(true);
     } catch {
-      Alert.alert("No se pudo mostrar el QR", "Intentá nuevamente en unos instantes.");
+      showAlert("No se pudo mostrar el QR", "Intentá nuevamente en unos instantes.", [{ text: "OK" }]);
     } finally {
       setLoadingQr(false);
     }
@@ -181,9 +182,10 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
       const certificadoActual = await consultarCertificadoEmitido(cursoId, dni);
       if (certificadoActual.descargaHabilitada === false) {
         setDescargaHabilitada(false);
-        Alert.alert(
+        showAlert(
           "Descarga no disponible",
-          "La descarga de este certificado fue deshabilitada."
+          "La descarga de este certificado fue deshabilitada.",
+          [{ text: "OK" }],
         );
         return;
       }
@@ -248,7 +250,11 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
                   onPageChanged={finalizarCargaPdf}
                   onError={() => {
                     finalizarCargaPdf();
-                    Alert.alert("No se pudo mostrar el certificado", "Ocurrió un problema al cargar la vista previa. Intentá nuevamente.");
+                    showAlert(
+                      "No se pudo mostrar el certificado",
+                      "Ocurrió un problema al cargar la vista previa. Intentá nuevamente.",
+                      [{ text: "OK" }],
+                    );
                   }}
                 />
               ) : null}
@@ -371,6 +377,8 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
           </View>
         </View>
       </Modal>
+
+      <AlertPortal />
     </View>
   );
 }

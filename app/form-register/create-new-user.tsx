@@ -9,7 +9,6 @@ import {
   Modal,
   FlatList,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import styles from "../../styles/new-user-styles/create-user-styles";
 import {
@@ -170,7 +169,11 @@ export default function CreateNewUser() {
       !normalized.establecimientos
     ) {
       submittingRef.current = false;
-      return Alert.alert("SiDCa", "Debe completar todos los campos obligatorios.");
+      return showAlert(
+        "SiDCa",
+        "Debe completar todos los campos obligatorios.",
+        [{ text: "OK" }],
+      );
     }
 
     if (
@@ -178,12 +181,12 @@ export default function CreateNewUser() {
       !regexRegister.names.test(normalized.apellido)
     ) {
       submittingRef.current = false;
-      return Alert.alert("SiDCa", "Nombre o apellido no válido");
+      return showAlert("SiDCa", "Nombre o apellido no válido", [{ text: "OK" }]);
     }
 
     if (!regexRegister.dni.test(normalized.dni)) {
       submittingRef.current = false;
-      return Alert.alert("SiDCa", "DNI no válido");
+      return showAlert("SiDCa", "DNI no válido", [{ text: "OK" }]);
     }
 
     const dniKey = normalized.dni;
@@ -311,14 +314,15 @@ export default function CreateNewUser() {
           [{ text: "ACEPTAR" }],
         );
       } else if (error?.code === "AFILIADO_ACTIVO") {
-        Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
+        showAlert("SiDCa", "Ya existe un afiliado con este DNI.", [{ text: "OK" }]);
       } else if (
         error?.code === "DNI_USUARIOS_DUPLICADOS" ||
         error?.code === "ESTADO_AFILIACION_INCONSISTENTE"
       ) {
-        Alert.alert(
+        showAlert(
           "No pudimos validar tu situación de afiliación",
           "Comunicate con SiDCa para continuar.",
+          [{ text: "OK" }],
         );
       } else if (
         error?.name === "TypeError" &&
@@ -330,12 +334,12 @@ export default function CreateNewUser() {
           [{ text: "ACEPTAR" }],
         );
       } else if (error?.status && error?.status !== 0) {
-        Alert.alert("SiDCa", "Hubo un problema al procesar tu solicitud.");
+        showAlert("SiDCa", "Hubo un problema al procesar tu solicitud.", [{ text: "OK" }]);
       } else if (error?.message === "DNI_EXISTE") {
-        Alert.alert("SiDCa", "Ya existe un afiliado con este DNI.");
+        showAlert("SiDCa", "Ya existe un afiliado con este DNI.", [{ text: "OK" }]);
       } else {
         console.error("Error al afiliar usuario: ", error);
-        Alert.alert("SiDCa", "Hubo un problema al procesar tu solicitud.");
+        showAlert("SiDCa", "Hubo un problema al procesar tu solicitud.", [{ text: "OK" }]);
       }
     } finally {
       setLoading(false);

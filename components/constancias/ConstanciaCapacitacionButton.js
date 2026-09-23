@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ImageBackground,
   Modal,
   Pressable,
@@ -14,6 +13,7 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { generarConstanciaCapacitacionPDF } from "./generarConstanciaCapacitacionPDF";
 import styles from "./ConstanciaCapacitacionButton.styles";
+import { useSidcaAlert } from "../SidcaAlert";
 
 const plantillaConstancia = require("../../assets/cursos/constancia_capacitacion.png");
 
@@ -282,13 +282,14 @@ const verificarArchivoPDF = async (fileUri) => {
   return true;
 };
 
-const compartirPDF = async (fileUri) => {
+const compartirPDF = async (fileUri, showAlert) => {
   const disponible = await Sharing.isAvailableAsync();
 
   if (!disponible) {
-    Alert.alert(
+    showAlert(
       "Certificado generado",
       `El PDF fue generado correctamente.\n\nUbicación:\n${fileUri}`,
+      [{ text: "OK" }],
     );
     return;
   }
@@ -448,6 +449,7 @@ const ConstanciaCapacitacionButton = ({
   configuracionConstancia = {},
   textoBoton = "Ver certificado",
 }) => {
+  const { showAlert, AlertPortal } = useSidcaAlert();
   const [generando, setGenerando] = useState(false);
   const [mostrarPreview, setMostrarPreview] = useState(false);
 
@@ -474,9 +476,10 @@ const ConstanciaCapacitacionButton = ({
     if (generando) return;
 
     if (!puedeDescargar) {
-      Alert.alert(
+      showAlert(
         "Certificado no disponible",
         "El certificado se habilita cuando la asistencia presencial tiene ingreso y salida registrados.",
+        [{ text: "OK" }],
       );
       return;
     }
@@ -488,9 +491,10 @@ const ConstanciaCapacitacionButton = ({
     if (generando) return;
 
     if (!puedeDescargar) {
-      Alert.alert(
+      showAlert(
         "Certificado no disponible",
         "El certificado se habilita cuando la asistencia presencial tiene ingreso y salida registrados.",
+        [{ text: "OK" }],
       );
       return;
     }
@@ -509,7 +513,7 @@ const ConstanciaCapacitacionButton = ({
 
       await verificarArchivoPDF(fileUriGenerado);
 
-      await compartirPDF(fileUriGenerado);
+      await compartirPDF(fileUriGenerado, showAlert);
 
       setMostrarPreview(false);
     } catch (error) {
@@ -518,11 +522,12 @@ const ConstanciaCapacitacionButton = ({
         error?.toString?.() ||
         "Error desconocido al generar el PDF.";
 
-      Alert.alert(
+      showAlert(
         "Error real al generar PDF",
         mensajeError.length > 700
           ? `${mensajeError.substring(0, 700)}...`
           : mensajeError,
+        [{ text: "OK" }],
       );
     } finally {
       setGenerando(false);
@@ -559,6 +564,7 @@ const ConstanciaCapacitacionButton = ({
         onDescargar={handleDescargar}
         generando={generando}
       />
+      <AlertPortal />
     </View>
   );
 };
