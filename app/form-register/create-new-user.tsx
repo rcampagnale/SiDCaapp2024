@@ -184,11 +184,6 @@ export default function CreateNewUser() {
       return showAlert("SiDCa", "Nombre o apellido no válido", [{ text: "OK" }]);
     }
 
-    if (!regexRegister.dni.test(normalized.dni)) {
-      submittingRef.current = false;
-      return showAlert("SiDCa", "DNI no válido", [{ text: "OK" }]);
-    }
-
     const dniKey = normalized.dni;
 
     try {
@@ -223,6 +218,14 @@ export default function CreateNewUser() {
         // El backend es la autoridad para clasificar el DNI. Sólo este código
         // habilita continuar con la transacción de una afiliación nueva.
         if (error?.code !== "AFILIADO_NO_ENCONTRADO") throw error;
+      }
+
+      if (!/^\d{8}$/.test(normalized.dni)) {
+        return showAlert(
+          "DNI no válido",
+          "Ingresá el DNI completo de 8 dígitos, sin puntos ni espacios.",
+          [{ text: "ACEPTAR" }],
+        );
       }
 
       const payloadBase = {
@@ -424,7 +427,7 @@ export default function CreateNewUser() {
               value={newUser.dni}
               onChangeText={(v) => handleNewUserData("dni", v.replace(/\D/g, ""))}
               keyboardType="numeric"
-              maxLength={9}
+              maxLength={8}
               returnKeyType="next"
             />
           </View>
