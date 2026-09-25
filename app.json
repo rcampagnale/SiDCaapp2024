@@ -2,7 +2,7 @@
   "expo": {
     "name": "SiDCa - Tu Sindicato",
     "slug": "sidca",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/logos/logo-05.png",
     "scheme": "sidca",
