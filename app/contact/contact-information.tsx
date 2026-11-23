@@ -1,175 +1,102 @@
 import {
+  ActivityIndicator,
   Text,
   View,
   StatusBar,
   TouchableOpacity,
   Image,
   Linking,
+  ScrollView,
 } from "react-native";
+import React, { useEffect, useState } from "react";
 import styles from "../../styles/contact/contact-styles";
+import {
+  Contacto,
+  ContactosState,
+  reintentarContactos,
+  suscribirseContactos,
+} from "../../services/contactosStore";
+
 export default function ContactInformation() {
   const statusBarHeight = StatusBar.currentHeight;
-  const openWspNumber = (urlMedia: string) => {
-    Linking.openURL(urlMedia);
-  };
-  return (
-    <View style={{ height: "100%", paddingTop: statusBarHeight }}>
-      <View style={styles.container}>
-        <View style={styles.titleContact}>
-          <Text style={styles.textTitle}>Medios de contacto</Text>
-        </View>
-        <View style={styles.mediasContactContainer}>
-          <Text style={{ fontSize: 22, fontWeight: 500 }}>
-            Números de WhatsApp
-          </Text>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834051983")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Asesoramiento General
-            </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834397239")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Departamento Jurídico
-            </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834230813")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              SiDCa Gestión Expediente
-            </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834283151")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>SiDCa Turismo</Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834250139")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Casa del Docente
-            </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834220295")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>SiDCa Radio</Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493835406450")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Hotelería Interprovincial
-            </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834012228")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Secretaría de Capacitación
-            </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493832437803")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Soporte Técnico
-            </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834539754")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Afiliado Adherente
-            </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
+  const [contactos, setContactos] = useState<Contacto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-          <TouchableOpacity
-            style={styles.btnWhatsApp}
-            activeOpacity={1}
-            onPress={() => openWspNumber("https://wa.me/5493834325816")}
-          >
-            <Text style={{ fontSize: 18, marginLeft: 10 }}>
-              Entrega de Certificados
+  useEffect(() => {
+    return suscribirseContactos((nextState: ContactosState) => {
+      setContactos(nextState.contactos);
+      setLoading(nextState.loading);
+      setError(nextState.error);
+    });
+  }, []);
+
+  const openWspNumber = (numero: string) => {
+    const numeroNormalizado = String(numero || "").replace(/\D/g, "");
+    Linking.openURL(`https://wa.me/${numeroNormalizado}`).catch(() => undefined);
+  };
+
+  return (
+    <View style={[styles.screenRoot, { paddingTop: statusBarHeight }]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.container}>
+          <View style={styles.titleContact}>
+            <Text style={styles.textTitle}>Medios de contacto</Text>
+          </View>
+          <View style={styles.mediasContactContainer}>
+            <Text style={{ fontSize: 22, fontWeight: 500 }}>
+              Números de WhatsApp
             </Text>
-            <Image
-              style={{ width: 30, height: 30, marginRight: 10 }}
-              source={require("../../assets/logos/whatsapp.png")}
-            />
-          </TouchableOpacity>
+            {loading ? (
+              <ActivityIndicator color="#091d24" />
+            ) : error ? (
+              <>
+                <Text style={styles.contactStatusText}>
+                  No pudimos cargar los medios de contacto.
+                </Text>
+                <TouchableOpacity
+                  style={styles.retryButton}
+                  onPress={reintentarContactos}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.retryButtonText}>Reintentar</Text>
+                </TouchableOpacity>
+              </>
+            ) : contactos.length === 0 ? (
+              <Text style={styles.contactStatusText}>
+                No hay medios de contacto disponibles en este momento.
+              </Text>
+            ) : (
+              contactos.map((contacto) => (
+                <TouchableOpacity
+                  key={contacto.id}
+                  style={styles.btnWhatsApp}
+                  activeOpacity={1}
+                  onPress={() => openWspNumber(contacto.numero)}
+                >
+                  <Text style={{ fontSize: 18, marginLeft: 10 }}>
+                    {contacto.referencia}
+                  </Text>
+                  <Image
+                    style={{ width: 30, height: 30, marginRight: 10 }}
+                    source={require("../../assets/logos/whatsapp.png")}
+                  />
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+          <View style={styles.contactSeparator} />
+          <View style={styles.footerContainer}>
+            <Text style={{ width: "90%" }}>
+              Sede central Ayacucho 227 - 1° Piso, San Fernando del Valle de
+              Catamarca, Catamarca CP 4700
+            </Text>
+          </View>
         </View>
-        <View style={styles.footerContainer}>
-          <Text style={{ width: "90%" }}>
-            Sede central Ayacucho 227 - 1° Piso, San Fernando del Valle de
-            Catamarca, Catamarca CP 4700
-          </Text>
-        </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }

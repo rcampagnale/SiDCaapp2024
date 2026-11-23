@@ -1,12 +1,23 @@
 import { StyleSheet } from "react-native";
 
 export default contactStyles = StyleSheet.create({
+  screenRoot: {
+    flex: 1,
+    backgroundColor: "#fea200",
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#fea200",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 0,
+  },
   container: {
     width: "100%",
-    height: "100%",
+    minHeight: "100%",
     display: "flex",
     flexDirection: "column",
-    justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#091d24",
   },
@@ -25,20 +36,26 @@ export default contactStyles = StyleSheet.create({
   },
   mediasContactContainer: {
     width: "100%",
-    height: "75%",
     backgroundColor: "#fea200",
     display: "flex",
-    justifyContent: "space-around",
+    paddingVertical: 18,
+    gap: 12,
     alignItems: "center",
     flexDirection: "column",
   },
   footerContainer: {
     width: "100%",
-    height: "15%",
     backgroundColor: "#fea200",
     display: "flex",
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 20,
+  },
+  contactSeparator: {
+    width: "100%",
+    height: 4,
+    backgroundColor: "#091d24",
   },
   btnWhatsApp: {
     width: "80%",
@@ -49,5 +66,26 @@ export default contactStyles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     flexDirection: "row",
+  },
+  contactStatusText: {
+    width: "88%",
+    color: "#091d24",
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: "center",
+  },
+  retryButton: {
+    minWidth: 150,
+    minHeight: 40,
+    paddingHorizontal: 18,
+    borderRadius: 7,
+    backgroundColor: "#25d366",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  retryButtonText: {
+    color: "#091d24",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

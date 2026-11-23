@@ -10,6 +10,7 @@ import {
   PushNewsModalData,
   processPendingPushNotification,
 } from "../services/pushNotificationNavigation";
+import { iniciarContactosStore } from "../services/contactosStore";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,6 +49,10 @@ export default function RootLayout() {
       await SplashScreen.hideAsync();
     };
     hideSplash();
+  }, []);
+
+  useEffect(() => {
+    iniciarContactosStore();
   }, []);
 
   useEffect(() => {
