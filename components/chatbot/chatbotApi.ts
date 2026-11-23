@@ -2,7 +2,8 @@ export type BackendDominio =
   | "licencias"
   | "estatuto"
   | "general"
-  | "coberturas";
+  | "coberturas"
+  | "servicios";
 
 export type BackendArticuloLicencia = {
   capitulo?: string;
@@ -13,6 +14,12 @@ export type BackendArticuloLicencia = {
   resumen?: string | null;
   fuente?: string;
   [key: string]: any;
+};
+
+export type BackendServiceContact = {
+  area?: string;
+  whatsapp?: string;
+  url?: string;
 };
 
 export type BackendBusquedaItem = {
@@ -33,6 +40,8 @@ export type BackendRespuestaLicencias = {
   referencias?: string[];
   busqueda?: BackendBusquedaItem[];
   conversationId?: string | null;
+  asesoramientoGremial?: BackendServiceContact;
+  status?: number;
   error?: string;
 };
 
@@ -45,6 +54,7 @@ export type ChatbotDetalleUi = {
   articulosSecundarios: BackendArticuloLicencia[];
   fuentes: string[];
   busqueda: BackendBusquedaItem[];
+  asesoramientoGremial?: BackendServiceContact;
 };
 
 const CHATBOT_BACKEND_BASE_URL =
@@ -62,6 +72,37 @@ function limpiarTexto(texto?: string | null): string {
   return (texto || "").replace(/\s+/g, " ").trim();
 }
 
+function limpiarRespuestaVisible(texto?: string | null): string {
+  const lineas = String(texto || "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((linea) => {
+      let limpia = linea
+        .replace(/^\s*#{1,6}\s*/, "")
+        .replace(/#/g, "")
+        .replace(/^\s*[*]\s+/, "• ")
+        .replace(/\*\*/g, "")
+        .replace(/\*/g, "")
+        .trim();
+
+      if (/^respuesta breve[:：]?$/i.test(limpia)) {
+        return "";
+      }
+
+      return limpia;
+    });
+
+  return lineas
+    .filter(Boolean)
+    .join("\n")
+    .replace(/\bpuedes\s+(consultar|revisar|presentar|ver)\b/gi, "podés $1")
+    .replace(/\bdebes\s+(presentar|solicitar|consultar)\b/gi, "debés $1")
+    .replace(/\bpresenta\s+(el|la|los|las)\b/gi, "presentá $1")
+    .replace(/\bsolicita\s+(el|la|los|las)\b/gi, "solicitá $1")
+    .replace(/\baseg[uú]rate\s+de\b/gi, "asegurate de")
+    .trim();
+}
+
 function dedupeStrings(items: string[] = []): string[] {
   return [...new Set(items.map((i) => limpiarTexto(i)).filter(Boolean))];
 }
@@ -71,19 +112,64 @@ function normalizarArticuloKey(art: BackendArticuloLicencia): string {
   const titulo = limpiarTexto(art?.titulo_articulo);
   const texto = limpiarTexto(art?.texto).slice(0, 120);
 
+  if (!articulo && !titulo && !texto) return "";
+
   return `${articulo}::${titulo}::${texto}`;
+}
+
+function identidadEstructuralArticulo(art: BackendArticuloLicencia): string {
+  const fields = [
+    art.fuente,
+    art.referencia,
+    art.anexo,
+    art.capitulo,
+    art.titulo_capitulo,
+    art.seccion,
+    art.punto,
+    art.articulo,
+    art.titulo_articulo,
+  ].map((value) => limpiarTexto(String(value ?? "")).toLowerCase());
+
+  const fallback = limpiarTexto(art.texto || art.resumen).slice(0, 120);
+  return [...fields, fallback].join("|");
 }
 
 function dedupeArticulos(
   articulos: BackendArticuloLicencia[] = []
 ): BackendArticuloLicencia[] {
+  const normalizados = articulos.filter((art) => normalizarArticuloKey(art));
+  const individuales = new Set<string>();
+
+  for (const art of normalizados) {
+    const refs = String(art.articulo ?? "").match(/\d+/g) || [];
+    if (refs.length === 1 && art.texto) {
+      individuales.add(
+        `${identidadEstructuralArticulo(art).split("|").slice(0, 7).join("|")}|${refs[0]}`
+      );
+    }
+  }
+
   const seen = new Set<string>();
   const out: BackendArticuloLicencia[] = [];
 
-  for (const art of articulos) {
-    const key = normalizarArticuloKey(art);
+  for (const art of normalizados) {
+    const refs = String(art.articulo ?? "").match(/\d+/g) || [];
+    const isComposite = refs.length > 1;
+    const contextKey = identidadEstructuralArticulo(art)
+      .split("|")
+      .slice(0, 7)
+      .join("|");
+    const compositeCovered =
+      isComposite &&
+      refs.every((ref) => individuales.has(`${contextKey}|${ref}`));
 
-    if (!key || seen.has(key)) continue;
+    if (compositeCovered) continue;
+
+    const key =
+      refs.length === 1
+        ? `${contextKey}|${refs[0]}|${limpiarTexto(art.titulo_articulo)}`
+        : identidadEstructuralArticulo(art) || normalizarArticuloKey(art);
+    if (seen.has(key)) continue;
 
     seen.add(key);
     out.push(art);
@@ -92,12 +178,96 @@ function dedupeArticulos(
   return out;
 }
 
+function extraerArticulosCitados(texto?: string | null): Set<string> {
+  const normalizado = String(texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/°/g, " ");
+  const citados = new Set<string>();
+  const patron = /\b(?:articulos?|arts?)\s+([0-9]+(?:\s*(?:y|e|,)\s*[0-9]+)*)/g;
+
+  for (const match of normalizado.matchAll(patron)) {
+    for (const numero of String(match[1] || "").match(/\d+/g) || []) {
+      citados.add(numero);
+    }
+  }
+
+  return citados;
+}
+
+function fusionarArticulos(
+  articulos: BackendArticuloLicencia[]
+): BackendArticuloLicencia[] {
+  const grupos = new Map<string, BackendArticuloLicencia>();
+
+  for (const articulo of articulos) {
+    const refs = String(articulo.articulo ?? "").match(/\d+/g) || [];
+    const contexto = [
+      articulo.fuente,
+      articulo.referencia,
+      articulo.anexo,
+      articulo.capitulo,
+      articulo.titulo_capitulo,
+      articulo.seccion,
+      articulo.punto,
+      refs.join(","),
+    ]
+      .map((value) => limpiarTexto(String(value ?? "")).toLowerCase())
+      .join("|");
+    const actual = grupos.get(contexto);
+
+    if (!actual) {
+      grupos.set(contexto, articulo);
+      continue;
+    }
+
+    const textoActual = limpiarTexto(actual.texto || actual.resumen);
+    const textoNuevo = limpiarTexto(articulo.texto || articulo.resumen);
+    const base = textoNuevo.length > textoActual.length ? articulo : actual;
+    const complemento = base === articulo ? actual : articulo;
+
+    grupos.set(contexto, {
+      ...complemento,
+      ...base,
+      articulo: base.articulo || complemento.articulo,
+      titulo_articulo:
+        base.titulo_articulo || complemento.titulo_articulo,
+      texto: textoNuevo.length > textoActual.length
+        ? articulo.texto || articulo.resumen
+        : actual.texto || actual.resumen,
+      resumen: base.resumen || complemento.resumen,
+      otorgante: base.otorgante || complemento.otorgante,
+      interviniente: base.interviniente || complemento.interviniente,
+    });
+  }
+
+  return Array.from(grupos.values());
+}
+
+function articulosUsadosEnRespuesta(
+  respuesta: string,
+  articulos: BackendArticuloLicencia[]
+): BackendArticuloLicencia[] {
+  const citados = extraerArticulosCitados(respuesta);
+  if (!citados.size) return [];
+
+  return articulos.filter((articulo) => {
+    const refs = String(articulo.articulo ?? "").match(/\d+/g) || [];
+    if (!refs.length) return false;
+    return refs.length === 1
+      ? citados.has(refs[0])
+      : refs.every((ref) => citados.has(ref));
+  });
+}
+
 function normalizarDominio(dominio?: string): BackendDominio {
   if (
     dominio === "licencias" ||
     dominio === "estatuto" ||
     dominio === "general" ||
-    dominio === "coberturas"
+    dominio === "coberturas" ||
+    dominio === "servicios"
   ) {
     return dominio;
   }
@@ -147,6 +317,7 @@ function respuestaErrorBackend(params: {
     referencias: Array.isArray(params.referencias) ? params.referencias : [],
     busqueda: Array.isArray(params.busqueda) ? params.busqueda : [],
     conversationId: null,
+    status: params.status,
     error:
       params.error ||
       (params.status ? `Error HTTP ${params.status}` : "Error desconocido"),
@@ -172,6 +343,15 @@ function normalizarRespuestaBackend(
     referencias: Array.isArray(data?.referencias) ? data.referencias : [],
     busqueda: Array.isArray(data?.busqueda) ? data.busqueda : [],
     conversationId: data?.conversationId || null,
+    asesoramientoGremial:
+      data?.asesoramientoGremial && typeof data.asesoramientoGremial === "object"
+        ? {
+            area: data.asesoramientoGremial.area,
+            whatsapp: data.asesoramientoGremial.whatsapp,
+            url: data.asesoramientoGremial.url,
+          }
+        : undefined,
+    status: typeof data?.status === "number" ? data.status : undefined,
     error: data?.error,
   };
 }
@@ -183,9 +363,8 @@ export async function consultarLicenciasEnBackend(
 ): Promise<BackendRespuestaLicencias> {
   const dominioSeguro = normalizarDominio(dominio);
   const preguntaLimpia = limpiarTexto(pregunta);
-
-  console.log("[Chatbot] Consultando backend IA Groq/RAG...");
-  console.log("[Chatbot] CHATBOT_API_URL:", CHATBOT_API_URL);
+  const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const startedAt = Date.now();
 
   if (!preguntaLimpia) {
     return respuestaErrorBackend({
@@ -210,9 +389,12 @@ export async function consultarLicenciasEnBackend(
     });
 
     const text = await resp.text();
-
-    console.log("[Chatbot] Status backend IA:", resp.status);
-    console.log("[Chatbot] Body backend IA:", text);
+    console.log("[Chatbot] respuesta", {
+      requestId,
+      status: resp.status,
+      dominio: dominioSeguro,
+      duracionMs: Date.now() - startedAt,
+    });
 
     let data: any = {};
 
@@ -223,13 +405,27 @@ export async function consultarLicenciasEnBackend(
     }
 
     if (!resp.ok) {
+      const esSolicitudInvalida = resp.status === 400;
+      const esRateLimit = resp.status === 429;
+      const esBackendNoDisponible = [500, 502, 503, 504].includes(resp.status);
+
       return respuestaErrorBackend({
         pregunta: preguntaLimpia,
         dominio: dominioSeguro,
-        respuesta:
-          data?.respuesta ||
-          "No pude consultar la IA en este momento. Voy a usar la búsqueda local.",
-        error: data?.error || `Error HTTP ${resp.status}`,
+        respuesta: esSolicitudInvalida
+          ? data?.respuesta || "Solicitud inválida."
+          : esRateLimit
+            ? "Hay muchas consultas en este momento. Esperá unos segundos e intentá nuevamente."
+            : esBackendNoDisponible
+                ? "No pude consultar el servicio en este momento."
+                : "No se pudo procesar la consulta.",
+        error: esSolicitudInvalida
+          ? "invalid_request"
+          : esRateLimit
+            ? "rate_limit"
+            : esBackendNoDisponible
+              ? "backend_unavailable"
+              : `http_${resp.status}`,
         articulos: Array.isArray(data?.articulos) ? data.articulos : [],
         referencias: Array.isArray(data?.referencias) ? data.referencias : [],
         busqueda: Array.isArray(data?.busqueda) ? data.busqueda : [],
@@ -239,21 +435,25 @@ export async function consultarLicenciasEnBackend(
 
     return normalizarRespuestaBackend(data, preguntaLimpia, dominioSeguro);
   } catch (error: any) {
-    console.log("[Chatbot] Error consultando backend IA:", error);
-
     const esTimeout =
       error?.name === "AbortError" ||
       String(error?.message || "").toLowerCase().includes("aborted");
+    const errorCode = esTimeout ? "timeout" : "network_error";
+
+    console.warn("[Chatbot] error", {
+      requestId,
+      dominio: dominioSeguro,
+      code: errorCode,
+      duracionMs: Date.now() - startedAt,
+    });
 
     return respuestaErrorBackend({
       pregunta: preguntaLimpia,
       dominio: dominioSeguro,
       respuesta: esTimeout
-        ? "La consulta demoró más de lo esperado. Voy a usar la búsqueda local."
-        : "No pude consultar la IA en este momento. Voy a usar la búsqueda local.",
-      error: esTimeout
-        ? "Tiempo de espera agotado"
-        : error?.message || "Error de red",
+        ? "La consulta demoró más de lo esperado."
+        : "No pude conectar con el servicio.",
+      error: errorCode,
     });
   }
 }
@@ -261,8 +461,11 @@ export async function consultarLicenciasEnBackend(
 export function construirDetalleDesdeBackend(
   r: BackendRespuestaLicencias
 ): ChatbotDetalleUi {
-  const articulos = dedupeArticulos(
+  const articulosRecuperados = dedupeArticulos(
     Array.isArray(r?.articulos) ? r.articulos : []
+  );
+  const articulos = fusionarArticulos(
+    articulosUsadosEnRespuesta(r?.respuesta, articulosRecuperados)
   );
 
   const fuentes = dedupeStrings(
@@ -272,11 +475,12 @@ export function construirDetalleDesdeBackend(
   const busqueda = Array.isArray(r?.busqueda) ? r.busqueda.slice(0, 5) : [];
 
   return {
-    mensajePrincipal: limpiarTexto(r?.respuesta),
+    mensajePrincipal: limpiarRespuestaVisible(r?.respuesta),
     articuloPrincipal: articulos.length > 0 ? articulos[0] : null,
-    articulosSecundarios: articulos.slice(1, 3),
+    articulosSecundarios: articulos.slice(1),
     fuentes,
     busqueda,
+    asesoramientoGremial: r?.asesoramientoGremial,
   };
 }
 

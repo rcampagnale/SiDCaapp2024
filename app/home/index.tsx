@@ -407,7 +407,7 @@ export default function HomePage() {
       />
       
 
-      {/* <ChatbotModal />*/}
+      <ChatbotModal />
     </View>
   );
 }

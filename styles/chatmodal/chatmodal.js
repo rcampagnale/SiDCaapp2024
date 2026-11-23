@@ -26,35 +26,87 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 22,
     paddingTop: 14,
     paddingHorizontal: 14,
-    paddingBottom: 10,
+    paddingBottom: 12,
     height: "92%",
   },
 
   chatHeaderRow: {
-    paddingVertical: 10,
+    paddingVertical: 6,
     borderBottomWidth: 1,
     borderColor: "rgba(0,0,0,0.06)",
-    marginBottom: 8,
+    marginBottom: 6,
+  },
+
+  headerContent: {
+    minHeight: 66,
+    flexDirection: "row",
     alignItems: "center",
+  },
+
+  headerAvatar: {
+    width: 60,
+    height: 60,
+    marginRight: 10,
+  },
+
+  headerTextBlock: {
+    flex: 1,
     justifyContent: "center",
   },
 
   header: {
     fontSize: 24,
     fontWeight: "800",
-    textAlign: "center",
+    textAlign: "left",
     color: "#111827",
   },
 
+  headerSubtitle: {
+    marginTop: 2,
+    fontSize: 14,
+    color: "#4b5563",
+    textAlign: "left",
+  },
+
+  headerCloseButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 4,
+  },
+
+  initialProgressTrack: {
+    height: 3,
+    width: "100%",
+    borderRadius: 999,
+    overflow: "hidden",
+    backgroundColor: "rgba(0,92,254,0.08)",
+    marginBottom: 6,
+  },
+
+  initialProgressIndicator: {
+    height: "100%",
+    width: "32%",
+    borderRadius: 999,
+    backgroundColor: "#005CFE",
+  },
+
+  messagesList: {
+    flex: 1,
+  },
+
   messagesContent: {
-    paddingBottom: 14,
+    paddingTop: 4,
+    paddingBottom: 10,
   },
 
   messageRow: {
     flexDirection: "column",
     alignItems: "flex-start",
-    marginVertical: 6,
-    paddingHorizontal: 6,
+    marginVertical: 5,
+    paddingHorizontal: 4,
   },
 
   userRow: {
@@ -65,13 +117,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     width: "100%",
   },
-
- avatar: {
-  width: 50,
-  height: 50,
-  borderRadius: 0,
-  marginBottom: 4,
-},
 
   messageBubble: {
     maxWidth: "92%",
@@ -88,17 +133,23 @@ const styles = StyleSheet.create({
   },
 
   botBubble: {
-    backgroundColor: "#F4F4F4",
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 6,
     alignSelf: "flex-start",
-    maxWidth: "92%",
+    maxWidth: "100%",
+    borderWidth: 1,
+    borderColor: "rgba(23,36,42,0.08)",
   },
 
   messageText: {
     fontSize: 16,
     color: "#2d2d2d",
     textAlign: "justify",
-    lineHeight: 26,
+    lineHeight: 23,
+  },
+
+  welcomeMessageText: {
+    textAlign: "left",
   },
 
   userText: {
@@ -123,8 +174,8 @@ const styles = StyleSheet.create({
   },
 
   footerBar: {
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: 6,
+    paddingBottom: 2,
     backgroundColor: "#F3C67A",
   },
 
@@ -137,9 +188,10 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: "#D4D4D4",
-    borderRadius: 18,
+    borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 10,
+    minHeight: 48,
     fontSize: 16,
     backgroundColor: "#F8F8F8",
     marginRight: 4,
@@ -147,9 +199,9 @@ const styles = StyleSheet.create({
   },
 
   audioActionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "#22C55E",
     alignItems: "center",
     justifyContent: "center",
@@ -279,20 +331,6 @@ const styles = StyleSheet.create({
     textAlign: "left",
     maxWidth: 220,
     paddingHorizontal: 4,
-  },
-
-  closeButton: {
-    marginTop: 12,
-    backgroundColor: "#1565F9",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-
-  closeText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "800",
   },
 
   selectorContainer: {

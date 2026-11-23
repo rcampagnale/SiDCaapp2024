@@ -1,7 +1,12 @@
 import Fuse, { Expression } from "fuse.js";
 
 export type OrigenNormativa = "licencia" | "estatuto";
-export type DominioBackend = "licencias" | "estatuto" | "general";
+export type DominioBackend =
+  | "licencias"
+  | "estatuto"
+  | "general"
+  | "coberturas"
+  | "servicios";
 
 export type RegistroNormativa = {
   origen?: OrigenNormativa;
@@ -162,8 +167,6 @@ const KEYWORDS_LICENCIAS = [
   "religiosas",
   "comision de servicio",
   "comision de servicios",
-  "servicio",
-  "servicios",
   "actividad educativa",
   "actividad cientifica",
   "actividad cultural",
@@ -216,6 +219,48 @@ const KEYWORDS_ESTATUTO = [
   "carrera docente",
   "titularidad",
   "titularizacion",
+];
+
+const KEYWORDS_COBERTURAS = [
+  "cobertura",
+  "coberturas",
+  "asamblea publica",
+  "asamblea pública",
+  "cabecera cero",
+  "cabecera 0",
+  "lom",
+  "fua",
+  "vacante",
+  "vacantes",
+  "horas catedra",
+  "horas cátedra",
+  "cargo desierto",
+  "cargos desiertos",
+  "interinato",
+  "interinatos",
+  "suplencia",
+  "suplencias",
+  "declaracion jurada de cargos",
+  "declaración jurada de cargos",
+];
+
+const KEYWORDS_SERVICIOS = [
+  "turismo",
+  "viaje",
+  "viajes",
+  "casa del docente",
+  "convenio",
+  "convenios",
+  "oficina de gestion",
+  "oficina de gestión",
+  "asesoramiento gremial",
+  "asesoria gremial",
+  "asesoría gremial",
+  "certificado de curso",
+  "certificado de capacitacion",
+  "certificado de capacitación",
+  "soporte tecnico",
+  "soporte técnico",
 ];
 
 const TITULOS_GENERICOS_NO_CONFIABLES = [
@@ -323,6 +368,14 @@ export const detectarDominioBackend = (
     q.includes("citaciones")
   ) {
     return "licencias";
+  }
+
+  if (KEYWORDS_SERVICIOS.some((k) => q.includes(k))) {
+    return "servicios";
+  }
+
+  if (KEYWORDS_COBERTURAS.some((k) => q.includes(k))) {
+    return "coberturas";
   }
 
   if (KEYWORDS_LICENCIAS.some((k) => q.includes(k))) {

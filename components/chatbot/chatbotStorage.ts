@@ -8,6 +8,49 @@ import {
 } from "firebase/storage";
 
 const storage = getStorage(firebaseconn);
+const FOLDER_CONCURRENCY = 4;
+
+type FolderCacheEntry = {
+  status: "loading" | "success" | "error";
+  data: any[];
+  archivos: number;
+  promise?: Promise<any[]>;
+};
+
+const folderCache = new Map<string, FolderCacheEntry>();
+
+function fuenteLabel(url: string): string {
+  const raw = url.startsWith("gs://") ? storagePathFromGs(url) || "" : url;
+  const withoutQuery = raw.split("?")[0];
+  const parts = withoutQuery.split("/").filter(Boolean);
+  return parts.slice(-2).join("/") || "chatbot-folder";
+}
+
+async function mapConcurrenciaLimitada<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  const runWorker = async () => {
+    while (true) {
+      const index = nextIndex++;
+      if (index >= items.length) return;
+      results[index] = await worker(items[index], index);
+    }
+  };
+
+  await Promise.all(
+    Array.from(
+      { length: Math.min(Math.max(concurrency, 1), items.length || 1) },
+      () => runWorker(),
+    ),
+  );
+
+  return results;
+}
 
 /**
  * Convierte una URL gs://... a path interno de Storage
@@ -26,8 +69,6 @@ export const storagePathFromGs = (gsUrl: string): string | null => {
  * Devuelve siempre `any[]` (array), para simplificar el consumo.
  */
 export const loadJsonFromStorageUrl = async (url: string): Promise<any[]> => {
-  console.log("[ChatbotStorage] loadJsonFromStorageUrl -> url:", url);
-
   let downloadUrl = url;
 
   // Si viene como gs://... armamos la URL pública con getDownloadURL
@@ -39,29 +80,22 @@ export const loadJsonFromStorageUrl = async (url: string): Promise<any[]> => {
   }
 
   const resp = await fetch(downloadUrl);
+  if (!resp.ok) {
+    throw new Error("Storage request failed");
+  }
   const text = await resp.text();
-
-  console.log(
-    "[ChatbotStorage] Primeros 200 chars del archivo:",
-    text.slice(0, 200)
-  );
 
   try {
     const json = JSON.parse(text);
     if (Array.isArray(json)) {
-      console.log(
-        "[ChatbotStorage] JSON.parse OK, tipo: array len:",
-        json.length
-      );
       return json;
     } else {
-      console.log("[ChatbotStorage] JSON.parse OK, tipo: object len: n/a");
       // Normalizamos a array para que el resto del código pueda hacer `.map`
       return [json];
     }
-  } catch (e) {
-    console.error("❌ Error haciendo JSON.parse del archivo de chatbot:", e);
-    throw e;
+  } catch (error) {
+    console.error("[ChatbotStorage] json_parse_error", { code: "invalid_json" });
+    throw error;
   }
 };
 
@@ -75,29 +109,88 @@ export const loadJsonFromStorageUrl = async (url: string): Promise<any[]> => {
 export const loadJsonFolderFromStorageUrl = async (
   url: string
 ): Promise<any[]> => {
-  console.log("[ChatbotStorage] loadJsonFolderFromStorageUrl -> url:", url);
+  const cacheKey = url.startsWith("gs://")
+    ? storagePathFromGs(url) || url
+    : url.split("?")[0];
+  const label = fuenteLabel(url);
+  const cached = folderCache.get(cacheKey);
+
+  if (cached?.status === "success") {
+    console.log("[ChatbotStorage] folder_cache_hit", {
+      fuente: label,
+      archivos: cached.archivos,
+      registros: cached.data.length,
+    });
+    return cached.data;
+  }
+
+  if (cached?.status === "loading" && cached.promise) {
+    console.log("[ChatbotStorage] folder_cache_hit", {
+      fuente: label,
+      estado: "loading",
+    });
+    return cached.promise;
+  }
+
+  const promise = cargarCarpeta(url, label, cacheKey).catch((error) => {
+    folderCache.set(cacheKey, {
+      status: "error",
+      data: [],
+      archivos: 0,
+    });
+    console.error("[ChatbotStorage] folder_load_error", {
+      fuente: label,
+      code: "folder_unavailable",
+    });
+    throw error;
+  });
+  folderCache.set(cacheKey, {
+    status: "loading",
+    data: [],
+    archivos: 0,
+    promise,
+  });
+
+  return promise;
+};
+
+async function cargarCarpeta(
+  url: string,
+  label: string,
+  cacheKey: string,
+): Promise<any[]> {
+  const startedAt = Date.now();
+  console.log("[ChatbotStorage] folder_load_start", { fuente: label });
 
   let folderRef;
 
   if (url.startsWith("gs://")) {
     const path = storagePathFromGs(url);
     if (!path) throw new Error("Path de Storage inválido (gs:// sin path)");
-    console.log("[ChatbotStorage] (folder) gs:// path resuelto:", path);
     folderRef = ref(storage, path);
   } else {
     // Ruta relativa directa dentro del bucket
-    console.log("[ChatbotStorage] (folder) ruta relativa:", url);
     folderRef = ref(storage, url);
   }
 
   const listResult = await listAll(folderRef);
-  console.log(
-    "[ChatbotStorage] listAll OK. Archivos encontrados:",
-    listResult.items.length
-  );
+  console.log("[ChatbotStorage] folder_list", {
+    fuente: label,
+    archivos: listResult.items.length,
+  });
 
   if (!listResult.items.length) {
-    console.warn("⚠️ La carpeta no tiene archivos JSON.");
+    folderCache.set(cacheKey, {
+      status: "success",
+      data: [],
+      archivos: 0,
+    });
+    console.log("[ChatbotStorage] folder_loaded", {
+      fuente: label,
+      archivos: 0,
+      registros: 0,
+      duracionMs: Date.now() - startedAt,
+    });
     return [];
   }
 
@@ -106,37 +199,49 @@ export const loadJsonFolderFromStorageUrl = async (
     a.name.localeCompare(b.name, "es", { numeric: true })
   );
 
-  const acumulado: any[] = [];
-  let totalRegs = 0;
-
-  for (const itemRef of itemsOrdenados) {
-    try {
-      console.log(
-        "[ChatbotStorage] Leyendo archivo de carpeta:",
-        itemRef.fullPath
-      );
-      const fileUrl = await getDownloadURL(itemRef);
-      console.log("[ChatbotStorage] fileUrl:", fileUrl);
-
-      const contenido = await loadJsonFromStorageUrl(fileUrl);
-
-      if (Array.isArray(contenido)) {
-        acumulado.push(...contenido);
-        totalRegs += contenido.length;
-      } else if (contenido) {
-        // Por si acaso, si loadJsonFromStorageUrl cambiara su contrato
-        acumulado.push(contenido);
-        totalRegs += 1;
+  let archivosFallidos = 0;
+  const resultados = await mapConcurrenciaLimitada(
+    itemsOrdenados,
+    FOLDER_CONCURRENCY,
+    async (itemRef) => {
+      try {
+        const fileUrl = await getDownloadURL(itemRef);
+        return await loadJsonFromStorageUrl(fileUrl);
+      } catch {
+        archivosFallidos += 1;
+        console.error("[ChatbotStorage] file_read_error", {
+          fuente: label,
+          code: "storage_file_unavailable",
+        });
+        return [];
       }
-    } catch (e) {
-      console.error("❌ Error leyendo JSON de", itemRef.fullPath, e);
-    }
-  }
-
-  console.log(
-    "[ChatbotStorage] Total registros acumulados en carpeta:",
-    totalRegs
+    },
   );
 
+  const acumulado = resultados.flatMap((contenido) =>
+    Array.isArray(contenido) ? contenido : contenido ? [contenido] : [],
+  );
+  const totalRegs = acumulado.length;
+
+  if (archivosFallidos === itemsOrdenados.length) {
+    throw new Error("No se pudo cargar la carpeta del chatbot");
+  }
+
+  folderCache.set(
+    cacheKey,
+    {
+      status: "success",
+      data: acumulado,
+      archivos: itemsOrdenados.length,
+    },
+  );
+
+  console.log("[ChatbotStorage] folder_loaded", {
+    fuente: label,
+    archivos: listResult.items.length,
+    registros: totalRegs,
+    duracionMs: Date.now() - startedAt,
+  });
+
   return acumulado;
-};
+}

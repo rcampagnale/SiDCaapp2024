@@ -19,7 +19,6 @@ import {
   Keyboard,
   Animated,
   Easing,
-  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
@@ -52,6 +51,7 @@ import {
 } from "../../components/chatbot/chatbotApi";
 
 import ChatbotBackendResponseCard from "../../components/chatbot/ChatbotBackendResponseCard";
+import { normalizarNombrePersona } from "../../src/utils/personName";
 
 type Mensaje = {
   id: string;
@@ -66,9 +66,8 @@ type Mensaje = {
 
 const db = getFirestore(firebaseconn);
 
-const MIN_AUDIO_DURATION_MS = 350;
 const SPEECH_LANGUAGES = ["es-AR", "es-ES", "es-MX", "es-US"];
-const SPEECH_TRANSCRIPT_WAIT_MS = 1800;
+const SPEECH_AUTO_SEND_STABILITY_MS = 650;
 
 const BOT_SIZE = 110;
 const BOT_RIGHT = 2;
@@ -79,6 +78,8 @@ const quitarMarkdownBasico = (texto: string) => {
     .replace(/\*\*(.*?)\*\*/g, "$1")
     .replace(/\*(.*?)\*/g, "$1")
     .replace(/`(.*?)`/g, "$1")
+    .replace(/^\s*#{1,6}\s*/gm, "")
+    .replace(/^\s*Respuesta breve\s*:?[ \t]*$/gim, "")
     .replace(/\s+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
@@ -110,6 +111,31 @@ const construirRespuestaLocalFinal = (textoBase: string, dominio: string) => {
   return salida.trim();
 };
 
+const unirTranscripcion = (actual: string, nueva: string): string => {
+  const base = String(actual || "").trim();
+  const incoming = String(nueva || "").trim();
+
+  if (!base) return incoming;
+  if (!incoming) return base;
+  if (incoming === base || incoming.startsWith(base)) return incoming;
+  if (base.startsWith(incoming)) return base;
+
+  const baseWords = base.split(/\s+/);
+  const incomingWords = incoming.split(/\s+/);
+  const maxOverlap = Math.min(baseWords.length, incomingWords.length, 10);
+
+  for (let overlap = maxOverlap; overlap > 0; overlap -= 1) {
+    const baseSuffix = baseWords.slice(-overlap).join(" ").toLowerCase();
+    const incomingPrefix = incomingWords.slice(0, overlap).join(" ").toLowerCase();
+
+    if (baseSuffix === incomingPrefix) {
+      return `${base} ${incomingWords.slice(overlap).join(" ")}`.trim();
+    }
+  }
+
+  return `${base} ${incoming}`.trim();
+};
+
 const esErrorDeCuota = (texto: string) => {
   const t = String(texto || "").toLowerCase();
 
@@ -125,10 +151,23 @@ const esErrorDeCuota = (texto: string) => {
 export default function ChatbotModal() {
   const { userData } = useContext(SidcaContext) as any;
 
-  const fullName =
-    userData?.apellido && userData?.nombre
-      ? `${userData.apellido}, ${userData.nombre}`
-      : userData?.nombre || "docente";
+  const identidadUsuario = normalizarNombrePersona(userData);
+  const nombreFuente = String(
+    userData?.nombre || identidadUsuario.nombre || "",
+  ).trim();
+  const nombreCompletoFuente = String(
+    userData?.nombreCompleto || identidadUsuario.nombreCompleto || "",
+  ).trim();
+  const nombreDesdeCompleto = nombreCompletoFuente.includes(",")
+    ? nombreCompletoFuente.split(",").slice(1).join(",").trim()
+    : nombreCompletoFuente;
+  const primerNombre = (nombreFuente || nombreDesdeCompleto)
+    .split(/\s+/)[0]
+    ?.trim() || "";
+  const nombreVisible =
+    primerNombre && !/^(usuario|prueba|afiliado\/a)$/i.test(primerNombre)
+      ? primerNombre
+      : "";
 
   const [visible, setVisible] = useState(false);
   const [messages, setMessages] = useState<Mensaje[]>([]);
@@ -144,14 +183,26 @@ export default function ChatbotModal() {
   const [speechListening, setSpeechListening] = useState(false);
   const [speechDuration, setSpeechDuration] = useState(0);
   const [speechWorking, setSpeechWorking] = useState(false);
+  const [speechPreview, setSpeechPreview] = useState("");
 
   const transcriptRef = useRef("");
+  const finalTranscriptRef = useRef("");
+  const interimTranscriptRef = useRef("");
+  const speechSegmentCountRef = useRef(0);
   const audioUriRef = useRef<string | null>(null);
   const speechStartedAtRef = useRef<number | null>(null);
-  const micPressingRef = useRef(false);
-  const stopInProgressRef = useRef(false);
+  const speechSessionActiveRef = useRef(false);
+  const speechUiStateRef = useRef<
+    "idle" | "listening" | "processing" | "sending"
+  >("idle");
+  const speechInputCommittedRef = useRef(false);
+  const committedSpeechTextRef = useRef("");
+  const hasAutoSentRef = useRef(false);
+  const autoSendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleSendMessageRef = useRef<((text: string) => Promise<void>) | null>(
+    null,
+  );
   const speechLanguageIndexRef = useRef(0);
-  const speechErrorRef = useRef<string | null>(null);
 
   const soundRef = useRef<Audio.Sound | null>(null);
   const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
@@ -161,22 +212,59 @@ export default function ChatbotModal() {
 
   const cargaContenidoRef = useRef<Promise<void> | null>(null);
   const contenidoUnificadoRef = useRef<RegistroNormativa[]>([]);
+  const contenidoFuentesCargadasRef = useRef(false);
+  const estatutoUrlRef = useRef<string | null>(null);
+  const licenciaUrlRef = useRef<string | null>(null);
+  const cargaInicialAnimacion = useRef(new Animated.Value(0)).current;
 
-  const botRuta = useRef(new Animated.Value(0)).current;
-
-  const screenWidth = Dimensions.get("window").width;
-  const screenHeight = Dimensions.get("window").height;
-
-  const recorridoX = -(screenWidth - BOT_SIZE - BOT_RIGHT - 12);
-  const recorridoY = -(screenHeight - BOT_SIZE - BOT_BOTTOM - 115);
+  const cargaInicialTranslateX = cargaInicialAnimacion.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-120, 300],
+  });
 
   useEffect(() => {
     contenidoUnificadoRef.current = contenidoUnificado;
   }, [contenidoUnificado]);
 
+  useEffect(() => {
+    if (!cargandoBase) {
+      cargaInicialAnimacion.stopAnimation();
+      cargaInicialAnimacion.setValue(0);
+      return;
+    }
+
+    const animation = Animated.loop(
+      Animated.timing(cargaInicialAnimacion, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+
+    animation.start();
+
+    return () => animation.stop();
+  }, [cargandoBase, cargaInicialAnimacion]);
+
   const cargarContenidoLocal = useCallback(
     async (mostrarLoader: boolean = false) => {
-      if (contenidoUnificadoRef.current.length > 0) return;
+      if (contenidoFuentesCargadasRef.current) {
+        if (!mostrarLoader || !estatutoUrlRef.current || !licenciaUrlRef.current) {
+          return;
+        }
+
+        setCargandoBase(true);
+        try {
+          await Promise.all([
+            loadJsonFolderFromStorageUrl(estatutoUrlRef.current),
+            loadJsonFolderFromStorageUrl(licenciaUrlRef.current),
+          ]);
+        } finally {
+          setCargandoBase(false);
+        }
+        return;
+      }
 
       if (mostrarLoader) {
         setCargandoBase(true);
@@ -203,10 +291,36 @@ export default function ChatbotModal() {
             return;
           }
 
-          const [estatutoJsonRaw, licenciaJsonRaw] = await Promise.all([
+          estatutoUrlRef.current = estatutoUrl;
+          licenciaUrlRef.current = licenciaUrl;
+
+          const [estatutoResult, licenciaResult] = await Promise.allSettled([
             loadJsonFolderFromStorageUrl(estatutoUrl),
             loadJsonFolderFromStorageUrl(licenciaUrl),
           ]);
+
+          contenidoFuentesCargadasRef.current =
+            estatutoResult.status === "fulfilled" &&
+            licenciaResult.status === "fulfilled";
+
+          if (estatutoResult.status === "rejected") {
+            console.error("[Chatbot] local_source_error", {
+              fuente: "estatuto",
+              code: "source_unavailable",
+            });
+          }
+
+          if (licenciaResult.status === "rejected") {
+            console.error("[Chatbot] local_source_error", {
+              fuente: "licencias",
+              code: "source_unavailable",
+            });
+          }
+
+          const estatutoJsonRaw =
+            estatutoResult.status === "fulfilled" ? estatutoResult.value : [];
+          const licenciaJsonRaw =
+            licenciaResult.status === "fulfilled" ? licenciaResult.value : [];
 
           const estatutoJson = (estatutoJsonRaw || []).map((item: any) => ({
             ...item,
@@ -228,12 +342,11 @@ export default function ChatbotModal() {
       try {
         await cargaContenidoRef.current;
       } catch (error) {
-        console.error("❌ Error al cargar contenido desde Firebase:", error);
-        cargaContenidoRef.current = null;
+        console.error("[Chatbot] local_content_error", {
+          code: "local_content_unavailable",
+        });
       } finally {
-        if (contenidoUnificadoRef.current.length <= 0) {
-          cargaContenidoRef.current = null;
-        }
+        cargaContenidoRef.current = null;
 
         if (mostrarLoader) {
           setCargandoBase(false);
@@ -243,105 +356,182 @@ export default function ChatbotModal() {
     [],
   );
 
-  useEffect(() => {
-    cargarContenidoLocal(false);
-
-    botRuta.setValue(0);
-
-    const animacionBot = Animated.sequence([
-      Animated.delay(700),
-      Animated.timing(botRuta, {
-        toValue: 1,
-        duration: 4550,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    ]);
-
-    animacionBot.start();
-
-    return () => {
-      animacionBot.stop();
-      botRuta.stopAnimation();
-    };
-  }, [cargarContenidoLocal, botRuta, recorridoX, recorridoY]);
-
-  const botMovimientoStyle = {
-    transform: [
-      {
-        translateX: botRuta.interpolate({
-          inputRange: [0, 0.13, 0.31, 0.5, 0.66, 0.82, 1],
-          outputRange: [
-            0,
-            -40,
-            recorridoX / 2,
-            recorridoX,
-            recorridoX / 1.4,
-            -80,
-            0,
-          ],
-        }),
-      },
-      {
-        translateY: botRuta.interpolate({
-          inputRange: [0, 0.13, 0.31, 0.5, 0.66, 0.82, 1],
-          outputRange: [
-            0,
-            -140,
-            recorridoY / 2,
-            recorridoY / 1.3,
-            -120,
-            -180,
-            0,
-          ],
-        }),
-      },
-      {
-        scale: botRuta.interpolate({
-          inputRange: [0, 0.25, 0.5, 0.75, 1],
-          outputRange: [1, 1.05, 1.02, 1.05, 1],
-        }),
-      },
-    ],
-  };
-
   const welcomeMessage: Mensaje = {
     id: "bienvenida",
-    texto: `Hola ${fullName} 👋
-Soy el Asistente Virtual de SiDCa.
-Podés preguntarme sobre el Estatuto Docente Provincial, el Régimen de Licencias y Coberturas.
+    texto: `${nombreVisible ? `Hola, ${nombreVisible} 👋` : "Hola 👋"}
 
-Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
+Soy el Asistente SIDCA. Podés consultarme sobre licencias, estatuto docente, coberturas y servicios del sindicato.
+
+Escribí tu consulta o usá el micrófono 🎙️`,
     tipo: "bot",
     backendData: null,
   };
+
+  useEffect(() => {
+    if (!visible || messages.length !== 1 || messages[0]?.id !== "bienvenida") {
+      return;
+    }
+
+    setMessages((current) => {
+      if (current.length !== 1 || current[0]?.id !== "bienvenida") {
+        return current;
+      }
+
+      return [welcomeMessage];
+    });
+  }, [visible, messages.length, nombreVisible]);
 
   const isCurrentRequest = useCallback((requestId: number) => {
     return modalOpenRef.current && activeRequestRef.current === requestId;
   }, []);
 
+  const logSpeechState = (
+    from: "idle" | "listening" | "processing" | "sending",
+    to: "idle" | "listening" | "processing" | "sending",
+  ) => {
+    if (from === to) return;
+    console.log("[SpeechRecognition] state", { from, to });
+  };
+
+  const markSpeechIdle = () => {
+    const previous = speechUiStateRef.current;
+    speechUiStateRef.current = "idle";
+    logSpeechState(previous, "idle");
+    speechSessionActiveRef.current = false;
+    setSpeechListening(false);
+    setSpeechWorking(false);
+    setSpeechPreview("");
+  };
+
+  const clearAutoSendTimer = () => {
+    if (autoSendTimerRef.current) {
+      clearTimeout(autoSendTimerRef.current);
+      autoSendTimerRef.current = null;
+    }
+  };
+
+  const scheduleSpeechAutoSend = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || hasAutoSentRef.current) return;
+
+    clearAutoSendTimer();
+    autoSendTimerRef.current = setTimeout(async () => {
+      autoSendTimerRef.current = null;
+
+      if (hasAutoSentRef.current || !modalOpenRef.current) return;
+
+      hasAutoSentRef.current = true;
+      logSpeechState(speechUiStateRef.current, "sending");
+      speechUiStateRef.current = "sending";
+      console.log("[SpeechRecognition] auto_send", {
+        longitud: trimmed.length,
+        estado: "sending",
+      });
+
+      try {
+        await handleSendMessageRef.current?.(trimmed);
+      } finally {
+        markSpeechIdle();
+      }
+    }, SPEECH_AUTO_SEND_STABILITY_MS);
+  };
+
+  const commitTranscriptToInput = () => {
+    if (speechInputCommittedRef.current) return committedSpeechTextRef.current;
+
+    const transcript = (
+      finalTranscriptRef.current || transcriptRef.current
+    ).trim();
+
+    if (!transcript) {
+      speechInputCommittedRef.current = true;
+      committedSpeechTextRef.current = "";
+      return "";
+    }
+
+    const textoExistente = inputText.trim();
+    const transcripcionCompleta = unirTranscripcion(textoExistente, transcript);
+
+    setInputText(transcripcionCompleta);
+    speechInputCommittedRef.current = true;
+    committedSpeechTextRef.current = transcripcionCompleta;
+    console.log("[SpeechRecognition] transcript_ready", {
+      longitud: transcripcionCompleta.length,
+      segmentos: speechSegmentCountRef.current,
+      teniaTextoExistente: Boolean(textoExistente),
+    });
+    return transcripcionCompleta;
+  };
+
   useSpeechRecognitionEvent("start", () => {
+    const previous = speechUiStateRef.current;
+    speechUiStateRef.current = "listening";
+    logSpeechState(previous, "listening");
     setSpeechListening(true);
+    setSpeechWorking(false);
     setSpeechDuration(0);
     speechStartedAtRef.current = Date.now();
   });
 
   useSpeechRecognitionEvent("end", () => {
     setSpeechListening(false);
+    const textoFinal = commitTranscriptToInput();
+    markSpeechIdle();
+    console.log("[SpeechRecognition] end", {
+      segmentos: speechSegmentCountRef.current,
+      estado: "idle",
+    });
+
+    if (finalTranscriptRef.current.trim()) {
+      scheduleSpeechAutoSend(textoFinal);
+    } else if (!transcriptRef.current.trim()) {
+      console.log("[SpeechRecognition] no_audio", { estado: "idle" });
+    }
   });
 
   useSpeechRecognitionEvent("result", (event: any) => {
     const results = event?.results || [];
-
+    const result = results?.[0];
     const best =
-      results?.[0]?.transcript ||
-      results?.[0]?.alternatives?.[0]?.transcript ||
+      result?.transcript ||
+      result?.alternatives?.[0]?.transcript ||
       event?.transcript ||
       "";
+    const candidate = String(best).trim();
+    if (!candidate) return;
 
-    if (best && String(best).trim()) {
-      transcriptRef.current = String(best).trim();
+    const isFinal = Boolean(event?.isFinal || result?.isFinal);
+    const merged = isFinal
+      ? unirTranscripcion(
+          finalTranscriptRef.current || interimTranscriptRef.current,
+          candidate,
+        )
+      : finalTranscriptRef.current
+        ? unirTranscripcion(finalTranscriptRef.current, candidate)
+        : candidate;
+
+    speechSegmentCountRef.current += 1;
+    transcriptRef.current = merged;
+    if (isFinal) {
+      finalTranscriptRef.current = merged;
+      interimTranscriptRef.current = "";
+      if (speechUiStateRef.current === "listening") {
+        logSpeechState("listening", "processing");
+        speechUiStateRef.current = "processing";
+        setSpeechWorking(true);
+      }
+    } else {
+      interimTranscriptRef.current = candidate;
     }
+    setSpeechPreview(merged);
+
+    console.log(`[SpeechRecognition] ${isFinal ? "final" : "partial"}`, {
+      longitud: merged.length,
+      segmentos: speechSegmentCountRef.current,
+      resultados: results.length,
+      isFinal,
+      estado: speechUiStateRef.current,
+    });
   });
 
   useSpeechRecognitionEvent("audioend", (event: any) => {
@@ -353,10 +543,26 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
   useSpeechRecognitionEvent("error", (event: any) => {
     const error = String(event?.error || "");
     const message = String(event?.message || "");
+    const normalizedError = error.toLowerCase();
 
-    speechErrorRef.current = `${error} ${message}`.trim();
+    if (normalizedError === "aborted") {
+      clearAutoSendTimer();
+      markSpeechIdle();
+      console.log("[SpeechRecognition] cancelled", {
+        code: "aborted",
+        estado: "idle",
+      });
+      return;
+    }
 
-    console.log("[SpeechRecognition] error:", error, message);
+    clearAutoSendTimer();
+    markSpeechIdle();
+
+    console.warn("[SpeechRecognition] error", {
+      code: error || "recognition_error",
+      hasMessage: Boolean(message),
+      estado: "idle",
+    });
   });
 
   useEffect(() => {
@@ -381,8 +587,10 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
         await soundRef.current.unloadAsync();
         soundRef.current = null;
       }
-    } catch (e) {
-      console.warn("Error limpiando sonido", e);
+    } catch {
+      console.warn("[Chatbot] audio_cleanup_error", {
+        code: "audio_cleanup_failed",
+      });
     } finally {
       setPlayingMessageId(null);
     }
@@ -390,22 +598,37 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
   const resetSpeechState = () => {
     transcriptRef.current = "";
+    finalTranscriptRef.current = "";
+    interimTranscriptRef.current = "";
+    speechSegmentCountRef.current = 0;
     audioUriRef.current = null;
     speechStartedAtRef.current = null;
-    micPressingRef.current = false;
-    stopInProgressRef.current = false;
-    speechErrorRef.current = null;
+    speechSessionActiveRef.current = false;
+    speechUiStateRef.current = "idle";
+    speechInputCommittedRef.current = false;
+    committedSpeechTextRef.current = "";
+    hasAutoSentRef.current = false;
 
     setSpeechListening(false);
     setSpeechDuration(0);
     setSpeechWorking(false);
+    setSpeechPreview("");
   };
 
   const abortSpeech = () => {
+    const hadActiveSession =
+      speechSessionActiveRef.current || speechListening || speechWorking;
+    clearAutoSendTimer();
     try {
       ExpoSpeechRecognitionModule.abort();
     } catch {}
     resetSpeechState();
+    if (hadActiveSession) {
+      console.log("[SpeechRecognition] cancelled", {
+        code: "user",
+        estado: "idle",
+      });
+    }
   };
 
   const closeChatbot = async () => {
@@ -446,17 +669,14 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     };
   }, []);
 
-  useEffect(() => {
-    if (!visible) return;
-    if (contenidoUnificado.length > 0) return;
-
-    cargarContenidoLocal(true);
-  }, [visible, contenidoUnificado.length, cargarContenidoLocal]);
-
   const resolverLocal = (
     trimmed: string,
     dominioBackend: string,
   ): Mensaje | null => {
+    if (dominioBackend !== "licencias" && dominioBackend !== "estatuto") {
+      return null;
+    }
+
     const baseLocal =
       contenidoUnificadoRef.current.length > 0
         ? contenidoUnificadoRef.current
@@ -505,13 +725,28 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     return null;
   };
 
+  const esFalloTecnicoRecuperable = (
+    respuesta: BackendRespuestaLicencias,
+  ): boolean => {
+    const status = Number(respuesta?.status || 0);
+    const error = String(respuesta?.error || "");
+
+    return (
+      error === "timeout" ||
+      error === "network_error" ||
+      error === "backend_unavailable" ||
+      error === "workflow_error" ||
+      error === "provider_rate_limit" ||
+      [500, 502, 503, 504].includes(status)
+    );
+  };
+
   const procesarConsulta = async (trimmed: string) => {
     const requestId = ++activeRequestRef.current;
     const dominioBackend = detectarDominioBackend(trimmed);
 
     setLoading(true);
-    await cargarContenidoLocal(false);
-    await new Promise((resolve) => setTimeout(resolve, 160));
+    void cargarContenidoLocal(false);
 
     if (!isCurrentRequest(requestId)) return;
 
@@ -520,6 +755,27 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
         trimmed,
         dominioBackend,
       );
+      const backendStatus = Number(respBackend?.status || 0);
+      const backendErrorCode = String(respBackend?.error || "");
+
+      if (backendStatus === 429 || backendErrorCode === "rate_limit") {
+        if (!isCurrentRequest(requestId)) return;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `rate-limit-${Date.now()}`,
+            texto:
+              "Hay muchas consultas en este momento. Esperá unos segundos e intentá nuevamente.",
+            tipo: "bot",
+            backendData: null,
+          },
+        ]);
+        setLoading(false);
+        Keyboard.dismiss();
+        return;
+      }
+
       const mensajeBot = construirMensajeDesdeBackend(respBackend);
 
       if (!isCurrentRequest(requestId)) return;
@@ -542,8 +798,11 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
       const backendError = String(respBackend?.error || "");
       const backendSinCuota = esErrorDeCuota(backendError);
+      const backendFalloRecuperable =
+        backendSinCuota || esFalloTecnicoRecuperable(respBackend);
 
-      if (backendSinCuota) {
+      if (backendFalloRecuperable) {
+        await cargarContenidoLocal(false);
         const localMsg = resolverLocal(trimmed, dominioBackend);
 
         if (!isCurrentRequest(requestId)) return;
@@ -558,11 +817,17 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
       if (!isCurrentRequest(requestId)) return;
 
+      const esErrorFuncional =
+        backendError === "invalid_request" ||
+        backendError === "question_too_long";
+
       setMessages((prev) => [
         ...prev,
         {
           id: `sin-respuesta-${Date.now()}`,
-          texto: "Servicio no disponible por el momento.",
+          texto: esErrorFuncional
+            ? respBackend.respuesta
+            : "Servicio no disponible por el momento.",
           tipo: "bot",
           backendData: null,
         },
@@ -576,6 +841,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
       const backendSinCuota = esErrorDeCuota(error?.message || "");
 
       if (backendSinCuota) {
+        await cargarContenidoLocal(false);
         const localMsg = resolverLocal(trimmed, dominioBackend);
 
         if (localMsg) {
@@ -605,6 +871,8 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     const trimmed = text.trim();
     if (!trimmed) return;
 
+    clearAutoSendTimer();
+
     setMessages((prev) => [
       ...prev,
       {
@@ -619,6 +887,8 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     await procesarConsulta(trimmed);
   };
 
+  handleSendMessageRef.current = handleSendMessage;
+
   const formatMillisToTime = (millis: number) => {
     const totalSeconds = Math.floor(millis / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -629,33 +899,19 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
       .padStart(2, "0")}`;
   };
 
-  const waitForTranscript = async (maxWaitMs = SPEECH_TRANSCRIPT_WAIT_MS) => {
-    const startedAt = Date.now();
-
-    while (Date.now() - startedAt < maxWaitMs) {
-      const transcript = transcriptRef.current.trim();
-
-      if (transcript.length > 0) {
-        return transcript;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 150));
-    }
-
-    return transcriptRef.current.trim();
-  };
-
   const startSpeechRecognition = async () => {
     try {
       if (
+        speechSessionActiveRef.current ||
         speechListening ||
         speechWorking ||
         loading ||
-        cargandoBase ||
-        inputText.trim().length > 0
+        cargandoBase
       ) {
         return;
       }
+
+      speechSessionActiveRef.current = true;
 
       const available = ExpoSpeechRecognitionModule.isRecognitionAvailable();
 
@@ -670,6 +926,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
             backendData: null,
           },
         ]);
+        resetSpeechState();
         return;
       }
 
@@ -687,23 +944,39 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
             backendData: null,
           },
         ]);
+        resetSpeechState();
+        return;
+      }
+
+      if (!speechSessionActiveRef.current) {
+        resetSpeechState();
         return;
       }
 
       transcriptRef.current = "";
+      finalTranscriptRef.current = "";
+      interimTranscriptRef.current = "";
+      speechSegmentCountRef.current = 0;
+      speechInputCommittedRef.current = false;
+      committedSpeechTextRef.current = "";
+      hasAutoSentRef.current = false;
+      clearAutoSendTimer();
+      logSpeechState(speechUiStateRef.current, "listening");
+      speechUiStateRef.current = "listening";
+      setSpeechPreview("");
       audioUriRef.current = null;
-      speechErrorRef.current = null;
       speechStartedAtRef.current = Date.now();
-      micPressingRef.current = true;
-      stopInProgressRef.current = false;
 
-      setSpeechWorking(true);
+      setSpeechWorking(false);
       setSpeechListening(true);
       setSpeechDuration(0);
 
       const lang = SPEECH_LANGUAGES[speechLanguageIndexRef.current] || "es-ES";
 
-      console.log("[SpeechRecognition] start lang:", lang);
+      console.log("[SpeechRecognition] start", {
+        lang,
+        estado: "listening",
+      });
 
       ExpoSpeechRecognitionModule.start({
         lang,
@@ -717,8 +990,10 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
             }
           : undefined,
       });
-    } catch (error) {
-      console.error("Error al iniciar reconocimiento", error);
+    } catch {
+      console.error("[SpeechRecognition] start_error", {
+        code: "recognition_start_failed",
+      });
       resetSpeechState();
 
       setMessages((prev) => [
@@ -734,118 +1009,13 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
     }
   };
 
-  const stopSpeechRecognitionAndSend = async () => {
-    try {
-      if (stopInProgressRef.current) return;
-      if (!speechListening && !speechWorking) return;
-
-      stopInProgressRef.current = true;
-
-      try {
-        ExpoSpeechRecognitionModule.stop();
-      } catch (error) {
-        console.warn("[SpeechRecognition] stop error:", error);
-      }
-
-      const transcript = await waitForTranscript();
-      const audioUri = audioUriRef.current;
-      const durationMs =
-        speechStartedAtRef.current != null
-          ? Date.now() - speechStartedAtRef.current
-          : speechDuration;
-
-      if (durationMs < MIN_AUDIO_DURATION_MS) {
-        resetSpeechState();
-        return;
-      }
-
-      const speechError = String(speechErrorRef.current || "").toLowerCase();
-      const languageNotSupported =
-        speechError.includes("language-not-supported") ||
-        speechError.includes("language not supported");
-
-      if (!transcript && languageNotSupported) {
-        speechLanguageIndexRef.current =
-          (speechLanguageIndexRef.current + 1) % SPEECH_LANGUAGES.length;
-
-        resetSpeechState();
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `speech-lang-error-${Date.now()}`,
-            texto:
-              "No pude reconocer el audio con el idioma actual. Probá nuevamente; voy a intentar con otra configuración de español.",
-            tipo: "bot",
-            backendData: null,
-          },
-        ]);
-
-        return;
-      }
-
-      if (!transcript) {
-        resetSpeechState();
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `speech-empty-${Date.now()}`,
-            texto:
-              "No pude interpretar el audio. Probá hablar un poco más claro, mantené presionado el micrófono y soltalo al terminar.",
-            tipo: "bot",
-            backendData: null,
-          },
-        ]);
-
-        return;
-      }
-
-      const audioMessageId = `audio-user-${Date.now()}`;
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: audioMessageId,
-          texto: transcript,
-          tipo: "usuario",
-          backendData: null,
-          isAudio: !!audioUri,
-          audioUri: audioUri || null,
-          audioDurationMs: durationMs,
-          transcript,
-        },
-      ]);
-
-      resetSpeechState();
-
-      await procesarConsulta(transcript);
-    } catch (error) {
-      console.error("Error al detener reconocimiento", error);
-      resetSpeechState();
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `speech-stop-error-${Date.now()}`,
-          texto:
-            "No pude procesar el audio. Probá nuevamente o escribí tu consulta.",
-          tipo: "bot",
-          backendData: null,
-        },
-      ]);
+  const toggleSpeechRecognition = async () => {
+    if (speechSessionActiveRef.current || speechListening || speechWorking) {
+      abortSpeech();
+      return;
     }
-  };
 
-  const handleMicPressIn = async () => {
     await startSpeechRecognition();
-  };
-
-  const handleMicPressOut = async () => {
-    if (!micPressingRef.current) return;
-
-    micPressingRef.current = false;
-    await stopSpeechRecognitionAndSend();
   };
 
   const toggleAudioPlayback = async (
@@ -885,37 +1055,49 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
   const renderActionButton = () => {
     const hasText = inputText.trim().length > 0;
 
-    if (hasText) {
-      return (
-        <TouchableOpacity
-          onPress={() => handleSendMessage(inputText)}
-          activeOpacity={0.9}
-          disabled={loading || cargandoBase}
-          style={[
-            styles.audioActionButton,
-            (loading || cargandoBase) && styles.audioActionButtonDisabled,
-          ]}
-        >
-          <Ionicons size={18} name="send" color="#fff" />
-        </TouchableOpacity>
-      );
-    }
-
-    return (
+    const micButton = (
       <TouchableOpacity
-        onPressIn={handleMicPressIn}
-        onPressOut={handleMicPressOut}
+        onPress={toggleSpeechRecognition}
         activeOpacity={0.9}
-        disabled={loading || cargandoBase}
+        disabled={
+          loading ||
+          cargandoBase ||
+          (speechWorking && !speechListening)
+        }
         style={[
           styles.audioActionButton,
           speechListening && styles.audioActionButtonRecording,
-          (loading || cargandoBase) && styles.audioActionButtonDisabled,
+          (loading || cargandoBase || (speechWorking && !speechListening)) &&
+            styles.audioActionButtonDisabled,
         ]}
       >
         <Ionicons size={18} name="mic" color="#fff" />
       </TouchableOpacity>
     );
+
+    if (speechListening) return micButton;
+
+    if (hasText) {
+      return (
+        <>
+          <TouchableOpacity
+            onPress={() => handleSendMessage(inputText)}
+            activeOpacity={0.9}
+            disabled={loading || cargandoBase || speechWorking}
+            style={[
+              styles.audioActionButton,
+              (loading || cargandoBase || speechWorking) &&
+                styles.audioActionButtonDisabled,
+            ]}
+          >
+            <Ionicons size={18} name="send" color="#fff" />
+          </TouchableOpacity>
+          {micButton}
+        </>
+      );
+    }
+
+    return micButton;
   };
 
   const renderWaveBars = () => {
@@ -973,7 +1155,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
 
   return (
     <>
-      <Animated.View
+      <View
         pointerEvents={visible ? "none" : "auto"}
         style={[
           {
@@ -983,7 +1165,6 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
             zIndex: 20,
             elevation: 10,
           },
-          botMovimientoStyle,
         ]}
       >
         <TouchableOpacity
@@ -1005,7 +1186,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
             resizeMode="contain"
           />
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
       <Modal
         visible={visible}
@@ -1015,18 +1196,50 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
         statusBarTranslucent
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
           style={styles.modalContainer}
         >
           <View style={styles.modalContent}>
             <View style={styles.chatHeaderRow}>
-              <Text style={styles.header}>Asistente Virtual SiDCa</Text>
+              <View style={styles.headerContent}>
+                <Image
+                  source={require("@/assets/logos/Chatboot5.png")}
+                  style={styles.headerAvatar}
+                  resizeMode="contain"
+                />
+                <View style={styles.headerTextBlock}>
+                  <Text style={styles.header}>Asistente SIDCA</Text>
+                  <Text style={styles.headerSubtitle}>Tu asistente gremial</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={closeChatbot}
+                  activeOpacity={0.8}
+                  style={styles.headerCloseButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cerrar asistente"
+                >
+                  <Ionicons name="close" size={27} color="#17242A" />
+                </TouchableOpacity>
+              </View>
             </View>
+
+            {cargandoBase ? (
+              <View style={styles.initialProgressTrack}>
+                <Animated.View
+                  style={[
+                    styles.initialProgressIndicator,
+                    { transform: [{ translateX: cargaInicialTranslateX }] },
+                  ]}
+                />
+              </View>
+            ) : null}
 
             <FlatList
               ref={flatListRef}
               data={messages}
               keyExtractor={(item) => item.id}
+              style={styles.messagesList}
               contentContainerStyle={styles.messagesContent}
               onContentSizeChange={() =>
                 flatListRef.current?.scrollToEnd({ animated: true })
@@ -1038,14 +1251,6 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
                     item.tipo === "usuario" ? styles.userRow : styles.botRow,
                   ]}
                 >
-                  {item.tipo === "bot" ? (
-                    <Image
-                      source={require("@/assets/logos/Chatboot5.png")}
-                      style={styles.avatar}
-                      resizeMode="contain"
-                    />
-                  ) : null}
-
                   {item.tipo === "bot" && item.backendData ? (
                     <View style={{ width: "100%" }}>
                       <ChatbotBackendResponseCard data={item.backendData} />
@@ -1071,6 +1276,7 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
                       <Text
                         style={[
                           styles.messageText,
+                          item.id === "bienvenida" && styles.welcomeMessageText,
                           item.tipo === "usuario" && styles.userText,
                         ]}
                       >
@@ -1082,11 +1288,13 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
               )}
             />
 
-            {(loading || speechWorking || cargandoBase) && (
+            {(loading || speechWorking) && (
               <View style={styles.consultingContainer}>
                 <ActivityIndicator size="small" color="#007AFF" />
                 <Text style={styles.consultingText}>
-                  Consultando asistente IA y normativa...
+                  {speechWorking && !loading
+                    ? "Procesando dictado..."
+                    : "Consultando asistente IA y normativa..."}
                 </Text>
               </View>
             )}
@@ -1097,8 +1305,8 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
                   <View style={styles.inlineRecordingPill}>
                     <View style={styles.inlineRecordingLeft}>
                       <View style={styles.recordingDot} />
-                      <Text style={styles.inlineRecordingText}>
-                        Escuchando...
+                      <Text style={styles.inlineRecordingText} numberOfLines={2}>
+                        {speechPreview || "Escuchando..."}
                       </Text>
                     </View>
 
@@ -1120,12 +1328,6 @@ Escribí tu consulta o mantené presionado el botón de audio 🎙️.`,
                 {renderActionButton()}
               </View>
 
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={closeChatbot}
-              >
-                <Text style={styles.closeText}>Cerrar</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </KeyboardAvoidingView>
