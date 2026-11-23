@@ -225,7 +225,10 @@ export function consultarCertificadoEmitido(cursoId: string, dni: string) {
 }
 
 export function obtenerPreviewCertificado(cursoId: string, dni: string) {
-  return solicitarJson<CertificadoArchivoResponse>(`${rutaCertificado(cursoId, dni)}/preview`);
+  const cacheBuster = encodeURIComponent(String(Date.now()));
+  return solicitarJson<CertificadoArchivoResponse>(
+    `${rutaCertificado(cursoId, dni)}/preview?v=${cacheBuster}`,
+  );
 }
 
 export function obtenerQrCertificado(cursoId: string, dni: string) {

@@ -40,6 +40,11 @@ const nombreTemporalSeguro = (cursoId: string, prefijo: string) => {
   return `${prefijo}-${seguro}.pdf`;
 };
 
+const esFallaRemotaRecuperable = (error: unknown) => {
+  if (!(error instanceof CertificadoApiError)) return true;
+  return error.status === 0 || [500, 502, 503, 504].includes(error.status);
+};
+
 const errorVisible = (error: unknown, tipo: "preview" | "descarga") => {
   if (error instanceof CertificadoApiError && error.status === 0) {
     return ["Sin conexión", "No se pudo conectar con el servidor. Verificá tu conexión a internet e intentá nuevamente."] as const;
@@ -106,28 +111,31 @@ export default function CertificadoEmitidoButton({ cursoId, cursoTitulo, dni }: 
     setMostrarDetalleValidacion(false);
     setLoadingConsulta(true);
     try {
-      const [certificadoActual, precargado] = await Promise.all([
-        consultarCertificadoEmitido(cursoId, dni),
-        obtenerCertificadoPrecargado(cursoId, dni).catch(() => null),
-      ]);
+      const certificadoActual = await consultarCertificadoEmitido(cursoId, dni);
       setValidacion(certificadoActual.validacion || null);
       setDescargaHabilitada(certificadoActual.descargaHabilitada !== false);
       setLoadingConsulta(false);
 
-      if (precargado) {
+      setLoadingPreview(true);
+      try {
+        const respuesta = await obtenerPreviewCertificado(cursoId, dni);
+        const uri = await descargarArchivo(
+          respuesta.url,
+          nombreTemporalSeguro(cursoId, "preview-certificado"),
+        );
+        setPreviewLocalUri(uri);
+        setMostrarPreview(true);
+      } catch (error) {
+        if (!esFallaRemotaRecuperable(error)) throw error;
+
+        const precargado = await obtenerCertificadoPrecargado(cursoId, dni).catch(
+          () => null,
+        );
+        if (!precargado) throw error;
+
         setPreviewLocalUri(precargado.previewLocalUri);
         setMostrarPreview(true);
-        return;
       }
-
-      setLoadingPreview(true);
-      const respuesta = await obtenerPreviewCertificado(cursoId, dni);
-      const uri = await descargarArchivo(
-        respuesta.url,
-        nombreTemporalSeguro(cursoId, "preview-certificado")
-      );
-      setPreviewLocalUri(uri);
-      setMostrarPreview(true);
     } catch (error) {
       setLoadingConsulta(false);
       setPdfCargando(false);

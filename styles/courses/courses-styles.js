@@ -81,12 +81,14 @@ export default coursesStyles = StyleSheet.create({
   },
   coursesDoneBox: {
     width: "100%",
-    height: 540,
     backgroundColor: "#fea200",
     borderRadius: 10,
-    display: "flex",
-    justifyContent: "space-around",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 20,
+    justifyContent: "flex-start",
     alignItems: "center",
+    marginBottom: 16,
   },
   viewCertificateButton: {
     backgroundColor: "#005CFE",

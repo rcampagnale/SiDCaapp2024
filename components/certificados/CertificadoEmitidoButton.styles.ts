@@ -78,7 +78,7 @@ export default StyleSheet.create({
     width: 62,
     height: 60,
     borderRadius: 6,
-    backgroundColor: "transparent",
+    backgroundColor: "#FFFFFF",
     borderWidth: 0,
     alignItems: "center",
     justifyContent: "flex-start",
@@ -95,6 +95,7 @@ export default StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
   qrEtiqueta: {
     width: "100%",

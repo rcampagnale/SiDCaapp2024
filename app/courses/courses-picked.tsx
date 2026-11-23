@@ -243,6 +243,7 @@ export default function CoursesTakenByMe() {
                   fontWeight: "bold",
                   fontSize: 17,
                   width: "100%",
+                  flexShrink: 1,
                   textAlign: "center",
                   paddingBottom: 5,
                 }}
@@ -251,7 +252,7 @@ export default function CoursesTakenByMe() {
               </Text>
               <Image
                 source={{ uri: e.imagen }}
-                style={{ width: "80%", height: "62%" }}
+                style={{ width: "80%", height: 335 }}
                 resizeMode="contain"
               />
               <Text style={{ fontSize: 22, fontWeight: "bold" }}>
